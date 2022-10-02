@@ -87,7 +87,7 @@
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
 	<div class="name_and_content">
 		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
-		<div class="content">じゃあ、step 1 は『return 3; するやつと return 42; するやつを gcc でコンパイルして ELF バイナリを吐いて、その差分を比較してどのバイトを置き換えるべきかを調べ、それを &#x60;include!()&#x60; する』という方針にするのがよさそう</div>
+		<div class="content">じゃあ、step 1 は『return 3; するやつと return 42; するやつを gcc でコンパイルして ELF バイナリを吐いて、その差分を比較してどのバイトを置き換えるべきかを調べ、それを &#x60;include_bytes!()&#x60; する』という方針にするのがよさそう</div>
 		<div class="content">なので、step 1 ではアセンブラもリンカもない。まあ、拡張していくと、機械語を直にいじるのがじきにきつくなるので、だんだんアセンブリ言語が育っていって、それは GNU のアセンブリ言語とそれなりに互換性があることが期待されるが、別にそれを目標にするわけではない。</div>
 		<div class="content">という感じでやっていくとよさそう。今日はもう寝ます？</div>
 	</div>
@@ -354,6 +354,32 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 		<div class="content">よし、差分が 1 バイトになった！！！！！</div>
 		<div class="content">ここで 52 って出てるのは cmp コマンドがバイトを 8 進数で出力する仕様になっているからであって、これは 10 進数だと 42 なのでこれで正解です</div>
 		<div class="content">よーし、やっとスタート地点に立つことができた</div>
+		<pre><code class="language-rust">fn main() -&gt; std::io::Result&lt;()&gt; {
+    let input = std::env::args().nth(1).expect(&quot;入力が与えられていません&quot;);
+    let input: u8 = input.parse().expect(&quot;入力をパースできません&quot;);
+    let tiny_3 = include_bytes!(&quot;../experiment/tiny3&quot;);
+    let tiny_42 = include_bytes!(&quot;../experiment/tiny42&quot;);
+    assert_eq!(tiny_3.len(), tiny_42.len());
+
+    let file = std::fs::File::create(&quot;a.out&quot;)?;
+
+    {
+        use std::io::Write;
+        let mut writer = std::io::BufWriter::new(file);
+        for (index, byte) in tiny_3.iter().enumerate() {
+            if *byte == tiny_42[index] {
+                writer.write_all(&amp;[*byte])?;
+            } else if *byte == 3 &amp;&amp; tiny_42[index] == 42 {
+                writer.write_all(&amp;[input])?;
+            } else {
+                panic!(&quot;&#x60;../experiment/tiny3&#x60; と &#x60;../experiment/tiny42&#x60; の間に非自明な差分が見つかったので、なにを出力すべきか分かりません&quot;)
+            }
+        }
+    }
+    Ok(())
+}
+</code></pre>
+		<div class="content">これで、step 1 達成！</div>
 	</div>
 </div>
 </body>

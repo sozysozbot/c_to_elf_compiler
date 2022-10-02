@@ -5,7 +5,7 @@ tkr「なるほど」
 hsjoihs「C → アセンブラのコンパイラをセルフホストしたあとにアセンブラとリンカと libc と書くのは既に ushitora_anqou がやってるけど、最初から ELF バイナリへとコンパイルしつづける形式で Rui 本を走ってる人を私は知らないので、やってみるとおもしろそう」
 hsjoihs「教材書けとは言わんので、作業ログでもいいんで書いてみません？言語はどれでやるんです？」
 tkr「もちろん Rust」
-hsjoihs「じゃあ、step 1 は『return 3; するやつと return 42; するやつを gcc でコンパイルして ELF バイナリを吐いて、その差分を比較してどのバイトを置き換えるべきかを調べ、それを `include!()` する』という方針にするのがよさそう」
+hsjoihs「じゃあ、step 1 は『return 3; するやつと return 42; するやつを gcc でコンパイルして ELF バイナリを吐いて、その差分を比較してどのバイトを置き換えるべきかを調べ、それを `include_bytes!()` する』という方針にするのがよさそう」
 hsjoihs「なので、step 1 ではアセンブラもリンカもない。まあ、拡張していくと、機械語を直にいじるのがじきにきつくなるので、だんだんアセンブリ言語が育っていって、それは GNU のアセンブリ言語とそれなりに互換性があることが期待されるが、別にそれを目標にするわけではない。」
 hsjoihs「という感じでやっていくとよさそう。今日はもう寝ます？」
 tkr「いま布団の中です」
@@ -261,3 +261,32 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 hsjoihs「よし、差分が 1 バイトになった！！！！！」
 hsjoihs「ここで 52 って出てるのは cmp コマンドがバイトを 8 進数で出力する仕様になっているからであって、これは 10 進数だと 42 なのでこれで正解です」
 hsjoihs「よーし、やっとスタート地点に立つことができた」
+
+$source
+```rust
+fn main() -> std::io::Result<()> {
+    let input = std::env::args().nth(1).expect("入力が与えられていません");
+    let input: u8 = input.parse().expect("入力をパースできません");
+    let tiny_3 = include_bytes!("../experiment/tiny3");
+    let tiny_42 = include_bytes!("../experiment/tiny42");
+    assert_eq!(tiny_3.len(), tiny_42.len());
+
+    let file = std::fs::File::create("a.out")?;
+
+    {
+        use std::io::Write;
+        let mut writer = std::io::BufWriter::new(file);
+        for (index, byte) in tiny_3.iter().enumerate() {
+            if *byte == tiny_42[index] {
+                writer.write_all(&[*byte])?;
+            } else if *byte == 3 && tiny_42[index] == 42 {
+                writer.write_all(&[input])?;
+            } else {
+                panic!("`../experiment/tiny3` と `../experiment/tiny42` の間に非自明な差分が見つかったので、なにを出力すべきか分かりません")
+            }
+        }
+    }
+    Ok(())
+}
+```
+hsjoihs「これで、step 1 達成！」
