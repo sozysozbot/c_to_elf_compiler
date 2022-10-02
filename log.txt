@@ -16,3 +16,29 @@ hsjoihs「とりあえず docs フォルダを立てて、docs/dialog.txt に会
 hsjoihs「このリポジトリに招待を飛ばしておいて、」
 hsjoihs「Ubuntu の方にリポジトリをクローンし、cargo init し、議事録を書く。おや、npm が通らない。えっと https://stackoverflow.com/questions/67938486/after-installing-npm-on-wsl-ubuntu-20-04-i-get-the-message-usr-bin-env-bash に従ったら直った。」
 hsjoihs「ちゃんと README.md も書いておこう。まあ日本語と英語で書いておくか。」
+hsjoihs「もう step 1 は私がやってしまおう。experiment フォルダにファイルを用意して、」
+hsjoihs「とりあえず Makefile はこんな感じでいいか」
+$source
+```Makefile
+CFLAGS=-std=c17 -Wall -s
+
+3: 3.c
+42: 42.c
+
+clean: 
+	rm 3
+	rm 42
+
+.PHONY: clean
+```
+hsjoihs「gcc が出力したファイルのサイズを数えると、」
+
+$source
+```shell
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
+13296 3
+```
+
+hsjoihs「うーむ、デカい！」
+hsjoihs「まあ、考えてみると、一応 gcc の出力をそのまま使う必要もないんだよな」
+hsjoihs「 https://www.muppetlabs.com/~breadbox/software/tiny/teensy.html に頼って、もっと小さい実行形式を出力できるようなお膳立てをしてからじゃないと step 1 にふさわしくない気がする」

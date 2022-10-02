@@ -116,6 +116,26 @@
 		<div class="content">このリポジトリに招待を飛ばしておいて、</div>
 		<div class="content">Ubuntu の方にリポジトリをクローンし、cargo init し、議事録を書く。おや、npm が通らない。えっと <a href="https://stackoverflow.com/questions/67938486/after-installing-npm-on-wsl-ubuntu-20-04-i-get-the-message-usr-bin-env-bash" target="_blank" rel="noopener noreferrer">https://stackoverflow.com/questions/67938486/after-installing-npm-on-wsl-ubuntu-20-04-i-get-the-message-usr-bin-env-bash</a> に従ったら直った。</div>
 		<div class="content">ちゃんと README.md も書いておこう。まあ日本語と英語で書いておくか。</div>
+		<div class="content">もう step 1 は私がやってしまおう。experiment フォルダにファイルを用意して、</div>
+		<div class="content">とりあえず Makefile はこんな感じでいいか</div>
+		<pre><code class="language-Makefile">CFLAGS=-std=c17 -Wall -s
+
+3: 3.c
+42: 42.c
+
+clean: 
+	rm 3
+	rm 42
+
+.PHONY: clean
+</code></pre>
+		<div class="content">gcc が出力したファイルのサイズを数えると、</div>
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
+13296 3
+</code></pre>
+		<div class="content">うーむ、デカい！</div>
+		<div class="content">まあ、考えてみると、一応 gcc の出力をそのまま使う必要もないんだよな</div>
+		<div class="content"> <a href="https://www.muppetlabs.com/~breadbox/software/tiny/teensy.html" target="_blank" rel="noopener noreferrer">https://www.muppetlabs.com/~breadbox/software/tiny/teensy.html</a> に頼って、もっと小さい実行形式を出力できるようなお膳立てをしてからじゃないと step 1 にふさわしくない気がする</div>
 	</div>
 </div>
 </body>
