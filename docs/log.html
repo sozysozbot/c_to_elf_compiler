@@ -340,6 +340,20 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny3; echo $?
 4633 334 333
 </code></pre>
 		<div class="content">んー。ああそうか、ld 側にも reproducible にしてくれと頼まないと</div>
+		<div class="content">……軽く調べたが、頼み方がよくわからん。リンカを gold にしたらバージョン名を埋め込んできたし。んー、1 バイトのズレはファイル名『tiny3.asm』『tiny42.asm』の差に起因してるっぽいし、そこを strip かなんかで処理すれば解決するかも？</div>
+		<pre><code class="language-">make tiny3
+nasm -felf64  --reproducible tiny3.asm
+ld tiny3.o -o tiny3
+strip tiny3
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny42; echo $?; ./tiny3; echo $?
+42
+3
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
+4103  52   3
+</code></pre>
+		<div class="content">よし、差分が 1 バイトになった！！！！！</div>
+		<div class="content">ここで 52 って出てるのは cmp コマンドがバイトを 8 進数で出力する仕様になっているからであって、これは 10 進数だと 42 なのでこれで正解です</div>
+		<div class="content">よーし、やっとスタート地点に立つことができた</div>
 	</div>
 </div>
 </body>
