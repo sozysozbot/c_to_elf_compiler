@@ -136,6 +136,9 @@ clean:
 		<div class="content">うーむ、デカい！</div>
 		<div class="content">まあ、考えてみると、一応 gcc の出力をそのまま使う必要もないんだよな</div>
 		<div class="content"> <a href="https://www.muppetlabs.com/~breadbox/software/tiny/teensy.html" target="_blank" rel="noopener noreferrer">https://www.muppetlabs.com/~breadbox/software/tiny/teensy.html</a> に頼って、もっと小さい実行形式を出力できるようなお膳立てをしてからじゃないと step 1 にふさわしくない気がする</div>
+		<div class="content">というか、reproducible なビルドになるようにしないといけないんだよな</div>
+		<div class="content">……よし、こうするか。</div>
+		<div class="content"><ol><li>nasm かなんかで小さな .asm をコンパイルすることで、我々が目指すべき「動く小さい ELF バイナリ」を得る</li><li>それはそれとして、我々が作るのは C コンパイラなので、常に C 言語（のようなもの）を入力として取る</li></ol></div>
 	</div>
 </div>
 </body>

@@ -42,3 +42,6 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
 hsjoihs「うーむ、デカい！」
 hsjoihs「まあ、考えてみると、一応 gcc の出力をそのまま使う必要もないんだよな」
 hsjoihs「 https://www.muppetlabs.com/~breadbox/software/tiny/teensy.html に頼って、もっと小さい実行形式を出力できるようなお膳立てをしてからじゃないと step 1 にふさわしくない気がする」
+hsjoihs「というか、reproducible なビルドになるようにしないといけないんだよな」
+hsjoihs「……よし、こうするか。」
+$HTML「<ol><li>nasm かなんかで小さな .asm をコンパイルすることで、我々が目指すべき「動く小さい ELF バイナリ」を得る</li><li>それはそれとして、我々が作るのは C コンパイラなので、常に C 言語（のようなもの）を入力として取る</li></ol>」
