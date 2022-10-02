@@ -15,3 +15,4 @@ hsjoihs「じゃあ私が勝手に step 1 を実装するか。なんなら会�
 hsjoihs「とりあえず docs フォルダを立てて、docs/dialog.txt に会話を書いて docs/ 内で node index.js したらログがレンダリングできるようにしておいた」
 hsjoihs「このリポジトリに招待を飛ばしておいて、」
 hsjoihs「Ubuntu の方にリポジトリをクローンし、cargo init し、議事録を書く。おや、npm が通らない。えっと https://stackoverflow.com/questions/67938486/after-installing-npm-on-wsl-ubuntu-20-04-i-get-the-message-usr-bin-env-bash に従ったら直った。」
+hsjoihs「ちゃんと README.md も書いておこう。まあ日本語と英語で書いておくか。」

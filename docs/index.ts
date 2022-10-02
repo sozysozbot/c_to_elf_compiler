@@ -1,8 +1,8 @@
 import { PseudoRoku } from 'pseudoroku';
 
 new PseudoRoku({
-	input: `./../dialog.txt`,
-	output: `index.html`,
+	input: `./../log.txt`,
+	output: `log.html`,
 	template: `./template.html`,
 	profile_lookup: './profile_lookup.tsv',
 	getIconPathFromCensoredName: name => `icons/${name}.webp`,
