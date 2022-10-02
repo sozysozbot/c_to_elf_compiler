@@ -1,7 +1,7 @@
 import { PseudoRoku } from 'pseudoroku';
 
 new PseudoRoku({
-	input: `./dialog.txt`,
+	input: `./../dialog.txt`,
 	output: `index.html`,
 	template: `./template.html`,
 	profile_lookup: './profile_lookup.tsv',
