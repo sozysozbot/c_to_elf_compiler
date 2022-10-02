@@ -62,3 +62,34 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
 14328 3
 ```
 hsjoihs「はい、ということで nasm 使います」
+
+$DATE「2022年10月3日（一人で作業）」
+hsjoihs「とりあえず、原典にこうあるけど、」
+$source
+```asm
+  ; tiny.asm
+  BITS 32
+  GLOBAL _start
+  SECTION .text
+  _start:
+                mov     eax, 1
+                mov     ebx, 42  
+                int     0x80
+```
+hsjoihs「64 ビット環境だし、この BITS 32 を削って実行してみるか。Makefile はこんな感じ」
+$source
+```Makefile
+tiny42: tiny42.asm
+	nasm -f elf tiny42.asm
+	gcc -Wall -s -nostdlib tiny42.o -o tiny42
+```
+hsjoihs「make tiny42 をすると～？」
+$source
+```shell
+nasm -f elf tiny42.asm
+gcc -Wall -s -nostdlib tiny42.o -o tiny42
+/usr/bin/ld: i386 architecture of input file `tiny42.o' is incompatible with i386:x86-64 output
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:12: tiny42] Error 1
+```
+hsjoihs「はい。正直そんな気はしてた」

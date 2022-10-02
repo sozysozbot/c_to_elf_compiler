@@ -180,4 +180,34 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
 		<div class="content">はい、ということで nasm 使います</div>
 	</div>
 </div>
+<h3 class="date">2022年10月3日（一人で作業）</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">とりあえず、原典にこうあるけど、</div>
+		<pre><code class="language-asm">  ; tiny.asm
+  BITS 32
+  GLOBAL _start
+  SECTION .text
+  _start:
+                mov     eax, 1
+                mov     ebx, 42  
+                int     0x80
+</code></pre>
+		<div class="content">64 ビット環境だし、この BITS 32 を削って実行してみるか。Makefile はこんな感じ</div>
+		<pre><code class="language-Makefile">tiny42: tiny42.asm
+	nasm -f elf tiny42.asm
+	gcc -Wall -s -nostdlib tiny42.o -o tiny42
+</code></pre>
+		<div class="content">make tiny42 をすると～？</div>
+		<pre><code class="language-shell">nasm -f elf tiny42.asm
+gcc -Wall -s -nostdlib tiny42.o -o tiny42
+/usr/bin/ld: i386 architecture of input file &#x60;tiny42.o&#x27; is incompatible with i386:x86-64 output
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:12: tiny42] Error 1
+</code></pre>
+		<div class="content">はい。正直そんな気はしてた</div>
+	</div>
+</div>
 </body>
