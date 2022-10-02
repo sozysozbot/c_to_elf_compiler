@@ -187,7 +187,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
 	<div class="name_and_content">
 		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
 		<div class="content">とりあえず、原典にこうあるけど、</div>
-		<pre><code class="language-asm">  ; tiny.asm
+		<pre><code class="language-x86asm">  ; tiny.asm
   BITS 32
   GLOBAL _start
   SECTION .text
@@ -210,7 +210,7 @@ make: *** [Makefile:12: tiny42] Error 1
 </code></pre>
 		<div class="content">はい。正直そんな気はしてた</div>
 		<div class="content">普通に gcc 付属のアセンブラを使ってみるか</div>
-		<pre><code class="language-asm">.globl _start
+		<pre><code class="language-x86asm">.globl _start
 _start:
 	movl	$1, %eax
 	movl	$42, %ebx  
@@ -226,7 +226,7 @@ _start:
 		<pre><code class="language-">nasm -felf64 hello.asm &amp;&amp; ld hello.o &amp;&amp; ./a.out
 </code></pre>
 		<div class="content">でよいとのこと。なるほど、やってみるか</div>
-		<pre><code class="language-">make tiny42
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
 nasm -felf64 tiny42.asm
 ld tiny42.o -o tiny42
 hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny42
@@ -342,7 +342,11 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny3; echo $?
 </code></pre>
 		<div class="content">んー。ああそうか、ld 側にも reproducible にしてくれと頼まないと</div>
 		<div class="content">……軽く調べたが、頼み方がよくわからん。リンカを gold にしたらバージョン名を埋め込んできたし。んー、1 バイトのズレはファイル名『tiny3.asm』『tiny42.asm』の差に起因してるっぽいし、そこを strip かなんかで処理すれば解決するかも？</div>
-		<pre><code class="language-">make tiny3
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
+nasm -felf64  --reproducible tiny42.asm
+ld tiny42.o -o tiny42
+strip tiny42
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny3
 nasm -felf64  --reproducible tiny3.asm
 ld tiny3.o -o tiny3
 strip tiny3

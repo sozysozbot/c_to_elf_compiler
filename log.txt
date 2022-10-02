@@ -66,7 +66,7 @@ hsjoihs「はい、ということで nasm 使います」
 $DATE「2022年10月3日（一人で作業）」
 hsjoihs「とりあえず、原典にこうあるけど、」
 $source
-```asm
+```x86asm
   ; tiny.asm
   BITS 32
   GLOBAL _start
@@ -95,7 +95,7 @@ make: *** [Makefile:12: tiny42] Error 1
 hsjoihs「はい。正直そんな気はしてた」
 hsjoihs「普通に gcc 付属のアセンブラを使ってみるか」
 $source
-```asm
+```x86asm
 .globl _start
 _start:
 	movl	$1, %eax
@@ -118,8 +118,8 @@ nasm -felf64 hello.asm && ld hello.o && ./a.out
 ```
 hsjoihs「でよいとのこと。なるほど、やってみるか」
 $source
-```
-make tiny42
+```shell
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
 nasm -felf64 tiny42.asm
 ld tiny42.o -o tiny42
 hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny42
@@ -247,8 +247,12 @@ hsjoihs「んー。ああそうか、ld 側にも reproducible にしてくれ�
 hsjoihs「……軽く調べたが、頼み方がよくわからん。リンカを gold にしたらバージョン名を埋め込んできたし。んー、1 バイトのズレはファイル名『tiny3.asm』『tiny42.asm』の差に起因してるっぽいし、そこを strip かなんかで処理すれば解決するかも？」
 
 $source
-```
-make tiny3
+```shell
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
+nasm -felf64  --reproducible tiny42.asm
+ld tiny42.o -o tiny42
+strip tiny42
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny3
 nasm -felf64  --reproducible tiny3.asm
 ld tiny3.o -o tiny3
 strip tiny3
