@@ -141,6 +141,7 @@ clean:
 		<div class="content"><ol><li>nasm かなんかで小さな .asm をコンパイルすることで、我々が目指すべき「動く小さい ELF バイナリ」を得る</li><li>それはそれとして、我々が作るのは C コンパイラなので、常に C 言語（のようなもの）を入力として取る</li></ol></div>
 	</div>
 </div>
+<h3 class="date">2022年10月3日（yukata_yu との会話）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/yukata_yu" target="_blank" rel="noopener noreferrer"><img alt="ゆかたゆ" class="icon" src="icons/ゆかたゆ.webp" height="48px"></a></div>
 	<div class="name_and_content">
@@ -168,7 +169,15 @@ clean:
 	<div class="name_and_content">
 		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
 		<div class="content">-Os を使うと、3 + 4 - 2 とかが畳み込まれちゃう気がするので</div>
-		<div class="content">まあ一応 -Os でどれくらい減るのかも実験しておくか。そもそも nasm にする予定だけど</div>
+		<div class="content">まあ一応 -Os でどれくらい減るのかも実験しておくか。そもそも nasm にする予定だけど。CFLAGS=-std=c17 -Wall -s -Os で試すと、</div>
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 3
+cc -std=c17 -Wall -s -Os    3.c   -o 3
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 42
+cc -std=c17 -Wall -s -Os    42.c   -o 42
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
+14328 3
+</code></pre>
+		<div class="content">はい、ということで nasm 使います</div>
 	</div>
 </div>
 </body>

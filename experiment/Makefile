@@ -1,4 +1,4 @@
-CFLAGS=-std=c17 -Wall -s
+CFLAGS=-std=c17 -Wall -s -Os
 
 3: 3.c
 42: 42.c

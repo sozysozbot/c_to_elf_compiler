@@ -45,9 +45,20 @@ hsjoihs「 https://www.muppetlabs.com/~breadbox/software/tiny/teensy.html に頼
 hsjoihs「というか、reproducible なビルドになるようにしないといけないんだよな」
 hsjoihs「……よし、こうするか。」
 $HTML「<ol><li>nasm かなんかで小さな .asm をコンパイルすることで、我々が目指すべき「動く小さい ELF バイナリ」を得る</li><li>それはそれとして、我々が作るのは C コンパイラなので、常に C 言語（のようなもの）を入力として取る</li></ol>」
+$DATE「2022年10月3日（yukata_yu との会話）」
 ゆかたゆ「-O1 を使わないのですか？ (エイリアスなんでしたっけ)」
 ゆかたゆ「あー， -Osがあるんだ…」
 hsjoihs「-O1 を導入せず、gcc を消し飛ばして nasm で作るようにします」
 ゆかたゆ「なるほ」
 hsjoihs「-Os を使うと、3 + 4 - 2 とかが畳み込まれちゃう気がするので」
-hsjoihs「まあ一応 -Os でどれくらい減るのかも実験しておくか。そもそも nasm にする予定だけど」
+hsjoihs「まあ一応 -Os でどれくらい減るのかも実験しておくか。そもそも nasm にする予定だけど。CFLAGS=-std=c17 -Wall -s -Os で試すと、」
+$source
+```shell
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 3
+cc -std=c17 -Wall -s -Os    3.c   -o 3
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 42
+cc -std=c17 -Wall -s -Os    42.c   -o 42
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
+14328 3
+```
+hsjoihs「はい、ということで nasm 使います」
