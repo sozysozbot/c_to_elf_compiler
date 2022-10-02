@@ -208,6 +208,18 @@ collect2: error: ld returned 1 exit status
 make: *** [Makefile:12: tiny42] Error 1
 </code></pre>
 		<div class="content">はい。正直そんな気はしてた</div>
+		<div class="content">普通に gcc 付属のアセンブラを使ってみるか</div>
+		<pre><code class="language-asm">.globl _start
+_start:
+	movl	$1, %eax
+	movl	$42, %ebx  
+	int		$0x80
+</code></pre>
+		<div class="content">に対して</div>
+		<pre><code class="language-Makefile">tiny42: tiny42.s
+	gcc -Wall -s -nostdlib tiny42.s -o tiny42
+</code></pre>
+		<div class="content">をかませてやると、まあちゃんと動く。しかし wc -c tiny42 すると 13024 tiny42 なので、結局問題が解決してないんだよな</div>
 	</div>
 </div>
 </body>

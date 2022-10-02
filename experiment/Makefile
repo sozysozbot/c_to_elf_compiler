@@ -7,8 +7,7 @@ clean:
 	rm 3
 	rm 42
 
-tiny42: tiny42.asm
-	nasm -f elf tiny42.asm
-	gcc -Wall -s -nostdlib tiny42.o -o tiny42
+tiny42: tiny42.s
+	gcc -Wall -s -nostdlib tiny42.s -o tiny42
 
 .PHONY: clean

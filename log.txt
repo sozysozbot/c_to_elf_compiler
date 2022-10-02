@@ -93,3 +93,19 @@ collect2: error: ld returned 1 exit status
 make: *** [Makefile:12: tiny42] Error 1
 ```
 hsjoihs「はい。正直そんな気はしてた」
+hsjoihs「普通に gcc 付属のアセンブラを使ってみるか」
+$source
+```asm
+.globl _start
+_start:
+	movl	$1, %eax
+	movl	$42, %ebx  
+	int		$0x80
+```
+hsjoihs「に対して」
+$source
+```Makefile
+tiny42: tiny42.s
+	gcc -Wall -s -nostdlib tiny42.s -o tiny42
+```
+hsjoihs「をかませてやると、まあちゃんと動く。しかし wc -c tiny42 すると 13024 tiny42 なので、結局問題が解決してないんだよな」
