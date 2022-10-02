@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="utf-8">
+	<title>ELF を吐く C コンパイラを Rui 本の方式で作る</title>
+	<style>
+		img.icon {
+			border-radius: 50%;
+		}
+		div.one_person {
+			display: flex;
+			padding-bottom: 10px;
+		}
+		blockquote {
+			position: relative;
+			border-left: 3px solid #005242;
+			padding-left: 10px;
+			margin-inline-start: 10px;
+			white-space: pre-wrap;
+		}
+		a {
+			overflow-wrap: anywhere;
+		}
+		h3 {
+			margin-top: 15px;
+		}
+		.name a {
+			text-decoration: none;
+			color: inherit;
+		}
+		.name a:hover {
+			text-decoration: underline;
+		}
+		div.name_and_content {
+			padding-left: 10px;
+		}
+		pre {
+			white-space: pre-wrap;
+		}
+	</style>
+	<link rel="stylesheet" href="vs.min.css">
+	<script src="highlight.min.js"></script>
+	<script>hljs.highlightAll();</script>
+</head>
+<body style="background-color: #eeeeee">
+<h1>ELF を吐く C コンパイラを Rui 本の方式で作る</h1>
+<p>編纂者：<a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></p>
+<p><a href="https://hsjoihs.hatenablog.com/entry/*****">はてなブログへのバックリンク (FIXME)</a></p>
+
+<h2>会話ログ本体</h2><h3 class="date">2022年10月3日（Discord にて）</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+		<div class="content">そういや C コンパイラやってないな。アセンブリ言語を機械語にするのに binutils のを使うのもどうなんだろと思ってたらそのまま数ヶ月経ってた</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/sosobotpi" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/sosobotpi" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">いいですね。だったら、Rui 本の原則に則って、『step 1 からもう ELF バイナリへとコンパイルしちゃう』『常に実行形式をコンパイラが生成しつつけられるようにする』というのでやってみませんか？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+		<div class="content">なるほど</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/sosobotpi" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/sosobotpi" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">C → アセンブラのコンパイラをセルフホストしたあとにアセンブラとリンカと libc と書くのは既に ushitora_anqou がやってるけど、最初から ELF バイナリへとコンパイルしつづける形式で Rui 本を走ってる人を私は知らないので、やってみるとおもしろそう</div>
+		<div class="content">教材書けとは言わんので、作業ログでもいいんで書いてみません？言語はどれでやるんです？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+		<div class="content">もちろん Rust</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/sosobotpi" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/sosobotpi" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">じゃあ、step 1 は『return 3; するやつと return 42; するやつを gcc でコンパイルして ELF バイナリを吐いて、その差分を比較してどのバイトを置き換えるべきかを調べ、それを &#x60;include!()&#x60; する』という方針にするのがよさそう</div>
+		<div class="content">なので、step 1 ではアセンブラもリンカもない。まあ、拡張していくと、機械語を直にいじるのがじきにきつくなるので、だんだんアセンブリ言語が育っていって、それは GNU のアセンブリ言語とそれなりに互換性があることが期待されるが、別にそれを目標にするわけではない。</div>
+		<div class="content">という感じでやっていくとよさそう。今日はもう寝ます？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+		<div class="content">いま布団の中です</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/sosobotpi" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/sosobotpi" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">ではでは、おやすみなさい〜</div>
+	</div>
+</div>
+<h3 class="date">2022年10月3日（一人で作業）</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/sosobotpi" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/sosobotpi" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">じゃあ私が勝手に step 1 を実装するか。なんなら会話ログももうレンダリングできるようにしておこう</div>
+		<div class="content">とりあえず docs フォルダを立てて、docs/dialog.txt に会話を書いて docs/ 内で node index.js したらログがレンダリングできるようにしておいた</div>
+	</div>
+</div>
+</body>
