@@ -109,3 +109,138 @@ tiny42: tiny42.s
 	gcc -Wall -s -nostdlib tiny42.s -o tiny42
 ```
 hsjoihs「をかませてやると、まあちゃんと動く。しかし wc -c tiny42 すると 13024 tiny42 なので、結局問題が解決してないんだよな」
+
+hsjoihs「食事から戻った。やっていき」
+hsjoihs「https://cs.lmu.edu/~ray/notes/nasmtutorial/ 曰く、」
+$source
+```
+nasm -felf64 hello.asm && ld hello.o && ./a.out
+```
+hsjoihs「でよいとのこと。なるほど、やってみるか」
+$source
+```
+make tiny42
+nasm -felf64 tiny42.asm
+ld tiny42.o -o tiny42
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny42
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ echo $?
+42
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c tiny42
+4672 tiny42
+```
+hsjoihs「まあこんなもんか。これ以上削るのはやりすぎな気もする」
+hsjoihs「一応マニュアル https://www.nasm.us/doc/ を見る。あ、--reproducible があるのか、都合がいい、つけておこう」
+hsjoihs「おや、動かない。このバージョンの nasm にはないのかな」
+$source
+```shell
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ nasm --version
+NASM version 2.14.02
+```
+hsjoihs「マニュアルは version 2.15.05 となっている。この --reproducible、なんと version 2.15.05 で加わった最新の機能だそうだ。すばらしい」
+hsjoihs「手元の WSL 2 上の Ubuntu でも sudo apt-get update からの sudo apt-get -y install nasm をすれば nasm が最新になってくれたりしないかな」
+$source
+```shell
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ sudo apt-get -y install nasm
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+nasm is already the newest version (2.14.02-1).
+The following package was automatically installed and is no longer required:
+  libfwupdplugin1
+Use 'sudo apt autoremove' to remove it.
+0 upgraded, 0 newly installed, 0 to remove and 44 not upgraded.
+```
+hsjoihs「残念。じゃあ自分で入れるしかないか」
+hsjoihs「とりあえず https://www.linuxfromscratch.org/blfs/view/svn/general/nasm.html に従って入れて……」
+$source
+```shell
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ nasm --version
+NASM version 2.15.05 compiled on Oct  3 2022
+```
+hsjoihs「よし。ではいよいよ」
+$source
+```shell
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
+nasm -felf64  --reproducible tiny42.asm
+ld tiny42.o -o tiny42
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny3
+nasm -felf64  --reproducible tiny3.asm
+ld tiny3.o -o tiny3
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny42; echo $?
+42
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny3; echo $?
+3
+```
+hsjoihs「これは、やったか？」
+$source
+```shell
+hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
+4103  52   3
+4185  21  20
+4209  14  13
+4233  30  27
+4257  37  36
+4286  64  63
+4287  62  56
+4288  56 141
+4289 141 163
+4290 163 155
+4291 155   0
+4292   0 137
+4294 137 142
+4295 142 163
+4297 163 137
+4298 137 163
+4299 163 164
+4300 164 141
+4301 141 162
+4302 162 164
+4303 164   0
+4304   0 137
+4305 137 145
+4306 145 144
+4307 144 141
+4308 141 164
+4309 164 141
+4310 141   0
+4311   0 137
+4312 137 145
+4313 145 156
+4314 156 144
+4315 144   0
+4317   0  56
+4318  56 163
+4319 163 171
+4320 171 155
+4321 155 164
+4322 164 141
+4323 141 142
+4324 142   0
+4325   0  56
+4326  56 163
+4327 163 164
+4328 164 162
+4329 162 164
+4330 164 141
+4331 141 142
+4332 142   0
+4333   0  56
+4334  56 163
+4335 163 150
+4336 150 163
+4337 163 164
+4338 164 162
+4339 162 164
+4340 164 141
+4341 141 142
+4342 142   0
+4343   0  56
+4344  56 164
+4345 164 145
+4346 145 170
+4347 170 164
+4348 164   0
+4577  44  43
+4633 334 333
+```
+hsjoihs「んー。ああそうか、ld 側にも reproducible にしてくれと頼まないと」

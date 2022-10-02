@@ -1,13 +1,12 @@
-CFLAGS=-std=c17 -Wall -s -Os
+tiny42: tiny42.asm
+	nasm -felf64  --reproducible tiny42.asm
+	ld tiny42.o -o tiny42
 
-3: 3.c
-42: 42.c
+tiny3: tiny3.asm
+	nasm -felf64  --reproducible tiny3.asm
+	ld tiny3.o -o tiny3
 
 clean: 
-	rm 3
-	rm 42
-
-tiny42: tiny42.s
-	gcc -Wall -s -nostdlib tiny42.s -o tiny42
+	rm tiny42 tiny42.o tiny3 tiny3.o
 
 .PHONY: clean
