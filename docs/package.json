@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@types/node": "^18.7.18",
-    "pseudoroku": "^1.0.2"
+    "@types/node": "^18.11.0",
+    "pseudoroku": "^1.1.0"
   }
 }
