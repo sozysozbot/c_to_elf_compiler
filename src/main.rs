@@ -1,3 +1,5 @@
+use core::panic;
+
 fn main() -> std::io::Result<()> {
     let input = std::env::args().nth(1).expect("入力が与えられていません");
     let tiny = include_bytes!("../experiment/tiny");
@@ -8,30 +10,78 @@ fn main() -> std::io::Result<()> {
     let mut writer = std::io::BufWriter::new(file);
     writer.write_all(&tiny[0..0x78])?;
 
-    let mut input = input.chars().peekable();
-    let first = parse_num(&mut input);
+    let tokens = tokenize(&mut input.chars().peekable());
+    let mut tokens = tokens.iter();
 
-    writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00])?;
-    writer.write_all(&[0xbf, first as u8, 0x00, 0x00, 0x00])?;
+    match tokens.next() {
+        None => panic!("入力が空です"),
+        Some(Token::Add | Token::Sub) => panic!("入力が演算子で始まっています"),
+        Some(Token::Num(first)) => {
+            writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00])?;
+            writer.write_all(&[0xbf, *first as u8, 0x00, 0x00, 0x00])?;
 
-    while let Some(c) = input.next() {
+            while let Some(tok) = tokens.next() {
+                match tok {
+                    Token::Add => match tokens.next() {
+                        Some(Token::Num(n)) => writer.write_all(&[0x83, 0xc7, *n])?,
+                        Some(Token::Add | Token::Sub) => panic!("演算子が二つ続いています"),
+                        None => panic!("入力が演算子で終わりました"),
+                    },
+                    Token::Sub => match tokens.next() {
+                        Some(Token::Num(n)) => writer.write_all(&[0x83, 0xef, *n])?,
+                        Some(Token::Add | Token::Sub) => panic!("演算子が二つ続いています"),
+                        None => panic!("入力が演算子で終わりました"),
+                    },
+                    _ => {
+                        panic!("入力が不正です");
+                    }
+                }
+            }
+
+            writer.write_all(&[0x0f, 0x05])?;
+            Ok(())
+        }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+enum Token {
+    Num(u8),
+    Add,
+    Sub,
+}
+
+#[test]
+fn tokenize_test() {
+    assert_eq!(
+        tokenize(&mut "5 - 3".chars().peekable()),
+        vec![Token::Num(5), Token::Sub, Token::Num(3)]
+    );
+}
+
+fn tokenize(iter: &mut std::iter::Peekable<impl Iterator<Item = char>>) -> Vec<Token> {
+    let mut ans = vec![];
+    while let Some(c) = iter.peek() {
         match c {
+            ' ' => {
+                iter.next();
+                continue;
+            }
             '+' => {
-                let n = parse_num(&mut input);
-                writer.write_all(&[0x83, 0xc7, n])?;
+                iter.next();
+                ans.push(Token::Add)
             }
             '-' => {
-                let n = parse_num(&mut input);
-                writer.write_all(&[0x83, 0xef, n])?;
+                iter.next();
+                ans.push(Token::Sub)
             }
-            _ => {
-                panic!("入力が不正です");
+            '0'..='9' => ans.push(Token::Num(parse_num(iter))),
+            c => {
+                panic!("トークナイザ内で不正な文字 `{}` を検出", c);
             }
         }
     }
-
-    writer.write_all(&[0x0f, 0x05])?;
-    Ok(())
+    ans
 }
 
 fn parse_num(iter: &mut std::iter::Peekable<impl Iterator<Item = char>>) -> u8 {
