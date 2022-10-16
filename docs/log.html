@@ -684,6 +684,18 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 		<div class="content">自信ないけど 2.16 以降が必要だったかな</div>
 	</div>
 </div>
+<h3 class="date">2022年10月16日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+		<div class="content">加減算の実装</div>
+		<div class="content">&#x60;experiment/tiny3&#x60; のサイズが4kを超えていて機械語どころかアセンブリも詳しくない人には厳しい。</div>
+		<div class="content">以下プログラムで127バイトのelfを生成して実行すると終了コード0を出力することを確認。<a href="https://github.com/tchajed/minimal-elf" target="_blank" rel="noopener noreferrer">https://github.com/tchajed/minimal-elf</a></div>
+		<div class="content">&#x60;31 ff (xor %edi,%edi&#x60;) を &#x60;6a 01 (push $0x01) 5f (pop %edi)&#x60; にバイナリエディタで書き換えると終了コードが1になることを確認。アドレス &#x60;0x78&#x60; 以降を書き換えれば加減算の実装は簡単にできそうだ。</div>
+		<div class="content">objdumpコマンドでmovやaddやsubのバイナリ表現を調べて実装終わり</div>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>

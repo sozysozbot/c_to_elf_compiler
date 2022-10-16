@@ -1,24 +1,50 @@
 fn main() -> std::io::Result<()> {
     let input = std::env::args().nth(1).expect("入力が与えられていません");
-    let input: u8 = input.parse().expect("入力をパースできません");
-    let tiny_3 = include_bytes!("../experiment/tiny3");
-    let tiny_42 = include_bytes!("../experiment/tiny42");
-    assert_eq!(tiny_3.len(), tiny_42.len());
+    let tiny = include_bytes!("../experiment/tiny");
 
     let file = std::fs::File::create("a.out")?;
 
-    {
-        use std::io::Write;
-        let mut writer = std::io::BufWriter::new(file);
-        for (index, byte) in tiny_3.iter().enumerate() {
-            if *byte == tiny_42[index] {
-                writer.write_all(&[*byte])?;
-            } else if *byte == 3 && tiny_42[index] == 42 {
-                writer.write_all(&[input])?;
-            } else {
-                panic!("`../experiment/tiny3` と `../experiment/tiny42` の間に非自明な差分が見つかったので、なにを出力すべきか分かりません")
+    use std::io::Write;
+    let mut writer = std::io::BufWriter::new(file);
+    writer.write_all(&tiny[0..0x78])?;
+
+    let mut input = input.chars().peekable();
+    let first = parse_num(&mut input);
+
+    writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00])?;
+    writer.write_all(&[0xbf, first as u8, 0x00, 0x00, 0x00])?;
+
+    while let Some(c) = input.next() {
+        match c {
+            '+' => {
+                let n = parse_num(&mut input);
+                writer.write_all(&[0x83, 0xc7, n])?;
+            }
+            '-' => {
+                let n = parse_num(&mut input);
+                writer.write_all(&[0x83, 0xef, n])?;
+            }
+            _ => {
+                panic!("入力が不正です");
             }
         }
     }
+
+    writer.write_all(&[0x0f, 0x05])?;
     Ok(())
+}
+
+fn parse_num(iter: &mut std::iter::Peekable<impl Iterator<Item = char>>) -> u8 {
+    let mut s = String::new();
+
+    while let Some(&c) = iter.peek() {
+        if c.is_ascii_digit() {
+            s.push(c);
+            iter.next();
+        } else {
+            break;
+        }
+    }
+
+    s.parse::<u8>().expect("入力が数字ではありません")
 }
