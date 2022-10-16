@@ -4,7 +4,7 @@ Follows https://www.sigbus.info/compilerbook but spits out an ELF / Rui 本ベ�
 [作業ログはこちら](https://sozysozbot.github.io/c_to_elf_compiler/log.html)
 
 ## Plan
-[https://twitter.com/hsjoihs](hsjoihs) will implement the odd-numbered steps, and [https://twitter/com/tkr](tkr) will implement the even-numbered steps.
+[hsjoihs](https://twitter.com/hsjoihs) will implement the odd-numbered steps, and [tkr](https://twitter.com/tkr) will implement the even-numbered steps. / hsjoihs が奇数番目のステップを、tkr が偶数番目のステップを実装する方針
 
 ## Files and folders
 - `log.txt`: conversations and logs in plaintext (written entirely in Japanese) / 会話および作業ログがテキスト形式で記録されている
