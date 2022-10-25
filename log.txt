@@ -354,3 +354,9 @@ tkr「`experiment/tiny3` のサイズが4kを超えていて機械語どころ�
 tkr「以下プログラムで127バイトのelfを生成して実行すると終了コード0を出力することを確認。https://github.com/tchajed/minimal-elf」
 tkr「`31 ff (xor %edi,%edi`) を `6a 01 (push $0x01) 5f (pop %edi)` にバイナリエディタで書き換えると終了コードが1になることを確認。アドレス `0x78` 以降を書き換えれば加減算の実装は簡単にできそうだ。」
 tkr「objdumpコマンドでmovやaddやsubのバイナリ表現を調べて実装終わり」
+
+$DATE「2022年10月17日」
+hsjoihs「」
+$HTML「えーと次にやるべきは……『<a href="https://www.sigbus.info/compilerbook#%E3%82%B9%E3%83%86%E3%83%83%E3%83%973%E3%83%88%E3%83%BC%E3%82%AF%E3%83%8A%E3%82%A4%E3%82%B6%E3%82%92%E5%B0%8E%E5%85%A5">ステップ3：トークナイザを導入</a>』か。すぐ終わりそう」
+hsjoihs「check 2 "5 - 3" を走らせ、テストが無事落ちることを確認。」
+hsjoihs「トークナイザをサクッと書いて、挿げ替えて、テストが通ることを確認。」

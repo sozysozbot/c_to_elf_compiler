@@ -21,4 +21,6 @@ check 8 8
 check 27 27
 check 3 "1+2"
 check 2 "5-3"
+check 6 "3+5-2"
+check 2 "5 - 3"
 rm a.out
