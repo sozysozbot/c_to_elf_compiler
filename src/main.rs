@@ -22,6 +22,7 @@ fn main() -> std::io::Result<()> {
 enum BinaryOp {
     Add,
     Sub,
+    Mul,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -185,6 +186,10 @@ fn ediからeaxを減じる() -> [u8; 2] {
     [0x29, 0xc7]
 }
 
+fn ediをeax倍にする() -> [u8; 3] {
+    [0x0f, 0xaf, 0xf8]
+}
+
 fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
     match expr {
         Expr::BinaryExpr {
@@ -214,6 +219,20 @@ fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
             writer.write_all(&eaxへとポップ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
             writer.write_all(&ediからeaxを減じる()).unwrap();
+        }
+        Expr::BinaryExpr {
+            op: BinaryOp::Mul,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            writer.write_all(&eaxへとポップ()).unwrap();
+            writer.write_all(&ediへとポップ()).unwrap();
+            writer.write_all(&ediをeax倍にする()).unwrap();
         }
         Expr::Primary { val, pos: _ } => {
             writer.write_all(&ediに代入(*val)).unwrap();

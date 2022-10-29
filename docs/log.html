@@ -801,7 +801,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 		<div class="content">最近の Linux では a.out フォーマットのサポートが消えたので、ELF を選択するという判断は妥当そうに思えます。Windows の com も今はダメですし</div>
 	</div>
 </div>
-<h3 class="date">2022年10月30日（一人で作業）</h3>
+<h3 class="date">2022年10月30日（コードジェネレーター）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
 	<div class="name_and_content">
@@ -907,6 +907,18 @@ fn parse_and_codegen(
 </code></pre>
 		<div class="content">なるほど落ちる。あー、多分 eax レジスタをなんか別ので使ってるんだろうな。0xb8, 0x3c, 0x00, 0x00, 0x00 辺りかな</div>
 		<div class="content">じゃあそれを『exprを評価してediレジスタへ』より後ろに回すと……動いた。</div>
+	</div>
+</div>
+<h3 class="date">2022年10月30日（乗算）</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">次は乗算を組んでいこう。まず構文木に BinaryOp::Mul を加える。対応するバイナリ表現も調べる</div>
+		<pre><code class="language-rust">fn ediをeax倍にする() -&gt; [u8; 3] {
+    [0x0f, 0xaf, 0xf8]
+}
+</code></pre>
 	</div>
 </div>
 
