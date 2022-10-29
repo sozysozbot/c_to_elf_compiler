@@ -41,9 +41,10 @@ enum Expr {
 #[test]
 fn parse_test() {
     use crate::tokenize::tokenize;
-    let tokens = tokenize("5 - 3").unwrap();
+    let input = "5 - 3";
+    let tokens = tokenize(input).unwrap();
     assert_eq!(
-        parse(&tokens).unwrap(),
+        parse(&tokens, input).unwrap(),
         Expr::BinaryExpr {
             op: BinaryOp::Sub,
             op_pos: 2,
@@ -53,8 +54,97 @@ fn parse_test() {
     );
 }
 
-fn parse(tokens: &[Token]) -> Result<Expr, AppError> {
-    unimplemented!()
+fn parse(tokens: &[Token], input: &str) -> Result<Expr, AppError> {
+    let mut tokens = tokens.iter();
+    match tokens.next().unwrap() {
+        Token {
+            payload: TokenPayload::Num(first),
+            pos,
+        } => {
+            let mut expr = Expr::Primary {
+                val: *first,
+                pos: *pos,
+            };
+
+            loop {
+                let tok = tokens.next().unwrap();
+                match tok {
+                    Token {
+                        payload: TokenPayload::Add,
+                        pos: op_pos,
+                    } => match tokens.next().unwrap() {
+                        Token {
+                            payload: TokenPayload::Num(n),
+                            pos,
+                        } => {
+                            let lhs = Box::new(expr);
+                            let rhs = Box::new(Expr::Primary { val: *n, pos: *pos });
+                            expr = Expr::BinaryExpr {
+                                op: BinaryOp::Add,
+                                op_pos: *op_pos,
+                                lhs,
+                                rhs,
+                            }
+                        }
+                        tok => {
+                            return Err(AppError {
+                                message: "演算子の次に来ているものが数値ではありません".to_string(),
+                                input: input.to_string(),
+                                pos: tok.pos,
+                            });
+                        }
+                    },
+                    Token {
+                        payload: TokenPayload::Sub,
+                        pos: op_pos,
+                    } => match tokens.next() {
+                        Some(Token {
+                            payload: TokenPayload::Num(n),
+                            pos,
+                        }) => {
+                            let lhs = Box::new(expr);
+                            let rhs = Box::new(Expr::Primary { val: *n, pos: *pos });
+                            expr = Expr::BinaryExpr {
+                                op: BinaryOp::Sub,
+                                op_pos: *op_pos,
+                                lhs,
+                                rhs,
+                            }
+                        }
+                        Some(tok) => {
+                            return Err(AppError {
+                                message: "数値ではありません".to_string(),
+                                input: input.to_string(),
+                                pos: tok.pos,
+                            });
+                        }
+                        None => panic!("入力が演算子で終わりました"),
+                    },
+                    Token {
+                        payload: TokenPayload::Eof,
+                        ..
+                    } => {
+                        return Ok(expr);
+                    }
+                    Token {
+                        payload: TokenPayload::Num(_),
+                        ..
+                    } => {
+                        return Err(AppError {
+                            message: "演算子かeofが期待されていますが、数が来ました".to_string(),
+                            input: input.to_string(),
+                            pos: tok.pos,
+                        });
+                    }
+                }
+            }
+        }
+        tok => Err(AppError {
+            message: "入力が数字以外で始まっています".to_string(),
+            input: input.to_string(),
+            pos: tok.pos,
+        }),
+    }
 }
 
 fn parse_and_codegen(
