@@ -147,12 +147,25 @@ fn parse(tokens: &[Token], input: &str) -> Result<Expr, AppError> {
     }
 }
 
+fn edi増加(n: u8) -> [u8; 3] {
+    [0x83, 0xc7, n]
+}
+
+fn edi減少(n: u8) -> [u8; 3] {
+    [0x83, 0xef, n]
+}
+
+fn ediに代入(n: u8) -> [u8; 5] {
+    [0xbf, n, 0x00, 0x00, 0x00]
+}
+
 fn parse_and_codegen(
     writer: &mut impl Write,
     tokens: &[Token],
     input: &str,
 ) -> Result<(), AppError> {
     let mut tokens = tokens.iter();
+    let _ = parse;
 
     let tiny = include_bytes!("../experiment/tiny");
     writer.write_all(&tiny[0..0x78]).unwrap();
@@ -164,7 +177,7 @@ fn parse_and_codegen(
         } => {
             writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
             writer
-                .write_all(&[0xbf, *first as u8, 0x00, 0x00, 0x00])
+                .write_all(&ediに代入(*first as u8))
                 .unwrap();
 
             loop {
@@ -174,7 +187,7 @@ fn parse_and_codegen(
                         Token {
                             payload: TokenPayload::Num(n),
                             ..
-                        } => writer.write_all(&[0x83, 0xc7, *n]).unwrap(),
+                        } => writer.write_all(&edi増加(*n)).unwrap(),
                         tok => {
                             return Err(AppError {
                                 message: "数値ではありません".to_string(),
@@ -187,7 +200,7 @@ fn parse_and_codegen(
                         Some(Token {
                             payload: TokenPayload::Num(n),
                             ..
-                        }) => writer.write_all(&[0x83, 0xef, *n]).unwrap(),
+                        }) => writer.write_all(&edi減少(*n)).unwrap(),
                         Some(tok) => {
                             return Err(AppError {
                                 message: "数値ではありません".to_string(),
