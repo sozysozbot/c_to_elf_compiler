@@ -813,6 +813,47 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 		<div class="content"><a href="https://defuse.ca/online-x86-assembler.htm" target="_blank" rel="noopener noreferrer">https://defuse.ca/online-x86-assembler.htm</a> に投げたところ、bf ** 00 00 00 は edi レジスタに ** をセットするらしい。じゃあ 83 c7 ** は edi を増やして 83 ef ** は edi を減らすのでしょう</div>
 		<div class="content">とはいえ、我々は「なるべくアセンブリ言語について知らないようにしている」という設定なので、これに mov とか add とか名前を付けるのでは面白くない</div>
 		<div class="content">せっかく Rust が識別子に日本語を許すようになったのだし、『edi増加』『edi減少』とかの関数名にしてしまえ</div>
+		<div class="content">えーと、スタックマシンにする必要がある。そのためにはどのような機械語が必要だろうか。レジスタとメモリの間で色々移動させる必要がありそうだな</div>
+		<div class="content">『即値をスタックにpush』『レジスタをスタックにpush』『スタックからレジスタへとpop』『レジスタの中身を、別のレジスタに足し合わせる』があればいい</div>
+		<div class="content">tkr が既に「6a 01 (push $0x01)」「5f (pop %edi)」というのを調べてくれている。えーと、</div>
+		<blockquote>☑ 即値をプッシュ 
+☒ ediをプッシュ
+☒ eaxをプッシュ
+☑ ediへとポップ
+☒ eaxへとポップ
+☒ ediにeaxを足し合わせる
+☒ ediからeaxを減じる
+</blockquote>
+		<div class="content">ということで、あとは残り 5 つを調べればよい</div>
+		<pre><code class="language-rust">fn 即値をプッシュ(n: u8) -&gt; [u8; 2] {
+    [0x6a, n]
+}
+
+fn ediをプッシュ() -&gt; [u8; 1] {
+    [0x57]
+}
+
+fn eaxをプッシュ() -&gt; [u8; 1] {
+    [0x50]
+}
+
+fn ediへとポップ() -&gt; [u8; 1] {
+    [0x5f]
+}
+
+fn eaxへとポップ() -&gt; [u8; 1] {
+    [0x58]
+}
+
+fn ediにeaxを足し合わせる() -&gt; [u8; 2] {
+    [0x01, 0xc7]
+}
+
+fn ediからeaxを減じる() -&gt; [u8; 2] {
+    [0x29, 0xC7]
+}
+</code></pre>
+		<div class="content">あとはこれらを組み合わせれば動くはず。</div>
 	</div>
 </div>
 
