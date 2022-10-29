@@ -388,5 +388,14 @@ hsjoihs「と書いてあるので、まずは抽象構文木を導入すべき�
 hsjoihs「まずは clippy の pedantic でも足して、」
 hsjoihs「あとそろそろ tokenize を別ファイルに分離するか」
 hsjoihs「apperror.rs と tokenize.rs を分離」
+
+
+$DATE「2022年10月30日（一人で作業）」
 hsjoihs「そして抽象構文木を導入」
 hsjoihs「さて、コードジェネレーターでこれを使わなきゃいけないんだよな」
+
+$DATE「2022年10月30日（Discord にて）」
+hsjoihs「とまあこういうことをやっています」
+ikubaku「実行形式の中でも ELF にしてるのってどういう理由です？ELF はそれなりに複雑であり、難易度が上がる気がしていますけど」
+hsjoihs「一番ポピュラーであり、私の WSL 環境で動くからです。あと、その複雑さを上手く回避する小技を導入しています（step 1 をどう実装したかを見せる）」
+hiromi_mi「最近の Linux では a.out フォーマットのサポートが消えたので、ELF を選択するという判断は妥当そうに思えます。Windows の com も今はダメですし」
