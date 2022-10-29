@@ -388,3 +388,5 @@ hsjoihs「と書いてあるので、まずは抽象構文木を導入すべき�
 hsjoihs「まずは clippy の pedantic でも足して、」
 hsjoihs「あとそろそろ tokenize を別ファイルに分離するか」
 hsjoihs「apperror.rs と tokenize.rs を分離」
+hsjoihs「そして抽象構文木を導入」
+hsjoihs「さて、コードジェネレーターでこれを使わなきゃいけないんだよな」
