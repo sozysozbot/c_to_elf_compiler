@@ -1,3 +1,4 @@
+#![warn(clippy::pedantic)]
 use std::fmt;
 use std::io::Write;
 
@@ -17,7 +18,7 @@ fn main() -> std::io::Result<()> {
 
 fn parse_and_codegen(
     writer: &mut impl Write,
-    tokens: &Vec<Token>,
+    tokens: &[Token],
     input: &str,
 ) -> Result<(), AppError> {
     let mut tokens = tokens.iter();
@@ -69,9 +70,9 @@ fn parse_and_codegen(
                         writer.write_all(&[0x0f, 0x05]).unwrap();
                         return Ok(());
                     }
-                    _ => {
+                    TokenPayload::Num(_) => {
                         return Err(AppError {
-                            message: "演算子かeofが期待されています".to_string(),
+                            message: "演算子かeofが期待されていますが、数が来ました".to_string(),
                             input: input.to_string(),
                             pos: tok.pos,
                         });
@@ -79,13 +80,11 @@ fn parse_and_codegen(
                 }
             }
         }
-        tok => {
-            return Err(AppError {
-                message: "入力が数字以外で始まっています".to_string(),
-                input: input.to_string(),
-                pos: tok.pos,
-            });
-        }
+        tok => Err(AppError {
+            message: "入力が数字以外で始まっています".to_string(),
+            input: input.to_string(),
+            pos: tok.pos,
+        }),
     }
 }
 
@@ -98,7 +97,7 @@ struct AppError {
 
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n", self.input)?;
+        writeln!(f, "{}", self.input)?;
         write!(f, "{}^ {}", " ".repeat(self.pos), self.message)?;
         Ok(())
     }
@@ -159,14 +158,14 @@ fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 ans.push(Token {
                     payload: TokenPayload::Add,
                     pos,
-                })
+                });
             }
             '-' => {
                 iter.next();
                 ans.push(Token {
                     payload: TokenPayload::Sub,
                     pos,
-                })
+                });
             }
             '0'..='9' => ans.push(Token {
                 payload: TokenPayload::Num(parse_num(&mut iter).map_err(|message| AppError {
@@ -176,7 +175,7 @@ fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 })?),
                 pos,
             }),
-            c => {
+            _ => {
                 return Err(AppError {
                     message: "トークナイズできない不正な文字です".to_string(),
                     input: input.to_string(),

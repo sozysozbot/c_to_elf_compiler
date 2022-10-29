@@ -124,7 +124,7 @@
 		<div class="content">ちゃんと README.md も書いておこう。まあ日本語と英語で書いておくか。</div>
 		<div class="content">もう step 1 は私がやってしまおう。experiment フォルダにファイルを用意して、</div>
 		<div class="content">とりあえず Makefile はこんな感じでいいか</div>
-		<pre><code class="language-Makefile">CFLAGS=-std=c17 -Wall -s
+		<pre><code class="language-Makefile">CFLAGS=-std=c17 -Wall -s
 
 3: 3.c
 42: 42.c
@@ -136,7 +136,7 @@ clean:
 .PHONY: clean
 </code></pre>
 		<div class="content">gcc が出力したファイルのサイズを数えると、</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
 13296 3
 </code></pre>
 		<div class="content">うーむ、デカい！</div>
@@ -176,7 +176,7 @@ clean:
 		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
 		<div class="content">-Os を使うと、3 + 4 - 2 とかが畳み込まれちゃう気がするので</div>
 		<div class="content">まあ一応 -Os でどれくらい減るのかも実験しておくか。そもそも nasm にする予定だけど。CFLAGS=-std=c17 -Wall -s -Os で試すと、</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 3
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 3
 cc -std=c17 -Wall -s -Os    3.c   -o 3
 hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 42
 cc -std=c17 -Wall -s -Os    42.c   -o 42
@@ -192,7 +192,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
 	<div class="name_and_content">
 		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
 		<div class="content">とりあえず、原典にこうあるけど、</div>
-		<pre><code class="language-x86asm">  ; tiny.asm
+		<pre><code class="language-x86asm">  ; tiny.asm
   BITS 32
   GLOBAL _start
   SECTION .text
@@ -202,12 +202,12 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
                 int     0x80
 </code></pre>
 		<div class="content">64 ビット環境だし、この BITS 32 を削って実行してみるか。Makefile はこんな感じ</div>
-		<pre><code class="language-Makefile">tiny42: tiny42.asm
+		<pre><code class="language-Makefile">tiny42: tiny42.asm
 	nasm -f elf tiny42.asm
 	gcc -Wall -s -nostdlib tiny42.o -o tiny42
 </code></pre>
 		<div class="content">make tiny42 をすると～？</div>
-		<pre><code class="language-shell">nasm -f elf tiny42.asm
+		<pre><code class="language-shell">nasm -f elf tiny42.asm
 gcc -Wall -s -nostdlib tiny42.o -o tiny42
 /usr/bin/ld: i386 architecture of input file &#x60;tiny42.o&#x27; is incompatible with i386:x86-64 output
 collect2: error: ld returned 1 exit status
@@ -215,23 +215,23 @@ make: *** [Makefile:12: tiny42] Error 1
 </code></pre>
 		<div class="content">はい。正直そんな気はしてた</div>
 		<div class="content">普通に gcc 付属のアセンブラを使ってみるか</div>
-		<pre><code class="language-x86asm">.globl _start
+		<pre><code class="language-x86asm">.globl _start
 _start:
 	movl	$1, %eax
 	movl	$42, %ebx  
 	int		$0x80
 </code></pre>
 		<div class="content">に対して</div>
-		<pre><code class="language-Makefile">tiny42: tiny42.s
+		<pre><code class="language-Makefile">tiny42: tiny42.s
 	gcc -Wall -s -nostdlib tiny42.s -o tiny42
 </code></pre>
 		<div class="content">をかませてやると、まあちゃんと動く。しかし wc -c tiny42 すると 13024 tiny42 なので、結局問題が解決してないんだよな</div>
 		<div class="content">食事から戻った。やっていき</div>
 		<div class="content"><a href="https://cs.lmu.edu/~ray/notes/nasmtutorial/" target="_blank" rel="noopener noreferrer">https://cs.lmu.edu/~ray/notes/nasmtutorial/</a> 曰く、</div>
-		<pre><code class="language-">nasm -felf64 hello.asm &amp;&amp; ld hello.o &amp;&amp; ./a.out
+		<pre><code class="language-">nasm -felf64 hello.asm &amp;&amp; ld hello.o &amp;&amp; ./a.out
 </code></pre>
 		<div class="content">でよいとのこと。なるほど、やってみるか</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
 nasm -felf64 tiny42.asm
 ld tiny42.o -o tiny42
 hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny42
@@ -243,12 +243,12 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c tiny42
 		<div class="content">まあこんなもんか。これ以上削るのはやりすぎな気もする</div>
 		<div class="content">一応マニュアル <a href="https://www.nasm.us/doc/" target="_blank" rel="noopener noreferrer">https://www.nasm.us/doc/</a> を見る。あ、--reproducible があるのか、都合がいい、つけておこう</div>
 		<div class="content">おや、動かない。このバージョンの nasm にはないのかな</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ nasm --version
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ nasm --version
 NASM version 2.14.02
 </code></pre>
 		<div class="content">マニュアルは version 2.15.05 となっている。この --reproducible、なんと version 2.15.05 で加わった最新の機能だそうだ。すばらしい</div>
 		<div class="content">手元の WSL 2 上の Ubuntu でも sudo apt-get update からの sudo apt-get -y install nasm をすれば nasm が最新になってくれたりしないかな</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ sudo apt-get -y install nasm
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ sudo apt-get -y install nasm
 Reading package lists... Done
 Building dependency tree       
 Reading state information... Done
@@ -260,11 +260,11 @@ Use &#x27;sudo apt autoremove&#x27; to remove it.
 </code></pre>
 		<div class="content">残念。じゃあ自分で入れるしかないか</div>
 		<div class="content">とりあえず <a href="https://www.linuxfromscratch.org/blfs/view/svn/general/nasm.html" target="_blank" rel="noopener noreferrer">https://www.linuxfromscratch.org/blfs/view/svn/general/nasm.html</a> に従って入れて……</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ nasm --version
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ nasm --version
 NASM version 2.15.05 compiled on Oct  3 2022
 </code></pre>
 		<div class="content">よし。ではいよいよ</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
 nasm -felf64  --reproducible tiny42.asm
 ld tiny42.o -o tiny42
 hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny3
@@ -276,7 +276,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny3; echo $?
 3
 </code></pre>
 		<div class="content">これは、やったか？</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 4103  52   3
 4185  21  20
 4209  14  13
@@ -347,7 +347,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny3; echo $?
 </code></pre>
 		<div class="content">んー。ああそうか、ld 側にも reproducible にしてくれと頼まないと</div>
 		<div class="content">……軽く調べたが、頼み方がよくわからん。リンカを gold にしたらバージョン名を埋め込んできたし。んー、1 バイトのズレはファイル名『tiny3.asm』『tiny42.asm』の差に起因してるっぽいし、そこを strip かなんかで処理すれば解決するかも？</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
 nasm -felf64  --reproducible tiny42.asm
 ld tiny42.o -o tiny42
 strip tiny42
@@ -364,7 +364,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 		<div class="content">よし、差分が 1 バイトになった！！！！！</div>
 		<div class="content">ここで 52 って出てるのは cmp コマンドがバイトを 8 進数で出力する仕様になっているからであって、これは 10 進数だと 42 なのでこれで正解です</div>
 		<div class="content">よーし、やっとスタート地点に立つことができた</div>
-		<pre><code class="language-rust">fn main() -&gt; std::io::Result&lt;()&gt; {
+		<pre><code class="language-rust">fn main() -&gt; std::io::Result&lt;()&gt; {
     let input = std::env::args().nth(1).expect(&quot;入力が与えられていません&quot;);
     let input: u8 = input.parse().expect(&quot;入力をパースできません&quot;);
     let tiny_3 = include_bytes!(&quot;../experiment/tiny3&quot;);
@@ -758,6 +758,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 そのときには新たな機能を足すわけではないので、新しいテストは必要ありません。その後に、*、/、()を、テスト込みで実装していってください。
 </blockquote>
 		<div class="content">と書いてあるので、まずは抽象構文木を導入すべきなんだな</div>
+		<div class="content">まずは clippy の pedantic でも足して、</div>
 	</div>
 </div>
 
