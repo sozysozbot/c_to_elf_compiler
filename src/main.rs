@@ -29,8 +29,8 @@ enum Expr {
     BinaryExpr {
         op: BinaryOp,
         op_pos: usize,
-        lhs: Box<Expr>,
-        rhs: Box<Expr>,
+        左辺: Box<Expr>,
+        右辺: Box<Expr>,
     },
     Primary {
         val: u8,
@@ -48,8 +48,8 @@ fn parse_test() {
         Expr::BinaryExpr {
             op: BinaryOp::Sub,
             op_pos: 2,
-            lhs: Box::new(Expr::Primary { val: 5, pos: 0 }),
-            rhs: Box::new(Expr::Primary { val: 3, pos: 4 })
+            左辺: Box::new(Expr::Primary { val: 5, pos: 0 }),
+            右辺: Box::new(Expr::Primary { val: 3, pos: 4 })
         }
     );
 }
@@ -77,13 +77,13 @@ fn parse(tokens: &[Token], input: &str) -> Result<Expr, AppError> {
                             payload: TokenPayload::Num(n),
                             pos,
                         } => {
-                            let lhs = Box::new(expr);
-                            let rhs = Box::new(Expr::Primary { val: *n, pos: *pos });
+                            let 左辺 = Box::new(expr);
+                            let 右辺 = Box::new(Expr::Primary { val: *n, pos: *pos });
                             expr = Expr::BinaryExpr {
                                 op: BinaryOp::Add,
                                 op_pos: *op_pos,
-                                lhs,
-                                rhs,
+                                左辺,
+                                右辺,
                             }
                         }
                         tok => {
@@ -102,13 +102,13 @@ fn parse(tokens: &[Token], input: &str) -> Result<Expr, AppError> {
                             payload: TokenPayload::Num(n),
                             pos,
                         }) => {
-                            let lhs = Box::new(expr);
-                            let rhs = Box::new(Expr::Primary { val: *n, pos: *pos });
+                            let 左辺 = Box::new(expr);
+                            let 右辺 = Box::new(Expr::Primary { val: *n, pos: *pos });
                             expr = Expr::BinaryExpr {
                                 op: BinaryOp::Sub,
                                 op_pos: *op_pos,
-                                lhs,
-                                rhs,
+                                左辺,
+                                右辺,
                             }
                         }
                         Some(tok) => {
@@ -147,6 +147,7 @@ fn parse(tokens: &[Token], input: &str) -> Result<Expr, AppError> {
     }
 }
 
+/*
 fn edi増加(n: u8) -> [u8; 3] {
     [0x83, 0xc7, n]
 }
@@ -155,81 +156,84 @@ fn edi減少(n: u8) -> [u8; 3] {
     [0x83, 0xef, n]
 }
 
+fn 即値をプッシュ(n: u8) -> [u8; 2] {
+    [0x6a, n]
+}
+*/
+
 fn ediに代入(n: u8) -> [u8; 5] {
     [0xbf, n, 0x00, 0x00, 0x00]
 }
 
+fn ediをプッシュ() -> [u8; 1] {
+    [0x57]
+}
+
+fn ediへとポップ() -> [u8; 1] {
+    [0x5f]
+}
+
+fn eaxへとポップ() -> [u8; 1] {
+    [0x58]
+}
+
+fn ediにeaxを足し合わせる() -> [u8; 2] {
+    [0x01, 0xc7]
+}
+
+fn ediからeaxを減じる() -> [u8; 2] {
+    [0x29, 0xc7]
+}
+
+fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
+    match expr {
+        Expr::BinaryExpr {
+            op: BinaryOp::Add,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            writer.write_all(&eaxへとポップ()).unwrap();
+            writer.write_all(&ediへとポップ()).unwrap();
+            writer.write_all(&ediにeaxを足し合わせる()).unwrap();
+        }
+        Expr::BinaryExpr {
+            op: BinaryOp::Sub,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            writer.write_all(&eaxへとポップ()).unwrap();
+            writer.write_all(&ediへとポップ()).unwrap();
+            writer.write_all(&ediからeaxを減じる()).unwrap();
+        }
+        Expr::Primary { val, pos: _ } => {
+            writer.write_all(&ediに代入(*val)).unwrap();
+        }
+    }
+}
+
 fn parse_and_codegen(
-    writer: &mut impl Write,
+    mut writer: &mut impl Write,
     tokens: &[Token],
     input: &str,
 ) -> Result<(), AppError> {
-    let mut tokens = tokens.iter();
-    let _ = parse;
+    let expr = parse(tokens, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
     writer.write_all(&tiny[0..0x78]).unwrap();
-
-    match tokens.next().unwrap() {
-        Token {
-            payload: TokenPayload::Num(first),
-            ..
-        } => {
-            writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
-            writer
-                .write_all(&ediに代入(*first as u8))
-                .unwrap();
-
-            loop {
-                let tok = tokens.next().unwrap();
-                match tok.payload {
-                    TokenPayload::Add => match tokens.next().unwrap() {
-                        Token {
-                            payload: TokenPayload::Num(n),
-                            ..
-                        } => writer.write_all(&edi増加(*n)).unwrap(),
-                        tok => {
-                            return Err(AppError {
-                                message: "数値ではありません".to_string(),
-                                input: input.to_string(),
-                                pos: tok.pos,
-                            });
-                        }
-                    },
-                    TokenPayload::Sub => match tokens.next() {
-                        Some(Token {
-                            payload: TokenPayload::Num(n),
-                            ..
-                        }) => writer.write_all(&edi減少(*n)).unwrap(),
-                        Some(tok) => {
-                            return Err(AppError {
-                                message: "数値ではありません".to_string(),
-                                input: input.to_string(),
-                                pos: tok.pos,
-                            });
-                        }
-                        None => panic!("入力が演算子で終わりました"),
-                    },
-                    TokenPayload::Eof => {
-                        writer.write_all(&[0x0f, 0x05]).unwrap();
-                        return Ok(());
-                    }
-                    TokenPayload::Num(_) => {
-                        return Err(AppError {
-                            message: "演算子かeofが期待されていますが、数が来ました".to_string(),
-                            input: input.to_string(),
-                            pos: tok.pos,
-                        });
-                    }
-                }
-            }
-        }
-        tok => Err(AppError {
-            message: "入力が数字以外で始まっています".to_string(),
-            input: input.to_string(),
-            pos: tok.pos,
-        }),
-    }
+    exprを評価してediレジスタへ(&mut writer, &expr);
+    writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
+    writer.write_all(&[0x0f, 0x05]).unwrap();
+    Ok(())
 }
 mod apperror;
 

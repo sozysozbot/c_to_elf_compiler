@@ -818,23 +818,18 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 		<div class="content">tkr が既に「6a 01 (push $0x01)」「5f (pop %edi)」というのを調べてくれている。えーと、</div>
 		<blockquote>☑ 即値をプッシュ 
 ☒ ediをプッシュ
-☒ eaxをプッシュ
 ☑ ediへとポップ
 ☒ eaxへとポップ
 ☒ ediにeaxを足し合わせる
 ☒ ediからeaxを減じる
 </blockquote>
-		<div class="content">ということで、あとは残り 5 つを調べればよい</div>
+		<div class="content">ということで、あとは残り 4 つを調べればよい</div>
 		<pre><code class="language-rust">fn 即値をプッシュ(n: u8) -&gt; [u8; 2] {
     [0x6a, n]
 }
 
 fn ediをプッシュ() -&gt; [u8; 1] {
     [0x57]
-}
-
-fn eaxをプッシュ() -&gt; [u8; 1] {
-    [0x50]
 }
 
 fn ediへとポップ() -&gt; [u8; 1] {
@@ -850,10 +845,68 @@ fn ediにeaxを足し合わせる() -&gt; [u8; 2] {
 }
 
 fn ediからeaxを減じる() -&gt; [u8; 2] {
-    [0x29, 0xC7]
+    [0x29, 0xc7]
 }
 </code></pre>
-		<div class="content">あとはこれらを組み合わせれば動くはず。</div>
+		<div class="content">あとはこれらを組み合わせれば動くはず。これでいいかな</div>
+		<pre><code class="language-rust">fn exprを評価してediレジスタへ(writer: &amp;mut impl Write, expr: &amp;Expr) {
+    match expr {
+        Expr::BinaryExpr {
+            op: BinaryOp::Add,
+            op_pos: _,
+            左辺,
+            右辺,
+        } =&gt; {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&amp;ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&amp;ediをプッシュ()).unwrap();
+            writer.write_all(&amp;eaxへとポップ()).unwrap();
+            writer.write_all(&amp;ediへとポップ()).unwrap();
+            writer.write_all(&amp;ediにeaxを足し合わせる()).unwrap();
+        }
+        Expr::BinaryExpr {
+            op: BinaryOp::Sub,
+            op_pos: _,
+            左辺,
+            右辺,
+        } =&gt; {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&amp;ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&amp;ediをプッシュ()).unwrap();
+            writer.write_all(&amp;eaxへとポップ()).unwrap();
+            writer.write_all(&amp;ediへとポップ()).unwrap();
+            writer.write_all(&amp;ediからeaxを減じる()).unwrap();
+        }
+        Expr::Primary { val, pos: _ } =&gt; {
+            writer.write_all(&amp;ediに代入(*val)).unwrap();
+        }
+    }
+}
+
+fn parse_and_codegen(
+    mut writer: &amp;mut impl Write,
+    tokens: &amp;[Token],
+    input: &amp;str,
+) -&gt; Result&lt;(), AppError&gt; {
+    let expr = parse(tokens, input)?;
+
+    let tiny = include_bytes!(&quot;../experiment/tiny&quot;);
+    writer.write_all(&amp;tiny[0..0x78]).unwrap();
+    writer.write_all(&amp;[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
+
+    exprを評価してediレジスタへ(&amp;mut writer, &amp;expr);
+
+    writer.write_all(&amp;[0x0f, 0x05]).unwrap();
+    Ok(())
+}
+</code></pre>
+		<div class="content">走らせてみよう</div>
+		<pre><code class="language-">[FAIL] 1+2 =&gt; 3 expected, but got 139
+</code></pre>
+		<div class="content">なるほど落ちる。あー、多分 eax レジスタをなんか別ので使ってるんだろうな。0xb8, 0x3c, 0x00, 0x00, 0x00 辺りかな</div>
+		<div class="content">じゃあそれを『exprを評価してediレジスタへ』より後ろに回すと……動いた。</div>
 	</div>
 </div>
 

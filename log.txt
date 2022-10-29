@@ -415,13 +415,12 @@ $blockquote
 ```
 ☑ 即値をプッシュ 
 ☒ ediをプッシュ
-☒ eaxをプッシュ
 ☑ ediへとポップ
 ☒ eaxへとポップ
 ☒ ediにeaxを足し合わせる
 ☒ ediからeaxを減じる
 ```
-hsjoihs「ということで、あとは残り 5 つを調べればよい」
+hsjoihs「ということで、あとは残り 4 つを調べればよい」
 $source
 ```rust
 fn 即値をプッシュ(n: u8) -> [u8; 2] {
@@ -430,10 +429,6 @@ fn 即値をプッシュ(n: u8) -> [u8; 2] {
 
 fn ediをプッシュ() -> [u8; 1] {
     [0x57]
-}
-
-fn eaxをプッシュ() -> [u8; 1] {
-    [0x50]
 }
 
 fn ediへとポップ() -> [u8; 1] {
@@ -452,4 +447,66 @@ fn ediからeaxを減じる() -> [u8; 2] {
     [0x29, 0xc7]
 }
 ```
-hsjoihs「あとはこれらを組み合わせれば動くはず。」
+hsjoihs「あとはこれらを組み合わせれば動くはず。これでいいかな」
+$source
+```rust
+fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
+    match expr {
+        Expr::BinaryExpr {
+            op: BinaryOp::Add,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            writer.write_all(&eaxへとポップ()).unwrap();
+            writer.write_all(&ediへとポップ()).unwrap();
+            writer.write_all(&ediにeaxを足し合わせる()).unwrap();
+        }
+        Expr::BinaryExpr {
+            op: BinaryOp::Sub,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            writer.write_all(&eaxへとポップ()).unwrap();
+            writer.write_all(&ediへとポップ()).unwrap();
+            writer.write_all(&ediからeaxを減じる()).unwrap();
+        }
+        Expr::Primary { val, pos: _ } => {
+            writer.write_all(&ediに代入(*val)).unwrap();
+        }
+    }
+}
+
+fn parse_and_codegen(
+    mut writer: &mut impl Write,
+    tokens: &[Token],
+    input: &str,
+) -> Result<(), AppError> {
+    let expr = parse(tokens, input)?;
+
+    let tiny = include_bytes!("../experiment/tiny");
+    writer.write_all(&tiny[0..0x78]).unwrap();
+    writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
+
+    exprを評価してediレジスタへ(&mut writer, &expr);
+
+    writer.write_all(&[0x0f, 0x05]).unwrap();
+    Ok(())
+}
+```
+hsjoihs「走らせてみよう」
+$source
+```
+[FAIL] 1+2 => 3 expected, but got 139
+```
+hsjoihs「なるほど落ちる。あー、多分 eax レジスタをなんか別ので使ってるんだろうな。0xb8, 0x3c, 0x00, 0x00, 0x00 辺りかな」
+hsjoihs「じゃあそれを『exprを評価してediレジスタへ』より後ろに回すと……動いた。」
