@@ -365,3 +365,12 @@ hsjoihs「トークナイザをサクッと書いて、挿げ替えて、テス�
 $DATE「2022年10月27日」
 tkr「エラーメッセージを改善するだけ」
 tkr「エラー型を定義して関数分割して実装。分岐を少なくするためにtokenにeofを追加」
+
+$DATE「2022年10月29日（一人で作業）」
+hsjoihs「tkr からプルリクが来ておる。コードを読んだ。なるほどね。マージ」
+
+$DATE「2022年10月29日（Discord にて）」
+hsjoihs「とまあこういうことをやってるんですよ」
+hiromi_mi「おもしろかったです、ushitora_anqouと違ってELFファイルを出力できるような状態をたもちつつ拡張するなど、アイデアに一本取られました」
+hiromi_mi「LEB128 はこれですね https://ja.osdn.net/projects/drdeamon64/wiki/LEB128%E3%81%AA%E6%95%B0%E3%81%AE%E8%A1%A8%E7%8F%BE 」
+hsjoihs「ふむふむ。わりと自然な発想のエンコーディングですね」
