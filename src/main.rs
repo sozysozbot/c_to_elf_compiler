@@ -18,6 +18,45 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+enum BinaryOp {
+    Add,
+    Sub,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+enum Expr {
+    BinaryExpr {
+        op: BinaryOp,
+        op_pos: usize,
+        lhs: Box<Expr>,
+        rhs: Box<Expr>,
+    },
+    Primary {
+        val: u8,
+        pos: usize,
+    },
+}
+
+#[test]
+fn parse_test() {
+    use crate::tokenize::tokenize;
+    let tokens = tokenize("5 - 3").unwrap();
+    assert_eq!(
+        parse(&tokens).unwrap(),
+        Expr::BinaryExpr {
+            op: BinaryOp::Sub,
+            op_pos: 2,
+            lhs: Box::new(Expr::Primary { val: 5, pos: 0 }),
+            rhs: Box::new(Expr::Primary { val: 3, pos: 4 })
+        }
+    );
+}
+
+fn parse(tokens: &[Token]) -> Result<Expr, AppError> {
+    unimplemented!()
+}
+
 fn parse_and_codegen(
     writer: &mut impl Write,
     tokens: &[Token],
