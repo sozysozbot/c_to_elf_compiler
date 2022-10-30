@@ -531,3 +531,7 @@ hsjoihs「修正したら通った。"9 *8  - 7*  6 + 5*  4*1" とかも通り�
 hsjoihs「次はカッコを実装しよう。そのためには、」
 $HTML「<ul><li>数値リテラルを読むところを parse_primary 関数に切り出す</li><li>『全部読めていない場合に落とす』の部分を parse 関数から切り出す</li><li>カッコで括った式を primary と見なす</li></ul>」
 hsjoihs「という変更を加えることになる。とりあえず最初の二つをやり、テストが通ることを確認」
+hsjoihs「次はトークナイザへのカッコの追加だ。正直 paren, sqbracket, brace とかより『開き丸括弧』の方が読みやすくない？バンバン日本語識別子を使っていこう」
+hsjoihs「そうしたら parse_primary の中で parse_additive を呼んでやって、テストを書く」
+hsjoihs「えーと "5*(6-3)*7" が「演算子の次に来ているものが数値ではありません」で落ちる」
+hsjoihs「ああ、parse_multicative の右辺の方を parse_primary にしていなかったな。直した。テストが通る」

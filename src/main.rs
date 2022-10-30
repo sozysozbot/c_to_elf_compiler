@@ -68,8 +68,25 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
             };
             Ok(expr)
         }
+        Token {
+            payload: TokenPayload::開き丸括弧,
+            pos,
+        } => {
+            let expr = parse_additive(tokens, input)?;
+            match tokens.next().unwrap() {
+                Token {
+                    payload: TokenPayload::閉じ丸括弧,
+                    ..
+                } => Ok(expr),
+                _ => Err(AppError {
+                    message: "この開き丸括弧に対応する閉じ丸括弧がありません".to_string(),
+                    input: input.to_string(),
+                    pos: *pos,
+                }),
+            }
+        }
         tok => Err(AppError {
-            message: "数値リテラル以外が来ました".to_string(),
+            message: "数値リテラルでも開き丸括弧でもないものが来ました".to_string(),
             input: input.to_string(),
             pos: tok.pos,
         }),
@@ -85,28 +102,14 @@ fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Resu
                 pos: op_pos,
             }) => {
                 tokens.next();
-                match tokens.next().unwrap() {
-                    Token {
-                        payload: TokenPayload::Num(n),
-                        pos,
-                    } => {
-                        let 左辺 = Box::new(expr);
-                        let 右辺 = Box::new(Expr::Primary { val: *n, pos: *pos });
-                        expr = Expr::BinaryExpr {
-                            op: BinaryOp::Mul,
-                            op_pos: *op_pos,
-                            左辺,
-                            右辺,
-                        }
-                    }
-                    tok => {
-                        return Err(AppError {
-                            message: "演算子の次に来ているものが数値ではありません".to_string(),
-                            input: input.to_string(),
-                            pos: tok.pos,
-                        });
-                    }
-                }
+                let 左辺 = Box::new(expr);
+                let 右辺 = Box::new(parse_primary(tokens, input)?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::Mul,
+                    op_pos: *op_pos,
+                    左辺,
+                    右辺,
+                };
             }
 
             _ => {

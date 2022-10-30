@@ -6,6 +6,8 @@ pub enum TokenPayload {
     Add,
     Sub,
     Mul,
+    開き丸括弧,
+    閉じ丸括弧,
     Eof,
 }
 
@@ -67,6 +69,20 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 iter.next();
                 ans.push(Token {
                     payload: TokenPayload::Mul,
+                    pos,
+                });
+            }
+            '(' => {
+                iter.next();
+                ans.push(Token {
+                    payload: TokenPayload::開き丸括弧,
+                    pos,
+                });
+            }
+            ')' => {
+                iter.next();
+                ans.push(Token {
+                    payload: TokenPayload::閉じ丸括弧,
                     pos,
                 });
             }

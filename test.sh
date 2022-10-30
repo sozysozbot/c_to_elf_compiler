@@ -26,4 +26,5 @@ check 2 "5 - 3"
 check 7 "3*4-5"
 check 9 "5*6-3*7"
 check 50 "9 *8  - 7*  6 + 5*  4*1"
+check 105 "5*(6-3)*7"
 rm a.out

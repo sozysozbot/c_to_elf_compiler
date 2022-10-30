@@ -928,6 +928,13 @@ fn parse_and_codegen(
 		<div class="content">ああ普通に 1+2 が落ちてる。それはそうで、せっかく peekable にしたのに peek していない</div>
 		<div class="content">peekするようにすると……おっと『演算子かeofが期待されていますが、数か * が来ました』と言われる。ああここも peek にしないとね。あと第一式も parse_multiplicative にしないと</div>
 		<div class="content">修正したら通った。&quot;9 *8  - 7*  6 + 5*  4*1&quot; とかも通りますね</div>
+		<div class="content">次はカッコを実装しよう。そのためには、</div>
+		<div class="content"><ul><li>数値リテラルを読むところを parse_primary 関数に切り出す</li><li>『全部読めていない場合に落とす』の部分を parse 関数から切り出す</li><li>カッコで括った式を primary と見なす</li></ul></div>
+		<div class="content">という変更を加えることになる。とりあえず最初の二つをやり、テストが通ることを確認</div>
+		<div class="content">次はトークナイザへのカッコの追加だ。正直 paren, sqbracket, brace とかより『開き丸括弧』の方が読みやすくない？バンバン日本語識別子を使っていこう</div>
+		<div class="content">そうしたら parse_primary の中で parse_additive を呼んでやって、テストを書く</div>
+		<div class="content">えーと &quot;5*(6-3)*7&quot; が「演算子の次に来ているものが数値ではありません」で落ちる</div>
+		<div class="content">ああ、parse_multicative の右辺の方を parse_primary にしていなかったな。直した。テストが通る</div>
 	</div>
 </div>
 
