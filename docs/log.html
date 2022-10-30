@@ -2,7 +2,8 @@
 <head>
 	<meta charset="utf-8">
 	<title>ELF を吐く C コンパイラを Rui 本の方式で作る</title>
-	<style>
+	<meta name="viewport" content="width=device-width">
+<style>
 		img.icon {
 			border-radius: 50%;
 		}
@@ -35,6 +36,10 @@
 		}
 		pre {
 			white-space: pre-wrap;
+		}
+		body {
+			text-size-adjust: 100%;
+			-webkit-text-size-adjust: 100%;
 		}
 	</style>
 	<link rel="stylesheet" href="vs.min.css">
@@ -920,6 +925,14 @@ fn parse_and_codegen(
 		<div class="content">ということで、とりあえずイテレータを取るような関数へと変更。peekable もほしいかな</div>
 		<div class="content">そして parse_multiplicative 関数を実装し、parse の中ではそれを呼ぶようにする</div>
 		<div class="content">さて 3*4-5 が動くかな？おっと Mac ではそもそもどのテストケースも通らない。WSL で試すか</div>
+		<div class="content">ああ普通に 1+2 が落ちてる。それはそうで、せっかく peekable にしたのに peek していない</div>
+		<div class="content">peekするようにすると……おっと『演算子かeofが期待されていますが、数か * が来ました』と言われる。ああここも peek にしないとね。あと第一式も parse_multiplicative にしないと</div>
+		<div class="content">修正したら通った</div>
 	</div>
 </div>
-</body>
+
+<div style="font-size: 70%; display: flex; justify-content: center;">
+	<div>
+		Powered by <a href="https://github.com/sozysozbot/PseudoRoku">PseudoRoku</a>, which is designed by <a href="https://twitter.com/hsjoihs">hsjoihs</a>. <a href="https://github.com/sozysozbot/PseudoRoku/issues">Feel free to report any issues</a>.
+	</div>
+</div></body>

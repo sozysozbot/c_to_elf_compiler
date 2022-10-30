@@ -525,3 +525,6 @@ hsjoihs「再帰下降パーサというのは、『読めるところまで読�
 hsjoihs「ということで、とりあえずイテレータを取るような関数へと変更。peekable もほしいかな」
 hsjoihs「そして parse_multiplicative 関数を実装し、parse の中ではそれを呼ぶようにする」
 hsjoihs「さて 3*4-5 が動くかな？おっと Mac ではそもそもどのテストケースも通らない。WSL で試すか」
+hsjoihs「ああ普通に 1+2 が落ちてる。それはそうで、せっかく peekable にしたのに peek していない」
+hsjoihs「peekするようにすると……おっと『演算子かeofが期待されていますが、数か * が来ました』と言われる。ああここも peek にしないとね。あと第一式も parse_multiplicative にしないと」
+hsjoihs「修正したら通った」
