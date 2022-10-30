@@ -56,64 +56,67 @@ fn parse_test() {
     );
 }
 
-fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
     match tokens.next().unwrap() {
         Token {
             payload: TokenPayload::Num(first),
             pos,
         } => {
-            let mut expr = Expr::Primary {
+            let expr = Expr::Primary {
                 val: *first,
                 pos: *pos,
             };
-
-            loop {
-                match tokens.peek() {
-                    Some(Token {
-                        payload: TokenPayload::Mul,
-                        pos: op_pos,
-                    }) => {
-                        tokens.next();
-                        match tokens.next().unwrap() {
-                            Token {
-                                payload: TokenPayload::Num(n),
-                                pos,
-                            } => {
-                                let 左辺 = Box::new(expr);
-                                let 右辺 = Box::new(Expr::Primary { val: *n, pos: *pos });
-                                expr = Expr::BinaryExpr {
-                                    op: BinaryOp::Mul,
-                                    op_pos: *op_pos,
-                                    左辺,
-                                    右辺,
-                                }
-                            }
-                            tok => {
-                                return Err(AppError {
-                                    message: "演算子の次に来ているものが数値ではありません"
-                                        .to_string(),
-                                    input: input.to_string(),
-                                    pos: tok.pos,
-                                });
-                            }
-                        }
-                    }
-
-                    _ => {
-                        return Ok(expr);
-                    }
-                }
-            }
+            Ok(expr)
         }
         tok => Err(AppError {
-            message: "入力が数字以外で始まっています".to_string(),
+            message: "数値リテラル以外が来ました".to_string(),
             input: input.to_string(),
             pos: tok.pos,
         }),
     }
 }
 
-fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+    let mut expr = parse_primary(tokens, input)?;
+    loop {
+        match tokens.peek() {
+            Some(Token {
+                payload: TokenPayload::Mul,
+                pos: op_pos,
+            }) => {
+                tokens.next();
+                match tokens.next().unwrap() {
+                    Token {
+                        payload: TokenPayload::Num(n),
+                        pos,
+                    } => {
+                        let 左辺 = Box::new(expr);
+                        let 右辺 = Box::new(Expr::Primary { val: *n, pos: *pos });
+                        expr = Expr::BinaryExpr {
+                            op: BinaryOp::Mul,
+                            op_pos: *op_pos,
+                            左辺,
+                            右辺,
+                        }
+                    }
+                    tok => {
+                        return Err(AppError {
+                            message: "演算子の次に来ているものが数値ではありません".to_string(),
+                            input: input.to_string(),
+                            pos: tok.pos,
+                        });
+                    }
+                }
+            }
+
+            _ => {
+                return Ok(expr);
+            }
+        }
+    }
+}
+
+fn parse_additive(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
     let mut expr = parse_multiplicative(tokens, input)?;
     loop {
         let tok = tokens.peek().unwrap();
@@ -146,23 +149,24 @@ fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppErr
                     右辺,
                 }
             }
-            Token {
-                payload: TokenPayload::Eof,
-                ..
-            } => {
+            _ => {
                 return Ok(expr);
             }
-            Token {
-                payload: TokenPayload::Num(_) | TokenPayload::Mul,
-                ..
-            } => {
-                return Err(AppError {
-                    message: "演算子かeofが期待されていますが、数か * が来ました".to_string(),
-                    input: input.to_string(),
-                    pos: tok.pos,
-                });
-            }
         }
+    }
+}
+
+fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+    let expr = parse_additive(tokens, input)?;
+    let tok = tokens.peek().unwrap();
+    if tok.payload == TokenPayload::Eof {
+        Ok(expr)
+    } else {
+        Err(AppError {
+            message: "期待されたeofが来ませんでした".to_string(),
+            input: input.to_string(),
+            pos: tok.pos,
+        })
     }
 }
 
