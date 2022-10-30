@@ -2,8 +2,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>ELF を吐く C コンパイラを Rui 本の方式で作る</title>
-	<meta name="viewport" content="width=device-width">
-<style>
+	<style>
 		img.icon {
 			border-radius: 50%;
 		}
@@ -36,10 +35,6 @@
 		}
 		pre {
 			white-space: pre-wrap;
-		}
-		body {
-			text-size-adjust: 100%;
-			-webkit-text-size-adjust: 100%;
 		}
 	</style>
 	<link rel="stylesheet" href="vs.min.css">
@@ -919,11 +914,12 @@ fn parse_and_codegen(
     [0x0f, 0xaf, 0xf8]
 }
 </code></pre>
+		<div class="content">次に、再帰下降パーサにする。前に自分で書いた Rust での再帰下降を眺めよう</div>
+		<div class="content"><a href="https://docs.google.com/presentation/d/180pyDEMnBUPVIsQuNYgbdD0oWB-vZdzoJR4md_yEYRQ/edit#slide=id.g1339727b6e0_0_237" target="_blank" rel="noopener noreferrer">https://docs.google.com/presentation/d/180pyDEMnBUPVIsQuNYgbdD0oWB-vZdzoJR4md_yEYRQ/edit#slide=id.g1339727b6e0_0_237</a></div>
+		<div class="content">再帰下降パーサというのは、『読めるところまで読み、それ以外は読み残す』という挙動をする部品を組み合わせることで上手くいく</div>
+		<div class="content">ということで、とりあえずイテレータを取るような関数へと変更。peekable もほしいかな</div>
+		<div class="content">そして parse_multiplicative 関数を実装し、parse の中ではそれを呼ぶようにする</div>
+		<div class="content">さて 3*4-5 が動くかな？おっと Mac ではそもそもどのテストケースも通らない。WSL で試すか</div>
 	</div>
 </div>
-
-<div style="font-size: 70%; display: flex; justify-content: center;">
-	<div>
-		Powered by <a href="https://github.com/sozysozbot/PseudoRoku">PseudoRoku</a>, which is designed by <a href="https://twitter.com/hsjoihs">hsjoihs</a>. <a href="https://github.com/sozysozbot/PseudoRoku/issues">Feel free to report any issues</a>.
-	</div>
-</div></body>
+</body>

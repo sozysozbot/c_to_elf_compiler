@@ -519,3 +519,9 @@ fn ediをeax倍にする() -> [u8; 3] {
     [0x0f, 0xaf, 0xf8]
 }
 ```
+hsjoihs「次に、再帰下降パーサにする。前に自分で書いた Rust での再帰下降を眺めよう」
+$URL「https://docs.google.com/presentation/d/180pyDEMnBUPVIsQuNYgbdD0oWB-vZdzoJR4md_yEYRQ/edit#slide=id.g1339727b6e0_0_237」
+hsjoihs「再帰下降パーサというのは、『読めるところまで読み、それ以外は読み残す』という挙動をする部品を組み合わせることで上手くいく」
+hsjoihs「ということで、とりあえずイテレータを取るような関数へと変更。peekable もほしいかな」
+hsjoihs「そして parse_multiplicative 関数を実装し、parse の中ではそれを呼ぶようにする」
+hsjoihs「さて 3*4-5 が動くかな？おっと Mac ではそもそもどのテストケースも通らない。WSL で試すか」

@@ -5,6 +5,7 @@ pub enum TokenPayload {
     Num(u8),
     Add,
     Sub,
+    Mul,
     Eof,
 }
 
@@ -59,6 +60,13 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 iter.next();
                 ans.push(Token {
                     payload: TokenPayload::Sub,
+                    pos,
+                });
+            }
+            '*' => {
+                iter.next();
+                ans.push(Token {
+                    payload: TokenPayload::Mul,
                     pos,
                 });
             }
