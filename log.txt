@@ -527,4 +527,4 @@ hsjoihs「そして parse_multiplicative 関数を実装し、parse の中では
 hsjoihs「さて 3*4-5 が動くかな？おっと Mac ではそもそもどのテストケースも通らない。WSL で試すか」
 hsjoihs「ああ普通に 1+2 が落ちてる。それはそうで、せっかく peekable にしたのに peek していない」
 hsjoihs「peekするようにすると……おっと『演算子かeofが期待されていますが、数か * が来ました』と言われる。ああここも peek にしないとね。あと第一式も parse_multiplicative にしないと」
-hsjoihs「修正したら通った」
+hsjoihs「修正したら通った。"9 *8  - 7*  6 + 5*  4*1" とかも通りますね」

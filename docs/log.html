@@ -927,7 +927,7 @@ fn parse_and_codegen(
 		<div class="content">さて 3*4-5 が動くかな？おっと Mac ではそもそもどのテストケースも通らない。WSL で試すか</div>
 		<div class="content">ああ普通に 1+2 が落ちてる。それはそうで、せっかく peekable にしたのに peek していない</div>
 		<div class="content">peekするようにすると……おっと『演算子かeofが期待されていますが、数か * が来ました』と言われる。ああここも peek にしないとね。あと第一式も parse_multiplicative にしないと</div>
-		<div class="content">修正したら通った</div>
+		<div class="content">修正したら通った。&quot;9 *8  - 7*  6 + 5*  4*1&quot; とかも通りますね</div>
 	</div>
 </div>
 
