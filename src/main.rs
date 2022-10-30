@@ -23,6 +23,7 @@ enum BinaryOp {
     Add,
     Sub,
     Mul,
+    Div,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -33,7 +34,7 @@ enum Expr {
         左辺: Box<Expr>,
         右辺: Box<Expr>,
     },
-    Primary {
+    Numeric {
         val: u8,
         pos: usize,
     },
@@ -50,8 +51,8 @@ fn parse_test() {
         Expr::BinaryExpr {
             op: BinaryOp::Sub,
             op_pos: 2,
-            左辺: Box::new(Expr::Primary { val: 5, pos: 0 }),
-            右辺: Box::new(Expr::Primary { val: 3, pos: 4 })
+            左辺: Box::new(Expr::Numeric { val: 5, pos: 0 }),
+            右辺: Box::new(Expr::Numeric { val: 3, pos: 4 })
         }
     );
 }
@@ -62,7 +63,7 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
             payload: TokenPayload::Num(first),
             pos,
         } => {
-            let expr = Expr::Primary {
+            let expr = Expr::Numeric {
                 val: *first,
                 pos: *pos,
             };
@@ -215,6 +216,18 @@ fn ediをeax倍にする() -> [u8; 3] {
     [0x0f, 0xaf, 0xf8]
 }
 
+fn eaxの符号ビットをedxへ拡張() -> [u8; 1] {
+    [0x99]
+}
+
+fn edx_eaxをediで割る_商はeaxに_余りはedxに() -> [u8; 2] {
+    [0xf7, 0xff]
+}
+
+fn eaxをプッシュ() -> [u8; 1] {
+    [0x50]
+}
+
 fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
     match expr {
         Expr::BinaryExpr {
@@ -259,7 +272,30 @@ fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
             writer.write_all(&ediへとポップ()).unwrap();
             writer.write_all(&ediをeax倍にする()).unwrap();
         }
-        Expr::Primary { val, pos: _ } => {
+
+        Expr::BinaryExpr {
+            op: BinaryOp::Div,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+
+            // 右辺を edi に、左辺を eax に入れる必要がある
+            writer.write_all(&ediへとポップ()).unwrap();
+            writer.write_all(&eaxへとポップ()).unwrap();
+
+            writer.write_all(&eaxの符号ビットをedxへ拡張()).unwrap();
+            writer.write_all(&edx_eaxをediで割る_商はeaxに_余りはedxに()).unwrap();
+
+            // 結果は eax レジスタに入るので、ediに移し替える
+            writer.write_all(&eaxをプッシュ()).unwrap();
+            writer.write_all(&ediへとポップ()).unwrap();
+        }
+        Expr::Numeric { val, pos: _ } => {
             writer.write_all(&ediに代入(*val)).unwrap();
         }
     }
