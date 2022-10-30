@@ -112,6 +112,20 @@ fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Resu
                     右辺,
                 };
             }
+            Some(Token {
+                payload: TokenPayload::Div,
+                pos: op_pos,
+            }) => {
+                tokens.next();
+                let 左辺 = Box::new(expr);
+                let 右辺 = Box::new(parse_primary(tokens, input)?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::Div,
+                    op_pos: *op_pos,
+                    左辺,
+                    右辺,
+                };
+            }
 
             _ => {
                 return Ok(expr);

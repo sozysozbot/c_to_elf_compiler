@@ -935,6 +935,25 @@ fn parse_and_codegen(
 		<div class="content">そうしたら parse_primary の中で parse_additive を呼んでやって、テストを書く</div>
 		<div class="content">えーと &quot;5*(6-3)*7&quot; が「演算子の次に来ているものが数値ではありません」で落ちる</div>
 		<div class="content">ああ、parse_multicative の右辺の方を parse_primary にしていなかったな。直した。テストが通る</div>
+		<div class="content">残るは除算の実装だけ。これ面倒なんだよな。compilerbook にはこう書いてある</div>
+		<blockquote>特にパースやコード生成において重要なポイントではないのですが、トリッキーな仕様のidiv命令が上のコードでは使われているので、それについて説明しておきましょう。
+
+idivは符号あり除算を行う命令です。x86-64のidivが素直な仕様になっていれば、上のコードでは本来idiv rax, rdiのように書きたかったところですが、そのような2つのレジスタをとる除算命令はx86-64には存在しません。その代わりに、idivは暗黙のうちにRDXとRAXを取って、それを合わせたものを128ビット整数とみなして、それを引数のレジスタの64ビットの値で割り、商をRAXに、余りをRDXにセットする、という仕様になっています。cqo命令を使うと、RAXに入っている64ビットの値を128ビットに伸ばしてRDXとRAXにセットすることができるので、上記のコードではidivを呼ぶ前にcqoを呼んでいます。
+</blockquote>
+		<div class="content">ということで、足すべきは以下の通り</div>
+		<pre><code class="language-rust">fn eaxの符号ビットをedxへ拡張() -&gt; [u8; 1] {
+    [0x99]
+}
+
+fn edx_eaxをediで割る_商はeaxに_余りはedxに() -&gt; [u8; 2] {
+    [0xf7, 0xff]
+}
+
+fn eaxをプッシュ() -&gt; [u8; 1] {
+    [0x50]
+}
+</code></pre>
+		<div class="content">テストケースも足したし、これで『ステップ5：四則演算のできる言語の作成』が完了</div>
 	</div>
 </div>
 
