@@ -374,3 +374,187 @@ hsjoihs「とまあこういうことをやってるんですよ」
 hiromi_mi「おもしろかったです、ushitora_anqouと違ってELFファイルを出力できるような状態をたもちつつ拡張するなど、アイデアに一本取られました」
 hiromi_mi「LEB128 はこれですね https://ja.osdn.net/projects/drdeamon64/wiki/LEB128%E3%81%AA%E6%95%B0%E3%81%AE%E8%A1%A8%E7%8F%BE 」
 hsjoihs「ふむふむ。わりと自然な発想のエンコーディングですね」
+
+
+$DATE「2022年10月29日（一人で作業）」
+hsjoihs「さてやっていこう。compilerbook のステップ 5 には」
+$blockquote
+```
+説明の都合上、一気に*、/、()を実装しているような話の流れになっていますが、実際には一気に実装することは避ける方がよいでしょう。
+元々、加減算ができる機能があったわけですから、まずはその機能を壊さずに、抽象構文木とそれを使ったコードジェネレータを導入するようにしてみてください。
+そのときには新たな機能を足すわけではないので、新しいテストは必要ありません。その後に、*、/、()を、テスト込みで実装していってください。
+```
+hsjoihs「と書いてあるので、まずは抽象構文木を導入すべきなんだな」
+hsjoihs「まずは clippy の pedantic でも足して、」
+hsjoihs「あとそろそろ tokenize を別ファイルに分離するか」
+hsjoihs「apperror.rs と tokenize.rs を分離」
+
+
+$DATE「2022年10月30日（一人で作業）」
+hsjoihs「そして抽象構文木を導入」
+hsjoihs「さて、コードジェネレーターでこれを使わなきゃいけないんだよな」
+
+$DATE「2022年10月30日（Discord にて）」
+hsjoihs「とまあこういうことをやっています」
+ikubaku「実行形式の中でも ELF にしてるのってどういう理由です？ELF はそれなりに複雑であり、難易度が上がる気がしていますけど」
+hsjoihs「一番ポピュラーであり、私の WSL 環境で動くからです。あと、その複雑さを上手く回避する小技を導入しています（step 1 をどう実装したかを見せる）」
+hiromi_mi「最近の Linux では a.out フォーマットのサポートが消えたので、ELF を選択するという判断は妥当そうに思えます。Windows の com も今はダメですし」
+
+$DATE「2022年10月30日（コードジェネレーター）」
+hsjoihs「抽象構文木を導入したことにより、許容される式の自由度が真に上がったので、コードジェネレーターを書き換えねばならない。」
+hsjoihs「……よな？ここをちゃんと確認しないと『必要最低限のみを調べる』という縛りに抵触してしまう。」
+hsjoihs「うむ、一方向にのみ伸びているとは限らない木を処理できるようにするには、スタックマシンの仕組みを導入しないと無理ですな」
+hsjoihs「えーと tkr の書いたバイナリ表現を読まないとリファクタリングできない。よって調べる」
+hsjoihs「https://defuse.ca/online-x86-assembler.htm に投げたところ、bf ** 00 00 00 は edi レジスタに ** をセットするらしい。じゃあ 83 c7 ** は edi を増やして 83 ef ** は edi を減らすのでしょう」
+hsjoihs「とはいえ、我々は「なるべくアセンブリ言語について知らないようにしている」という設定なので、これに mov とか add とか名前を付けるのでは面白くない」
+hsjoihs「せっかく Rust が識別子に日本語を許すようになったのだし、『edi増加』『edi減少』とかの関数名にしてしまえ」
+hsjoihs「えーと、スタックマシンにする必要がある。そのためにはどのような機械語が必要だろうか。レジスタとメモリの間で色々移動させる必要がありそうだな」
+hsjoihs「『即値をスタックにpush』『レジスタをスタックにpush』『スタックからレジスタへとpop』『レジスタの中身を、別のレジスタに足し合わせる』があればいい」
+hsjoihs「tkr が既に「6a 01 (push $0x01)」「5f (pop %edi)」というのを調べてくれている。えーと、」
+$blockquote
+```
+☑ 即値をプッシュ 
+☒ ediをプッシュ
+☑ ediへとポップ
+☒ eaxへとポップ
+☒ ediにeaxを足し合わせる
+☒ ediからeaxを減じる
+```
+hsjoihs「ということで、あとは残り 4 つを調べればよい」
+$source
+```rust
+fn 即値をプッシュ(n: u8) -> [u8; 2] {
+    [0x6a, n]
+}
+
+fn ediをプッシュ() -> [u8; 1] {
+    [0x57]
+}
+
+fn ediへとポップ() -> [u8; 1] {
+    [0x5f]
+}
+
+fn eaxへとポップ() -> [u8; 1] {
+    [0x58]
+}
+
+fn ediにeaxを足し合わせる() -> [u8; 2] {
+    [0x01, 0xc7]
+}
+
+fn ediからeaxを減じる() -> [u8; 2] {
+    [0x29, 0xc7]
+}
+```
+hsjoihs「あとはこれらを組み合わせれば動くはず。これでいいかな」
+$source
+```rust
+fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
+    match expr {
+        Expr::BinaryExpr {
+            op: BinaryOp::Add,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            writer.write_all(&eaxへとポップ()).unwrap();
+            writer.write_all(&ediへとポップ()).unwrap();
+            writer.write_all(&ediにeaxを足し合わせる()).unwrap();
+        }
+        Expr::BinaryExpr {
+            op: BinaryOp::Sub,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            writer.write_all(&eaxへとポップ()).unwrap();
+            writer.write_all(&ediへとポップ()).unwrap();
+            writer.write_all(&ediからeaxを減じる()).unwrap();
+        }
+        Expr::Primary { val, pos: _ } => {
+            writer.write_all(&ediに代入(*val)).unwrap();
+        }
+    }
+}
+
+fn parse_and_codegen(
+    mut writer: &mut impl Write,
+    tokens: &[Token],
+    input: &str,
+) -> Result<(), AppError> {
+    let expr = parse(tokens, input)?;
+
+    let tiny = include_bytes!("../experiment/tiny");
+    writer.write_all(&tiny[0..0x78]).unwrap();
+    writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
+
+    exprを評価してediレジスタへ(&mut writer, &expr);
+
+    writer.write_all(&[0x0f, 0x05]).unwrap();
+    Ok(())
+}
+```
+hsjoihs「走らせてみよう」
+$source
+```
+[FAIL] 1+2 => 3 expected, but got 139
+```
+hsjoihs「なるほど落ちる。あー、多分 eax レジスタをなんか別ので使ってるんだろうな。0xb8, 0x3c, 0x00, 0x00, 0x00 辺りかな」
+hsjoihs「じゃあそれを『exprを評価してediレジスタへ』より後ろに回すと……動いた。」
+
+$DATE「2022年10月30日（乗算）」
+hsjoihs「次は乗算を組んでいこう。まず構文木に BinaryOp::Mul を加える。対応するバイナリ表現も調べる」
+$source
+```rust
+fn ediをeax倍にする() -> [u8; 3] {
+    [0x0f, 0xaf, 0xf8]
+}
+```
+hsjoihs「次に、再帰下降パーサにする。前に自分で書いた Rust での再帰下降を眺めよう」
+$URL「https://docs.google.com/presentation/d/180pyDEMnBUPVIsQuNYgbdD0oWB-vZdzoJR4md_yEYRQ/edit#slide=id.g1339727b6e0_0_237」
+hsjoihs「再帰下降パーサというのは、『読めるところまで読み、それ以外は読み残す』という挙動をする部品を組み合わせることで上手くいく」
+hsjoihs「ということで、とりあえずイテレータを取るような関数へと変更。peekable もほしいかな」
+hsjoihs「そして parse_multiplicative 関数を実装し、parse の中ではそれを呼ぶようにする」
+hsjoihs「さて 3*4-5 が動くかな？おっと Mac ではそもそもどのテストケースも通らない。WSL で試すか」
+hsjoihs「ああ普通に 1+2 が落ちてる。それはそうで、せっかく peekable にしたのに peek していない」
+hsjoihs「peekするようにすると……おっと『演算子かeofが期待されていますが、数か * が来ました』と言われる。ああここも peek にしないとね。あと第一式も parse_multiplicative にしないと」
+hsjoihs「修正したら通った。"9 *8  - 7*  6 + 5*  4*1" とかも通りますね」
+hsjoihs「次はカッコを実装しよう。そのためには、」
+$HTML「<ul><li>数値リテラルを読むところを parse_primary 関数に切り出す</li><li>『全部読めていない場合に落とす』の部分を parse 関数から切り出す</li><li>カッコで括った式を primary と見なす</li></ul>」
+hsjoihs「という変更を加えることになる。とりあえず最初の二つをやり、テストが通ることを確認」
+hsjoihs「次はトークナイザへのカッコの追加だ。正直 paren, sqbracket, brace とかより『開き丸括弧』の方が読みやすくない？バンバン日本語識別子を使っていこう」
+hsjoihs「そうしたら parse_primary の中で parse_additive を呼んでやって、テストを書く」
+hsjoihs「えーと "5*(6-3)*7" が「演算子の次に来ているものが数値ではありません」で落ちる」
+hsjoihs「ああ、parse_multicative の右辺の方を parse_primary にしていなかったな。直した。テストが通る」
+hsjoihs「残るは除算の実装だけ。これ面倒なんだよな。compilerbook にはこう書いてある」
+$blockquote
+```
+特にパースやコード生成において重要なポイントではないのですが、トリッキーな仕様のidiv命令が上のコードでは使われているので、それについて説明しておきましょう。
+
+idivは符号あり除算を行う命令です。x86-64のidivが素直な仕様になっていれば、上のコードでは本来idiv rax, rdiのように書きたかったところですが、そのような2つのレジスタをとる除算命令はx86-64には存在しません。その代わりに、idivは暗黙のうちにRDXとRAXを取って、それを合わせたものを128ビット整数とみなして、それを引数のレジスタの64ビットの値で割り、商をRAXに、余りをRDXにセットする、という仕様になっています。cqo命令を使うと、RAXに入っている64ビットの値を128ビットに伸ばしてRDXとRAXにセットすることができるので、上記のコードではidivを呼ぶ前にcqoを呼んでいます。
+```
+hsjoihs「ということで、足すべきは以下の通り」
+$source
+```rust
+fn eaxの符号ビットをedxへ拡張() -> [u8; 1] {
+    [0x99]
+}
+
+fn edx_eaxをediで割る_商はeaxに_余りはedxに() -> [u8; 2] {
+    [0xf7, 0xff]
+}
+
+fn eaxをプッシュ() -> [u8; 1] {
+    [0x50]
+}
+```
+hsjoihs「テストケースも足したし、これで『ステップ5：四則演算のできる言語の作成』が完了」

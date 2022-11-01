@@ -124,7 +124,7 @@
 		<div class="content">ちゃんと README.md も書いておこう。まあ日本語と英語で書いておくか。</div>
 		<div class="content">もう step 1 は私がやってしまおう。experiment フォルダにファイルを用意して、</div>
 		<div class="content">とりあえず Makefile はこんな感じでいいか</div>
-		<pre><code class="language-Makefile">CFLAGS=-std=c17 -Wall -s
+		<pre><code class="language-Makefile">CFLAGS=-std=c17 -Wall -s
 
 3: 3.c
 42: 42.c
@@ -136,7 +136,7 @@ clean:
 .PHONY: clean
 </code></pre>
 		<div class="content">gcc が出力したファイルのサイズを数えると、</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
 13296 3
 </code></pre>
 		<div class="content">うーむ、デカい！</div>
@@ -176,7 +176,7 @@ clean:
 		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
 		<div class="content">-Os を使うと、3 + 4 - 2 とかが畳み込まれちゃう気がするので</div>
 		<div class="content">まあ一応 -Os でどれくらい減るのかも実験しておくか。そもそも nasm にする予定だけど。CFLAGS=-std=c17 -Wall -s -Os で試すと、</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 3
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 3
 cc -std=c17 -Wall -s -Os    3.c   -o 3
 hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 42
 cc -std=c17 -Wall -s -Os    42.c   -o 42
@@ -192,7 +192,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
 	<div class="name_and_content">
 		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
 		<div class="content">とりあえず、原典にこうあるけど、</div>
-		<pre><code class="language-x86asm">  ; tiny.asm
+		<pre><code class="language-x86asm">  ; tiny.asm
   BITS 32
   GLOBAL _start
   SECTION .text
@@ -202,12 +202,12 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
                 int     0x80
 </code></pre>
 		<div class="content">64 ビット環境だし、この BITS 32 を削って実行してみるか。Makefile はこんな感じ</div>
-		<pre><code class="language-Makefile">tiny42: tiny42.asm
+		<pre><code class="language-Makefile">tiny42: tiny42.asm
 	nasm -f elf tiny42.asm
 	gcc -Wall -s -nostdlib tiny42.o -o tiny42
 </code></pre>
 		<div class="content">make tiny42 をすると～？</div>
-		<pre><code class="language-shell">nasm -f elf tiny42.asm
+		<pre><code class="language-shell">nasm -f elf tiny42.asm
 gcc -Wall -s -nostdlib tiny42.o -o tiny42
 /usr/bin/ld: i386 architecture of input file &#x60;tiny42.o&#x27; is incompatible with i386:x86-64 output
 collect2: error: ld returned 1 exit status
@@ -215,23 +215,23 @@ make: *** [Makefile:12: tiny42] Error 1
 </code></pre>
 		<div class="content">はい。正直そんな気はしてた</div>
 		<div class="content">普通に gcc 付属のアセンブラを使ってみるか</div>
-		<pre><code class="language-x86asm">.globl _start
+		<pre><code class="language-x86asm">.globl _start
 _start:
 	movl	$1, %eax
 	movl	$42, %ebx  
 	int		$0x80
 </code></pre>
 		<div class="content">に対して</div>
-		<pre><code class="language-Makefile">tiny42: tiny42.s
+		<pre><code class="language-Makefile">tiny42: tiny42.s
 	gcc -Wall -s -nostdlib tiny42.s -o tiny42
 </code></pre>
 		<div class="content">をかませてやると、まあちゃんと動く。しかし wc -c tiny42 すると 13024 tiny42 なので、結局問題が解決してないんだよな</div>
 		<div class="content">食事から戻った。やっていき</div>
 		<div class="content"><a href="https://cs.lmu.edu/~ray/notes/nasmtutorial/" target="_blank" rel="noopener noreferrer">https://cs.lmu.edu/~ray/notes/nasmtutorial/</a> 曰く、</div>
-		<pre><code class="language-">nasm -felf64 hello.asm &amp;&amp; ld hello.o &amp;&amp; ./a.out
+		<pre><code class="language-">nasm -felf64 hello.asm &amp;&amp; ld hello.o &amp;&amp; ./a.out
 </code></pre>
 		<div class="content">でよいとのこと。なるほど、やってみるか</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
 nasm -felf64 tiny42.asm
 ld tiny42.o -o tiny42
 hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny42
@@ -243,12 +243,12 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c tiny42
 		<div class="content">まあこんなもんか。これ以上削るのはやりすぎな気もする</div>
 		<div class="content">一応マニュアル <a href="https://www.nasm.us/doc/" target="_blank" rel="noopener noreferrer">https://www.nasm.us/doc/</a> を見る。あ、--reproducible があるのか、都合がいい、つけておこう</div>
 		<div class="content">おや、動かない。このバージョンの nasm にはないのかな</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ nasm --version
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ nasm --version
 NASM version 2.14.02
 </code></pre>
 		<div class="content">マニュアルは version 2.15.05 となっている。この --reproducible、なんと version 2.15.05 で加わった最新の機能だそうだ。すばらしい</div>
 		<div class="content">手元の WSL 2 上の Ubuntu でも sudo apt-get update からの sudo apt-get -y install nasm をすれば nasm が最新になってくれたりしないかな</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ sudo apt-get -y install nasm
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ sudo apt-get -y install nasm
 Reading package lists... Done
 Building dependency tree       
 Reading state information... Done
@@ -260,11 +260,11 @@ Use &#x27;sudo apt autoremove&#x27; to remove it.
 </code></pre>
 		<div class="content">残念。じゃあ自分で入れるしかないか</div>
 		<div class="content">とりあえず <a href="https://www.linuxfromscratch.org/blfs/view/svn/general/nasm.html" target="_blank" rel="noopener noreferrer">https://www.linuxfromscratch.org/blfs/view/svn/general/nasm.html</a> に従って入れて……</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ nasm --version
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ nasm --version
 NASM version 2.15.05 compiled on Oct  3 2022
 </code></pre>
 		<div class="content">よし。ではいよいよ</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
 nasm -felf64  --reproducible tiny42.asm
 ld tiny42.o -o tiny42
 hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny3
@@ -276,7 +276,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny3; echo $?
 3
 </code></pre>
 		<div class="content">これは、やったか？</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 4103  52   3
 4185  21  20
 4209  14  13
@@ -347,7 +347,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ ./tiny3; echo $?
 </code></pre>
 		<div class="content">んー。ああそうか、ld 側にも reproducible にしてくれと頼まないと</div>
 		<div class="content">……軽く調べたが、頼み方がよくわからん。リンカを gold にしたらバージョン名を埋め込んできたし。んー、1 バイトのズレはファイル名『tiny3.asm』『tiny42.asm』の差に起因してるっぽいし、そこを strip かなんかで処理すれば解決するかも？</div>
-		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
+		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make tiny42
 nasm -felf64  --reproducible tiny42.asm
 ld tiny42.o -o tiny42
 strip tiny42
@@ -364,7 +364,7 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 		<div class="content">よし、差分が 1 バイトになった！！！！！</div>
 		<div class="content">ここで 52 って出てるのは cmp コマンドがバイトを 8 進数で出力する仕様になっているからであって、これは 10 進数だと 42 なのでこれで正解です</div>
 		<div class="content">よーし、やっとスタート地点に立つことができた</div>
-		<pre><code class="language-rust">fn main() -&gt; std::io::Result&lt;()&gt; {
+		<pre><code class="language-rust">fn main() -&gt; std::io::Result&lt;()&gt; {
     let input = std::env::args().nth(1).expect(&quot;入力が与えられていません&quot;);
     let input: u8 = input.parse().expect(&quot;入力をパースできません&quot;);
     let tiny_3 = include_bytes!(&quot;../experiment/tiny3&quot;);
@@ -745,6 +745,215 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 	<div class="name_and_content">
 		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
 		<div class="content">ふむふむ。わりと自然な発想のエンコーディングですね</div>
+	</div>
+</div>
+<h3 class="date">2022年10月29日（一人で作業）</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">さてやっていこう。compilerbook のステップ 5 には</div>
+		<blockquote>説明の都合上、一気に*、/、()を実装しているような話の流れになっていますが、実際には一気に実装することは避ける方がよいでしょう。
+元々、加減算ができる機能があったわけですから、まずはその機能を壊さずに、抽象構文木とそれを使ったコードジェネレータを導入するようにしてみてください。
+そのときには新たな機能を足すわけではないので、新しいテストは必要ありません。その後に、*、/、()を、テスト込みで実装していってください。
+</blockquote>
+		<div class="content">と書いてあるので、まずは抽象構文木を導入すべきなんだな</div>
+		<div class="content">まずは clippy の pedantic でも足して、</div>
+		<div class="content">あとそろそろ tokenize を別ファイルに分離するか</div>
+		<div class="content">apperror.rs と tokenize.rs を分離</div>
+	</div>
+</div>
+<h3 class="date">2022年10月30日（一人で作業）</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">そして抽象構文木を導入</div>
+		<div class="content">さて、コードジェネレーターでこれを使わなきゃいけないんだよな</div>
+	</div>
+</div>
+<h3 class="date">2022年10月30日（Discord にて）</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">とまあこういうことをやっています</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/ikubaku10" target="_blank" rel="noopener noreferrer"><img alt="ikubaku" class="icon" src="icons/ikubaku.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/ikubaku10" target="_blank" rel="noopener noreferrer">ikubaku</a></span>
+		<div class="content">実行形式の中でも ELF にしてるのってどういう理由です？ELF はそれなりに複雑であり、難易度が上がる気がしていますけど</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">一番ポピュラーであり、私の WSL 環境で動くからです。あと、その複雑さを上手く回避する小技を導入しています（step 1 をどう実装したかを見せる）</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer"><img alt="hiromi_mi" class="icon" src="icons/hiromi_mi.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer">hiromi_mi</a></span>
+		<div class="content">最近の Linux では a.out フォーマットのサポートが消えたので、ELF を選択するという判断は妥当そうに思えます。Windows の com も今はダメですし</div>
+	</div>
+</div>
+<h3 class="date">2022年10月30日（コードジェネレーター）</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">抽象構文木を導入したことにより、許容される式の自由度が真に上がったので、コードジェネレーターを書き換えねばならない。</div>
+		<div class="content">……よな？ここをちゃんと確認しないと『必要最低限のみを調べる』という縛りに抵触してしまう。</div>
+		<div class="content">うむ、一方向にのみ伸びているとは限らない木を処理できるようにするには、スタックマシンの仕組みを導入しないと無理ですな</div>
+		<div class="content">えーと tkr の書いたバイナリ表現を読まないとリファクタリングできない。よって調べる</div>
+		<div class="content"><a href="https://defuse.ca/online-x86-assembler.htm" target="_blank" rel="noopener noreferrer">https://defuse.ca/online-x86-assembler.htm</a> に投げたところ、bf ** 00 00 00 は edi レジスタに ** をセットするらしい。じゃあ 83 c7 ** は edi を増やして 83 ef ** は edi を減らすのでしょう</div>
+		<div class="content">とはいえ、我々は「なるべくアセンブリ言語について知らないようにしている」という設定なので、これに mov とか add とか名前を付けるのでは面白くない</div>
+		<div class="content">せっかく Rust が識別子に日本語を許すようになったのだし、『edi増加』『edi減少』とかの関数名にしてしまえ</div>
+		<div class="content">えーと、スタックマシンにする必要がある。そのためにはどのような機械語が必要だろうか。レジスタとメモリの間で色々移動させる必要がありそうだな</div>
+		<div class="content">『即値をスタックにpush』『レジスタをスタックにpush』『スタックからレジスタへとpop』『レジスタの中身を、別のレジスタに足し合わせる』があればいい</div>
+		<div class="content">tkr が既に「6a 01 (push $0x01)」「5f (pop %edi)」というのを調べてくれている。えーと、</div>
+		<blockquote>☑ 即値をプッシュ 
+☒ ediをプッシュ
+☑ ediへとポップ
+☒ eaxへとポップ
+☒ ediにeaxを足し合わせる
+☒ ediからeaxを減じる
+</blockquote>
+		<div class="content">ということで、あとは残り 4 つを調べればよい</div>
+		<pre><code class="language-rust">fn 即値をプッシュ(n: u8) -&gt; [u8; 2] {
+    [0x6a, n]
+}
+
+fn ediをプッシュ() -&gt; [u8; 1] {
+    [0x57]
+}
+
+fn ediへとポップ() -&gt; [u8; 1] {
+    [0x5f]
+}
+
+fn eaxへとポップ() -&gt; [u8; 1] {
+    [0x58]
+}
+
+fn ediにeaxを足し合わせる() -&gt; [u8; 2] {
+    [0x01, 0xc7]
+}
+
+fn ediからeaxを減じる() -&gt; [u8; 2] {
+    [0x29, 0xc7]
+}
+</code></pre>
+		<div class="content">あとはこれらを組み合わせれば動くはず。これでいいかな</div>
+		<pre><code class="language-rust">fn exprを評価してediレジスタへ(writer: &amp;mut impl Write, expr: &amp;Expr) {
+    match expr {
+        Expr::BinaryExpr {
+            op: BinaryOp::Add,
+            op_pos: _,
+            左辺,
+            右辺,
+        } =&gt; {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&amp;ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&amp;ediをプッシュ()).unwrap();
+            writer.write_all(&amp;eaxへとポップ()).unwrap();
+            writer.write_all(&amp;ediへとポップ()).unwrap();
+            writer.write_all(&amp;ediにeaxを足し合わせる()).unwrap();
+        }
+        Expr::BinaryExpr {
+            op: BinaryOp::Sub,
+            op_pos: _,
+            左辺,
+            右辺,
+        } =&gt; {
+            exprを評価してediレジスタへ(writer, 左辺);
+            writer.write_all(&amp;ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+            writer.write_all(&amp;ediをプッシュ()).unwrap();
+            writer.write_all(&amp;eaxへとポップ()).unwrap();
+            writer.write_all(&amp;ediへとポップ()).unwrap();
+            writer.write_all(&amp;ediからeaxを減じる()).unwrap();
+        }
+        Expr::Primary { val, pos: _ } =&gt; {
+            writer.write_all(&amp;ediに代入(*val)).unwrap();
+        }
+    }
+}
+
+fn parse_and_codegen(
+    mut writer: &amp;mut impl Write,
+    tokens: &amp;[Token],
+    input: &amp;str,
+) -&gt; Result&lt;(), AppError&gt; {
+    let expr = parse(tokens, input)?;
+
+    let tiny = include_bytes!(&quot;../experiment/tiny&quot;);
+    writer.write_all(&amp;tiny[0..0x78]).unwrap();
+    writer.write_all(&amp;[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
+
+    exprを評価してediレジスタへ(&amp;mut writer, &amp;expr);
+
+    writer.write_all(&amp;[0x0f, 0x05]).unwrap();
+    Ok(())
+}
+</code></pre>
+		<div class="content">走らせてみよう</div>
+		<pre><code class="language-">[FAIL] 1+2 =&gt; 3 expected, but got 139
+</code></pre>
+		<div class="content">なるほど落ちる。あー、多分 eax レジスタをなんか別ので使ってるんだろうな。0xb8, 0x3c, 0x00, 0x00, 0x00 辺りかな</div>
+		<div class="content">じゃあそれを『exprを評価してediレジスタへ』より後ろに回すと……動いた。</div>
+	</div>
+</div>
+<h3 class="date">2022年10月30日（乗算）</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">次は乗算を組んでいこう。まず構文木に BinaryOp::Mul を加える。対応するバイナリ表現も調べる</div>
+		<pre><code class="language-rust">fn ediをeax倍にする() -&gt; [u8; 3] {
+    [0x0f, 0xaf, 0xf8]
+}
+</code></pre>
+		<div class="content">次に、再帰下降パーサにする。前に自分で書いた Rust での再帰下降を眺めよう</div>
+		<div class="content"><a href="https://docs.google.com/presentation/d/180pyDEMnBUPVIsQuNYgbdD0oWB-vZdzoJR4md_yEYRQ/edit#slide=id.g1339727b6e0_0_237" target="_blank" rel="noopener noreferrer">https://docs.google.com/presentation/d/180pyDEMnBUPVIsQuNYgbdD0oWB-vZdzoJR4md_yEYRQ/edit#slide=id.g1339727b6e0_0_237</a></div>
+		<div class="content">再帰下降パーサというのは、『読めるところまで読み、それ以外は読み残す』という挙動をする部品を組み合わせることで上手くいく</div>
+		<div class="content">ということで、とりあえずイテレータを取るような関数へと変更。peekable もほしいかな</div>
+		<div class="content">そして parse_multiplicative 関数を実装し、parse の中ではそれを呼ぶようにする</div>
+		<div class="content">さて 3*4-5 が動くかな？おっと Mac ではそもそもどのテストケースも通らない。WSL で試すか</div>
+		<div class="content">ああ普通に 1+2 が落ちてる。それはそうで、せっかく peekable にしたのに peek していない</div>
+		<div class="content">peekするようにすると……おっと『演算子かeofが期待されていますが、数か * が来ました』と言われる。ああここも peek にしないとね。あと第一式も parse_multiplicative にしないと</div>
+		<div class="content">修正したら通った。&quot;9 *8  - 7*  6 + 5*  4*1&quot; とかも通りますね</div>
+		<div class="content">次はカッコを実装しよう。そのためには、</div>
+		<div class="content"><ul><li>数値リテラルを読むところを parse_primary 関数に切り出す</li><li>『全部読めていない場合に落とす』の部分を parse 関数から切り出す</li><li>カッコで括った式を primary と見なす</li></ul></div>
+		<div class="content">という変更を加えることになる。とりあえず最初の二つをやり、テストが通ることを確認</div>
+		<div class="content">次はトークナイザへのカッコの追加だ。正直 paren, sqbracket, brace とかより『開き丸括弧』の方が読みやすくない？バンバン日本語識別子を使っていこう</div>
+		<div class="content">そうしたら parse_primary の中で parse_additive を呼んでやって、テストを書く</div>
+		<div class="content">えーと &quot;5*(6-3)*7&quot; が「演算子の次に来ているものが数値ではありません」で落ちる</div>
+		<div class="content">ああ、parse_multicative の右辺の方を parse_primary にしていなかったな。直した。テストが通る</div>
+		<div class="content">残るは除算の実装だけ。これ面倒なんだよな。compilerbook にはこう書いてある</div>
+		<blockquote>特にパースやコード生成において重要なポイントではないのですが、トリッキーな仕様のidiv命令が上のコードでは使われているので、それについて説明しておきましょう。
+
+idivは符号あり除算を行う命令です。x86-64のidivが素直な仕様になっていれば、上のコードでは本来idiv rax, rdiのように書きたかったところですが、そのような2つのレジスタをとる除算命令はx86-64には存在しません。その代わりに、idivは暗黙のうちにRDXとRAXを取って、それを合わせたものを128ビット整数とみなして、それを引数のレジスタの64ビットの値で割り、商をRAXに、余りをRDXにセットする、という仕様になっています。cqo命令を使うと、RAXに入っている64ビットの値を128ビットに伸ばしてRDXとRAXにセットすることができるので、上記のコードではidivを呼ぶ前にcqoを呼んでいます。
+</blockquote>
+		<div class="content">ということで、足すべきは以下の通り</div>
+		<pre><code class="language-rust">fn eaxの符号ビットをedxへ拡張() -&gt; [u8; 1] {
+    [0x99]
+}
+
+fn edx_eaxをediで割る_商はeaxに_余りはedxに() -&gt; [u8; 2] {
+    [0xf7, 0xff]
+}
+
+fn eaxをプッシュ() -&gt; [u8; 1] {
+    [0x50]
+}
+</code></pre>
+		<div class="content">テストケースも足したし、これで『ステップ5：四則演算のできる言語の作成』が完了</div>
 	</div>
 </div>
 
