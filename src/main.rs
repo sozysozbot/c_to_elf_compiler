@@ -189,11 +189,11 @@ fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppErr
 }
 
 /*
-fn edi増加(n: u8) -> [u8; 3] {
+fn ediに即値を足す(n: u8) -> [u8; 3] {
     [0x83, 0xc7, n]
 }
 
-fn edi減少(n: u8) -> [u8; 3] {
+fn ediから即値を引く(n: u8) -> [u8; 3] {
     [0x83, 0xef, n]
 }
 
