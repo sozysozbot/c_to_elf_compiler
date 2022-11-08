@@ -94,8 +94,34 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
     }
 }
 
+fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+    match tokens.peek() {
+        Some(Token {
+            payload: TokenPayload::Add,
+            ..
+        }) => {
+            tokens.next();
+            parse_primary(tokens, input)
+        }
+        Some(Token {
+            payload: TokenPayload::Sub,
+            pos,
+        }) => {
+            tokens.next();
+            let expr = parse_primary(tokens, input)?;
+            Ok(Expr::BinaryExpr {
+                op: BinaryOp::Sub,
+                op_pos: *pos,
+                左辺: Box::new(Expr::Numeric { val: 0, pos: *pos }),
+                右辺: Box::new(expr),
+            })
+        }
+        _ => parse_primary(tokens, input),
+    }
+}
+
 fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
-    let mut expr = parse_primary(tokens, input)?;
+    let mut expr = parse_unary(tokens, input)?;
     loop {
         match tokens.peek() {
             Some(Token {
@@ -104,7 +130,7 @@ fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Resu
             }) => {
                 tokens.next();
                 let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_primary(tokens, input)?);
+                let 右辺 = Box::new(parse_unary(tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Mul,
                     op_pos: *op_pos,
@@ -118,7 +144,7 @@ fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Resu
             }) => {
                 tokens.next();
                 let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_primary(tokens, input)?);
+                let 右辺 = Box::new(parse_unary(tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Div,
                     op_pos: *op_pos,
@@ -303,7 +329,9 @@ fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
             writer.write_all(&eaxへとポップ()).unwrap();
 
             writer.write_all(&eaxの符号ビットをedxへ拡張()).unwrap();
-            writer.write_all(&edx_eaxをediで割る_商はeaxに_余りはedxに()).unwrap();
+            writer
+                .write_all(&edx_eaxをediで割る_商はeaxに_余りはedxに())
+                .unwrap();
 
             // 結果は eax レジスタに入るので、ediに移し替える
             writer.write_all(&eaxをプッシュ()).unwrap();
