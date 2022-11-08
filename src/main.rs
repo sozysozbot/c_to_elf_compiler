@@ -24,6 +24,10 @@ enum BinaryOp {
     Sub,
     Mul,
     Div,
+    LessThan,
+    LessThanOrEqual,
+    Equal,
+    NotEqual,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -73,7 +77,7 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
             payload: TokenPayload::開き丸括弧,
             pos,
         } => {
-            let expr = parse_additive(tokens, input)?;
+            let expr = parse_expr(tokens, input)?;
             match tokens.next().unwrap() {
                 Token {
                     payload: TokenPayload::閉じ丸括弧,
@@ -200,8 +204,120 @@ fn parse_additive(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
     }
 }
 
+fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+    let mut expr = parse_additive(tokens, input)?;
+    loop {
+        let tok = tokens.peek().unwrap();
+        match tok {
+            Token {
+                payload: TokenPayload::LessThan,
+                pos: op_pos,
+            } => {
+                tokens.next();
+                let 左辺 = Box::new(expr);
+                let 右辺 = Box::new(parse_additive(tokens, input)?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::LessThan,
+                    op_pos: *op_pos,
+                    左辺,
+                    右辺,
+                }
+            }
+            Token {
+                payload: TokenPayload::LessThanOrEqual,
+                pos: op_pos,
+            } => {
+                tokens.next();
+                let 左辺 = Box::new(expr);
+                let 右辺 = Box::new(parse_additive(tokens, input)?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::LessThanOrEqual,
+                    op_pos: *op_pos,
+                    左辺,
+                    右辺,
+                }
+            }
+            Token {
+                payload: TokenPayload::GreaterThan,
+                pos: op_pos,
+            } => {
+                tokens.next();
+                let 左辺 = Box::new(expr);
+                let 右辺 = Box::new(parse_additive(tokens, input)?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::LessThan, // ここを逆転させ、
+                    op_pos: *op_pos,
+                    左辺: 右辺, // ここを逆転させればよい
+                    右辺: 左辺,
+                }
+            }
+            Token {
+                payload: TokenPayload::GreaterThanOrEqual,
+                pos: op_pos,
+            } => {
+                tokens.next();
+                let 左辺 = Box::new(expr);
+                let 右辺 = Box::new(parse_additive(tokens, input)?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::LessThanOrEqual, // ここを逆転させ、
+                    op_pos: *op_pos,
+                    左辺: 右辺, // ここを逆転させればよい
+                    右辺: 左辺,
+                }
+            }
+            _ => {
+                return Ok(expr);
+            }
+        }
+    }
+}
+
+fn parse_equality(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+    let mut expr = parse_relational(tokens, input)?;
+    loop {
+        let tok = tokens.peek().unwrap();
+        match tok {
+            Token {
+                payload: TokenPayload::Equal,
+                pos: op_pos,
+            } => {
+                tokens.next();
+                let 左辺 = Box::new(expr);
+                let 右辺 = Box::new(parse_relational(tokens, input)?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::Equal,
+                    op_pos: *op_pos,
+                    左辺,
+                    右辺,
+                }
+            }
+            Token {
+                payload: TokenPayload::NotEqual,
+                pos: op_pos,
+            } => {
+                tokens.next();
+                let 左辺 = Box::new(expr);
+                let 右辺 = Box::new(parse_relational(tokens, input)?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::NotEqual,
+                    op_pos: *op_pos,
+                    左辺,
+                    右辺,
+                }
+            }
+            _ => {
+                return Ok(expr);
+            }
+        }
+    }
+}
+
+fn parse_expr(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+    parse_equality(tokens, input)
+}
+
 fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
-    let expr = parse_additive(tokens, input)?;
+    let expr = parse_expr(tokens, input)?;
     let tok = tokens.peek().unwrap();
     if tok.payload == TokenPayload::Eof {
         Ok(expr)
@@ -268,6 +384,31 @@ fn eaxをプッシュ() -> [u8; 1] {
     [0x50]
 }
 
+fn eaxとediを比較してフラグをセット() -> [u8; 2] {
+    [0x39, 0xf8]
+}
+
+fn フラグを読んで等しいかどうかをalにセット() -> [u8; 3] {
+    [0x0f, 0x94, 0xc0]
+}
+
+fn フラグを読んで異なっているかどうかをalにセット() -> [u8; 3] {
+    [0x0f, 0x95, 0xc0]
+}
+
+fn フラグを読んで未満であるかどうかをalにセット() -> [u8; 3] {
+    [0x0f, 0x9c, 0xc0]
+}
+
+fn フラグを読んで以下であるかどうかをalにセット() -> [u8; 3] {
+    [0x0f, 0x9e, 0xc0]
+}
+
+fn alをゼロ拡張してediにセット() -> [u8; 3] {
+    [0x0f, 0xb6, 0xf8]
+}
+
+#[allow(clippy::too_many_lines)]
 fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
     match expr {
         Expr::BinaryExpr {
@@ -337,10 +478,85 @@ fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
             writer.write_all(&eaxをプッシュ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
         }
+        Expr::BinaryExpr {
+            op: BinaryOp::Equal,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            比較演算を評価してediレジスタへ(
+                writer,
+                左辺,
+                右辺,
+                &フラグを読んで等しいかどうかをalにセット(),
+            );
+        }
+        Expr::BinaryExpr {
+            op: BinaryOp::NotEqual,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            比較演算を評価してediレジスタへ(
+                writer,
+                左辺,
+                右辺,
+                &フラグを読んで異なっているかどうかをalにセット(),
+            );
+        }
+        Expr::BinaryExpr {
+            op: BinaryOp::LessThan,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            比較演算を評価してediレジスタへ(
+                writer,
+                左辺,
+                右辺,
+                &フラグを読んで未満であるかどうかをalにセット(),
+            );
+        }
+        Expr::BinaryExpr {
+            op: BinaryOp::LessThanOrEqual,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            比較演算を評価してediレジスタへ(
+                writer,
+                左辺,
+                右辺,
+                &フラグを読んで以下であるかどうかをalにセット(),
+            );
+        }
         Expr::Numeric { val, pos: _ } => {
             writer.write_all(&ediに代入(*val)).unwrap();
         }
     }
+}
+
+fn 比較演算を評価してediレジスタへ(
+    writer: &mut impl Write,
+    左辺: &Expr,
+    右辺: &Expr,
+    フラグをalに移す: &[u8],
+) {
+    exprを評価してediレジスタへ(writer, 左辺);
+    writer.write_all(&ediをプッシュ()).unwrap();
+    exprを評価してediレジスタへ(writer, 右辺);
+    writer.write_all(&ediをプッシュ()).unwrap();
+
+    writer.write_all(&ediへとポップ()).unwrap();
+    writer.write_all(&eaxへとポップ()).unwrap();
+
+    writer
+        .write_all(&eaxとediを比較してフラグをセット())
+        .unwrap();
+
+    writer.write_all(フラグをalに移す).unwrap();
+
+    writer.write_all(&alをゼロ拡張してediにセット()).unwrap();
 }
 
 fn parse_and_codegen(
