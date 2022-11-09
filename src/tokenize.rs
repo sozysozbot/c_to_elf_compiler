@@ -10,6 +10,12 @@ pub enum TokenPayload {
     開き丸括弧,
     閉じ丸括弧,
     Eof,
+    GreaterThan,
+    GreaterThanOrEqual,
+    LessThan,
+    LessThanOrEqual,
+    Equal,
+    NotEqual,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -43,6 +49,7 @@ fn tokenize_test() {
     );
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
     let mut ans = vec![];
     let mut iter = input.chars().enumerate().peekable();
@@ -93,6 +100,76 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     payload: TokenPayload::閉じ丸括弧,
                     pos,
                 });
+            }
+            '=' => {
+                iter.next();
+                match iter.peek() {
+                    Some(&(pos, '=')) => {
+                        iter.next();
+                        ans.push(Token {
+                            payload: TokenPayload::Equal,
+                            pos,
+                        });
+                    }
+                    _ => {
+                        return Err(AppError {
+                            message: "`=`演算子はありません".to_string(),
+                            input: input.to_string(),
+                            pos,
+                        })
+                    }
+                }
+            }
+            '!' => {
+                iter.next();
+                match iter.peek() {
+                    Some(&(pos, '=')) => {
+                        iter.next();
+                        ans.push(Token {
+                            payload: TokenPayload::NotEqual,
+                            pos,
+                        });
+                    }
+                    _ => {
+                        return Err(AppError {
+                            message: "`!`演算子はありません".to_string(),
+                            input: input.to_string(),
+                            pos,
+                        })
+                    }
+                }
+            }
+            '<' => {
+                iter.next();
+                match iter.peek() {
+                    Some(&(pos, '=')) => {
+                        iter.next();
+                        ans.push(Token {
+                            payload: TokenPayload::LessThanOrEqual,
+                            pos,
+                        });
+                    }
+                    _ => ans.push(Token {
+                        payload: TokenPayload::LessThan,
+                        pos,
+                    }),
+                }
+            }
+            '>' => {
+                iter.next();
+                match iter.peek() {
+                    Some(&(pos, '=')) => {
+                        iter.next();
+                        ans.push(Token {
+                            payload: TokenPayload::GreaterThanOrEqual,
+                            pos,
+                        });
+                    }
+                    _ => ans.push(Token {
+                        payload: TokenPayload::GreaterThan,
+                        pos,
+                    }),
+                }
             }
             '0'..='9' => ans.push(Token {
                 payload: TokenPayload::Num(parse_num(&mut iter).map_err(|message| AppError {
