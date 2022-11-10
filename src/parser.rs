@@ -23,11 +23,21 @@ fn parse_test() {
 fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
     match tokens.next().unwrap() {
         Token {
-            payload: TokenPayload::Num(first),
+            payload: TokenPayload::Num(val),
             pos,
         } => {
             let expr = Expr::Numeric {
-                val: *first,
+                val: *val,
+                pos: *pos,
+            };
+            Ok(expr)
+        }
+        Token {
+            payload: TokenPayload::Identifier(ident),
+            pos,
+        } => {
+            let expr = Expr::Identifier {
+                ident: *ident,
                 pos: *pos,
             };
             Ok(expr)
@@ -272,7 +282,25 @@ fn parse_equality(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
 }
 
 fn parse_expr(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
-    parse_equality(tokens, input)
+    let expr = parse_equality(tokens, input)?;
+    let tok = tokens.peek().unwrap();
+    match tok {
+        Token {
+            payload: TokenPayload::Assign,
+            pos: op_pos,
+        } => {
+            tokens.next();
+            let 左辺 = Box::new(expr);
+            let 右辺 = Box::new(parse_expr(tokens, input)?);
+            Ok(Expr::BinaryExpr {
+                op: BinaryOp::Assign,
+                op_pos: *op_pos,
+                左辺,
+                右辺,
+            })
+        }
+        _ => Ok(expr),
+    }
 }
 
 fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
@@ -286,7 +314,7 @@ fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
             } => {
                 tokens.next();
                 let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_relational(tokens, input)?);
+                let 右辺 = Box::new(parse_expr(tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::AndThen,
                     op_pos: *op_pos,
