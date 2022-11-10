@@ -652,3 +652,18 @@ Error: Ensure GITHUB_TOKEN has permission "idToken: write".
 ```
 hsjoihs「うーむ。とりあえず上手くいっていないので、せっかくバージョン管理されていることだし、上手くいっていたところまで強引に世界を差し戻すか？」
 hsjoihs「いや、https://github.com/jurliyuuri/cerke_online_alpha/blob/master/.github/workflows/deploy.yml のを転用して、gh-pages ブランチからページを生やすようにしよう」
+hsjoihs「えーと、https://github.com/sozysozbot/c_to_elf_compiler/actions/runs/3438695080/workflow 曰く、」
+$blockquote
+```
+The workflow is not valid. .github/workflows/docs.yaml (Line: 35, Col: 14): Unexpected value '' .github/workflows/docs.yaml (Line: 36, Col: 9): Unexpected value 'github_token'
+```
+hsjoihs「それはそう。え、でも cerke_online_alpha には secret が設定されていないと書いてあるけど」
+hsjoihs「https://github.com/peaceiris/actions-gh-pages 曰く、」
+$blockquote
+```
+For newbies of GitHub Actions: Note that the GITHUB_TOKEN is NOT a personal access token. A GitHub Actions runner automatically creates a GITHUB_TOKEN secret to authenticate in your workflow. So, you can start to deploy immediately without any configuration.
+```
+hsjoihs「あ、そうなの。じゃあなんで落ちてるんだろうか」
+
+hsjoihs「https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-first-deployment-with-github_token を読む。なるほど、初回は失敗することが想定されているのか。へー」
+hsjoihs「とりあえず git checkout --orphan gh-pages をして push することで gh-pages ブランチを作るか」
