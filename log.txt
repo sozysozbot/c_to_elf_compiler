@@ -604,3 +604,32 @@ hsjoihs「CIの整備と、ファイル分割がされている。ありがた�
 hsjoihs「設定を変更して、えっと」
 hsjoihs「あーあれか、マージしてから設定を変更したせいで、この版まではデフォルトのgithub-pages アクションに基づいて生成されているのか」
 hsjoihs「じゃあ、もう一回コミットしたら tkr の書いた GitHub Action が走ってくれる？」
+hsjoihs「んー、Workflow details will appear here once your site has been deployed. と言われる」
+hsjoihs「Your site was last deployed to the github-pages environment by the pages build and deployment workflow. とのことだから、設定できてないな」
+hsjoihs「https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site 曰く、」
+$blockquote
+```
+If you already have a workflow to publish your site, you can skip this step. 
+
+GitHub Pages does not associate a specific workflow to the GitHub Pages settings. However, the GitHub Pages settings will link to the workflow run that most recently deployed your site.
+```
+hsjoihs「とのこと。つまり、Source: GitHub Actions とだけ出てそれ以上設定する画面がないという現状で問題ないっぽい」
+hsjoihs「次に、https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#creating-a-custom-github-actions-workflow-to-publish-your-site を見ると、」
+
+$blockquote
+```
+The general flow of a workflow is to:
+
+1. Trigger whenever there is a push to the default branch of the repository or whenever the workflow is run manually from the Actions tab.
+
+2. Use the actions/checkout action to check out the repository contents.
+    
+3. If required by your site, build any static site files.
+
+4. Use the actions/upload-pages-artifact action to upload the static files as an artifact.
+    
+5. If the workflow was triggered by a push to the default branch, use the actions/deploy-pages action to deploy the artifact. This step is skipped if the workflow was triggered by a pull request.
+```
+hsjoihs「と書いてある。tkr の書いてくれた workflows/docs.yaml には actions/checkout と actions/upload-pages-artifact が言及されている」
+
+hsjoihs「ふむ、The starter workflows use a deployment environment called github-pages. If your repository does not already include an environment called github-pages, the environment will be created automatically. と書いてある。名前を変えてみるか」
