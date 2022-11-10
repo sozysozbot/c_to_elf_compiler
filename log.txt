@@ -667,3 +667,4 @@ hsjoihs「あ、そうなの。じゃあなんで落ちてるんだろうか」
 
 hsjoihs「https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-first-deployment-with-github_token を読む。なるほど、初回は失敗することが想定されているのか。へー」
 hsjoihs「とりあえず git checkout --orphan gh-pages をして push することで gh-pages ブランチを作るか」
+hsjoihs「えーとインデントが壊れている。直そう」
