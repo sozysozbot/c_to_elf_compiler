@@ -634,3 +634,21 @@ hsjoihs「と書いてある。tkr の書いてくれた workflows/docs.yaml に
 
 hsjoihs「ふむ、The starter workflows use a deployment environment called github-pages. If your repository does not already include an environment called github-pages, the environment will be created automatically. と書いてある。名前を変えてみるか」
 hsjoihs「うまくいかない。 actions/deploy-pages action を足してみるか」
+hsjoihs「CI が落ちた。https://github.com/sozysozbot/c_to_elf_compiler/actions/runs/3438529083/jobs/5734705044 」
+$blockquote
+```
+Error: Error message: Unable to get ACTIONS_ID_TOKEN_REQUEST_URL env variable
+    at Function.<anonymous> (/home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/oidc-utils.js:71:1)
+    at Generator.next (<anonymous>)
+    at /home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/oidc-utils.js:8:1
+    at new Promise (<anonymous>)
+    at __webpack_modules__.8041.__awaiter (/home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/oidc-utils.js:4:1)
+    at Function.getIDToken (/home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/oidc-utils.js:57:1)
+    at Object.<anonymous> (/home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/core.js:315:1)
+    at Generator.next (<anonymous>)
+    at /home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/core.js:27:1
+    at new Promise (<anonymous>)
+Error: Ensure GITHUB_TOKEN has permission "idToken: write".
+```
+hsjoihs「うーむ。とりあえず上手くいっていないので、せっかくバージョン管理されていることだし、上手くいっていたところまで強引に世界を差し戻すか？」
+hsjoihs「いや、https://github.com/jurliyuuri/cerke_online_alpha/blob/master/.github/workflows/deploy.yml のを転用して、gh-pages ブランチからページを生やすようにしよう」
