@@ -49,4 +49,6 @@ check 7 "a = 7; a"
 check 7 "a = 3; b = 4; a + b"
 check 7 "c = 28; b = 4; c / b"
 check 7 "a = 3; b = a + 1; a + b"
+check 7 "a = b = 7; a"
+check 7 "a = b = 7; b"
 rm a.out
