@@ -83,6 +83,15 @@ fn alをゼロ拡張してediにセット() -> [u8; 3] {
 pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
     match expr {
         Expr::BinaryExpr {
+            op: BinaryOp::AndThen,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺); // 左辺は push せずに捨てる
+            exprを評価してediレジスタへ(writer, 右辺);
+        }
+        Expr::BinaryExpr {
             op: BinaryOp::Add,
             op_pos: _,
             左辺,

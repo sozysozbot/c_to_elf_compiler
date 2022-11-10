@@ -36,6 +36,13 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 iter.next();
                 continue;
             }
+            ';' => {
+                iter.next();
+                ans.push(Token {
+                    payload: TokenPayload::Semicolon,
+                    pos,
+                });
+            }
             '+' => {
                 iter.next();
                 ans.push(Token {

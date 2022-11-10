@@ -42,4 +42,7 @@ check 1 "3+4!=5*6"
 check 0 "0<=1>2"
 check 1 "0<=(1>2)"
 check 1 "1<2==4>1"
+check 4 "3; 4"
+check 8 "42-5; 4+4"
+check 8 "45<3; 25>=4; 4+4"
 rm a.out

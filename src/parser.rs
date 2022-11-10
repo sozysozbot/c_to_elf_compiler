@@ -275,8 +275,34 @@ fn parse_expr(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, A
     parse_equality(tokens, input)
 }
 
+fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+    let mut expr = parse_expr(tokens, input)?;
+    loop {
+        let tok = tokens.peek().unwrap();
+        match tok {
+            Token {
+                payload: TokenPayload::Semicolon,
+                pos: op_pos,
+            } => {
+                tokens.next();
+                let 左辺 = Box::new(expr);
+                let 右辺 = Box::new(parse_relational(tokens, input)?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::AndThen,
+                    op_pos: *op_pos,
+                    左辺,
+                    右辺,
+                }
+            }
+            _ => {
+                return Ok(expr);
+            }
+        }
+    }
+}
+
 pub fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
-    let expr = parse_expr(tokens, input)?;
+    let expr = parse_program(tokens, input)?;
     let tok = tokens.peek().unwrap();
     if tok.payload == TokenPayload::Eof {
         Ok(expr)

@@ -8,6 +8,7 @@ pub enum BinaryOp {
     LessThanOrEqual,
     Equal,
     NotEqual,
+    AndThen,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
