@@ -1,5 +1,5 @@
 #![warn(clippy::pedantic)]
-use std::{io::Write, iter::Peekable, slice::Iter};
+use std::io::Write;
 
 use c_to_elf_compiler::apperror::AppError;
 use c_to_elf_compiler::codegen;

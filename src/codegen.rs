@@ -1,5 +1,5 @@
 use crate::ast::*;
-use std::{io::Write, iter::Peekable, slice::Iter};
+use std::io::Write;
 
 /*
 fn ediに即値を足す(n: u8) -> [u8; 3] {

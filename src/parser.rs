@@ -1,7 +1,7 @@
 use crate::apperror::*;
 use crate::ast::*;
 use crate::token::*;
-use std::{io::Write, iter::Peekable, slice::Iter};
+use std::{iter::Peekable, slice::Iter};
 
 #[test]
 fn parse_test() {
