@@ -6,13 +6,17 @@ fn ediに即値を足す(n: u8) -> [u8; 3] {
     [0x83, 0xc7, n]
 }
 
+fn ediから即値を引く(n: u8) -> [u8; 3] {
+    [0x83, 0xef, n]
+}
+
 fn 即値をプッシュ(n: u8) -> [u8; 2] {
     [0x6a, n]
 }
 */
 
-fn ediから即値を引く(n: u8) -> [u8; 3] {
-    [0x83, 0xef, n]
+fn rdiから即値を引く(n: u8) -> [u8; 4] {
+    [0x48, 0x83, 0xef, n]
 }
 
 fn ediに代入(n: u8) -> [u8; 5] {
@@ -108,7 +112,7 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
             let offset = (((*ident as usize) - ('a' as usize)) * 4) as u8;
             writer.write_all(&rbpをプッシュ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
-            writer.write_all(&ediから即値を引く(offset)).unwrap();
+            writer.write_all(&rdiから即値を引く(offset)).unwrap();
         }
         _ => panic!("代入式の左辺に左辺値以外が来ています"),
     }

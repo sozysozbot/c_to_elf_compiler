@@ -16,7 +16,6 @@ check() {
     exit 1
   fi
 }
-check 7 "a = 7; a"
 check 8 8
 check 27 27
 check 3 "1+2"
@@ -46,6 +45,7 @@ check 1 "1<2==4>1"
 check 4 "3; 4"
 check 8 "42-5; 4+4"
 check 8 "45<3; 25>=4; 4+4"
+check 7 "a = 7; a"
 check 7 "a = 3; b = 4; a + b"
 check 7 "c = 28; b = 4; c / b"
 check 7 "a = 3; b = a + 1; a + b"
