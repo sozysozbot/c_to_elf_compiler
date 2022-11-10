@@ -27,5 +27,5 @@ pub enum Expr {
     Identifier {
         ident: char,
         pos: usize,
-    }
+    },
 }
