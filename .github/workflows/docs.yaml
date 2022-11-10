@@ -1,0 +1,22 @@
+name: docs
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: |
+          npm ci
+          npx ts-node index.ts
+          mkdir dist
+          cp -r ./icons ./log.html ./highlight.min.js ./vs.min.css ./dist
+        working-directory: ./docs
+      - uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./docs/dist
