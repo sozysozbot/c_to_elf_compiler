@@ -6,7 +6,7 @@ check() {
 
   cargo run -- "$input"
   chmod 755 ./a.out
-  ./a.out
+  ./run-on-linux.sh ./a.out
   actual="$?"
 
   if [ "$actual" = "$expected" ]; then
@@ -16,7 +16,6 @@ check() {
     exit 1
   fi
 }
-
 check 8 8
 check 27 27
 check 3 "1+2"

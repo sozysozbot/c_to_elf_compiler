@@ -1,0 +1,22 @@
+name: ci
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache rust
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+            **/target
+            ~/.rustup
+          key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-
+      - run: cargo build
+      - run: cargo test
+      - run: cargo clippy
+      - run: cargo fmt -- --check
+      - run: ./test.sh
