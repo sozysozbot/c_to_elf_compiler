@@ -670,3 +670,4 @@ hsjoihs「とりあえず git checkout --orphan gh-pages をして push する�
 hsjoihs「えーとインデントが壊れている。直そう」
 hsjoihs「ジョブは走っているが、ページが出力されない。.nojekyll ってファイルだけが生えておる」
 hsjoihs「ああ、publish_dir がミスってるのか」
+hsjoihs「直したら直った！URL も今までと変わらず提供できている。勝利ですね。リポジトリの README も直しておくか」
