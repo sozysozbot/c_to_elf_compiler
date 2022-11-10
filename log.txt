@@ -633,3 +633,4 @@ The general flow of a workflow is to:
 hsjoihs「と書いてある。tkr の書いてくれた workflows/docs.yaml には actions/checkout と actions/upload-pages-artifact が言及されている」
 
 hsjoihs「ふむ、The starter workflows use a deployment environment called github-pages. If your repository does not already include an environment called github-pages, the environment will be created automatically. と書いてある。名前を変えてみるか」
+hsjoihs「うまくいかない。 actions/deploy-pages action を足してみるか」
