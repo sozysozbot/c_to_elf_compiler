@@ -1054,7 +1054,7 @@ fn eaxをプッシュ() -&gt; [u8; 1] {
 		<div class="content">やったことはコミットメッセージに</div>
 	</div>
 </div>
-<h3 class="date">2022年11月11日</h3>
+<h3 class="date">2022年11月11日（CIの修正）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
 	<div class="name_and_content">
@@ -1118,6 +1118,59 @@ Error: Ensure GITHUB_TOKEN has permission &quot;idToken: write&quot;.
 		<div class="content">ジョブは走っているが、ページが出力されない。.nojekyll ってファイルだけが生えておる</div>
 		<div class="content">ああ、publish_dir がミスってるのか</div>
 		<div class="content">直したら直った！URL も今までと変わらず提供できている。勝利ですね。リポジトリの README も直しておくか</div>
+	</div>
+</div>
+<h3 class="date">2022年11月11日（一文字変数）</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+		<div class="content">さて、次は複文と一文字変数</div>
+		<div class="content">そういえば、compilerbook では『一番最後の式の結果をプログラム全体の計算結果とすることにします』として、構文定義がこうなってるけど、</div>
+		<blockquote>program    = stmt*
+stmt       = expr &quot;;&quot;
+expr       = assign
+assign     = equality (&quot;=&quot; assign)?
+equality   = relational (&quot;==&quot; relational | &quot;!=&quot; relational)*
+relational = add (&quot;&lt;&quot; add | &quot;&lt;=&quot; add | &quot;&gt;&quot; add | &quot;&gt;=&quot; add)*
+add        = mul (&quot;+&quot; mul | &quot;-&quot; mul)*
+mul        = unary (&quot;*&quot; unary | &quot;/&quot; unary)*
+unary      = (&quot;+&quot; | &quot;-&quot;)? primary
+primary    = num | ident | &quot;(&quot; expr &quot;)&quot;
+</blockquote>
+		<div class="content">このプロジェクトは Rust で書いてるんだし、Rust と同様に『文の列の最後に式を書くと、それが戻り値になる』で組もうかな</div>
+		<div class="content">こうすることの利点としては、</div>
+		<div class="content"><ul><li>今までのテストケースに手を入れなくて済む</li><li>スタック操作をミスってバグが出たときに、より早期に気づきやすい（Cコンパイラ班の受講生で、ここの周りで混乱してバグらせた人を見た）</li><li>実はセミコロンを中置演算子として見ることができ、既存の再帰下降のコピペで実装が終わる</li></ul></div>
+		<div class="content">などが挙げられそう</div>
+		<div class="content">ところで、関係ないけど、このログを生成する自作ツール PseudoRoku に箇条書き機能欲しくなってきたな。$HTML コマンドに &lt;ul&gt; を食わせて1行ずつで書かなきゃいけないのが面倒になってきた</div>
+		<div class="content">さて、とりあえずトークナイザに一文字変数を足さねば。あと Assign 演算子も足そう。右結合だから、ループにせずとも再帰で十分</div>
+		<div class="content">いや、まずは最小限の変更で動かしたいから、最初はセミコロンだけだな。AndThenという二項演算子として処理して、</div>
+		<pre><code class="language-rust">        Expr::BinaryExpr {
+            op: BinaryOp::AndThen,
+            op_pos: _,
+            左辺,
+            右辺,
+        } =&gt; {
+            exprを評価してediレジスタへ(writer, 左辺); // 左辺は push せずに捨てる
+            exprを評価してediレジスタへ(writer, 右辺);
+        }
+</code></pre>
+		<div class="content">これだけで動くはず。便利</div>
+		<div class="content">次に、一文字変数と代入が必要。&#x27;a&#x27; から &#x27;z&#x27; および &#x27;=&#x27; をトークナイズし、パーサーを増やす。parse_primary で識別子を読むコードも必要</div>
+		<div class="content">あとはコード生成を書くだけ。今回の実装では return しないので、エピローグは不要で、プロローグで変数 26 個分の領域を確保すれば十分</div>
+		<div class="content">おや、パースが通らない。なるほど、再帰下降のコピペミスか。直した。しかし Mac だとテストケースごとに docker run するから遅いな。しょうがないけど</div>
+		<div class="content">直したらパースが通るようになったが、&#x60;a = 3; b = 4; a + b&#x60; で &#x60;7 expected, but got 139&#x60; が出ている。なんかミスっておるな</div>
+		<div class="content">&#x60;a = 7; a&#x60; でも同じ。ところで、この手のミスをすると毎回 139 が来る気がするけど、これなんなんだろう</div>
+		<div class="content">あーわかった。コメントアウトしてた『ediから即値を引く』関数をそのまま使ってたけど、これは『edi から即値を引く』から、rdi の上位 32 ビットがクリアされちゃってるんだな</div>
+		<div class="content">ということで、</div>
+		<pre><code class="language-rust">fn rdiから即値を引く(n: u8) -&gt; [u8; 4] {
+    [0x48, 0x83, 0xef, n]
+}
+</code></pre>
+		<div class="content">にしたら……動いた！</div>
+		<div class="content">今までは意図的に 32 ビットレジスタと 64 ビットレジスタを混同するような書き方をしてきたけど、そろそろちゃんと分ける必要が出てきますわね</div>
+		<div class="content">あ、CI で cargo fmt が要求されてる。掛けておくか</div>
+		<div class="content">そういえば、せっかく &#x60;a = b = 7&#x60; みたいなやつに対応してあるんだから、テストケースに足しておこう</div>
 	</div>
 </div>
 
