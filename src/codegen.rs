@@ -15,12 +15,28 @@ fn 即値をプッシュ(n: u8) -> [u8; 2] {
 }
 */
 
+fn rdiから即値を引く(n: u8) -> [u8; 4] {
+    [0x48, 0x83, 0xef, n]
+}
+
 fn ediに代入(n: u8) -> [u8; 5] {
     [0xbf, n, 0x00, 0x00, 0x00]
 }
 
 fn ediをプッシュ() -> [u8; 1] {
     [0x57]
+}
+
+pub fn rbpをプッシュ() -> [u8; 1] {
+    [0x55]
+}
+
+pub fn rspをrbpにコピー() -> [u8; 3] {
+    [0x48, 0x89, 0xe5]
+}
+
+pub fn rspから即値を引く(n: u8) -> [u8; 4] {
+    [0x48, 0x83, 0xec, n]
 }
 
 fn ediへとポップ() -> [u8; 1] {
@@ -79,9 +95,58 @@ fn alをゼロ拡張してediにセット() -> [u8; 3] {
     [0x0f, 0xb6, 0xf8]
 }
 
+fn rdiを間接参照() -> [u8; 3] {
+    [0x48, 0x8b, 0x3f]
+}
+
+fn raxが指す位置にediを代入() -> [u8; 2] {
+    [0x89, 0x38]
+}
+
+pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
+    writer: &mut impl Write,
+    expr: &Expr,
+) {
+    match expr {
+        Expr::Identifier { ident, pos: _ } => {
+            let offset = (((*ident as usize) - ('a' as usize)) * 4) as u8;
+            writer.write_all(&rbpをプッシュ()).unwrap();
+            writer.write_all(&ediへとポップ()).unwrap();
+            writer.write_all(&rdiから即値を引く(offset)).unwrap();
+        }
+        _ => panic!("代入式の左辺に左辺値以外が来ています"),
+    }
+}
+
 #[allow(clippy::too_many_lines)]
 pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
     match expr {
+        Expr::BinaryExpr {
+            op: BinaryOp::Assign,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを左辺値として評価してアドレスをrdiレジスタへ(writer, 左辺);
+            writer.write_all(&ediをプッシュ()).unwrap();
+            exprを評価してediレジスタへ(writer, 右辺);
+
+            writer.write_all(&eaxへとポップ()).unwrap(); // 左辺のアドレス
+            writer.write_all(&raxが指す位置にediを代入()).unwrap();
+        }
+        Expr::Identifier { .. } => {
+            exprを左辺値として評価してアドレスをrdiレジスタへ(writer, expr);
+            writer.write_all(&rdiを間接参照()).unwrap();
+        }
+        Expr::BinaryExpr {
+            op: BinaryOp::AndThen,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺); // 左辺は push せずに捨てる
+            exprを評価してediレジスタへ(writer, 右辺);
+        }
         Expr::BinaryExpr {
             op: BinaryOp::Add,
             op_pos: _,

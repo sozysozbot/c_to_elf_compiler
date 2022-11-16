@@ -14,6 +14,9 @@ pub enum TokenPayload {
     LessThanOrEqual,
     Equal,
     NotEqual,
+    Assign,
+    Semicolon,
+    Identifier(char),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

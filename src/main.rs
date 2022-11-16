@@ -31,7 +31,15 @@ fn parse_and_codegen(
 
     let tiny = include_bytes!("../experiment/tiny");
     writer.write_all(&tiny[0..0x78]).unwrap();
+
+    writer.write_all(&codegen::rbpをプッシュ()).unwrap();
+    writer.write_all(&codegen::rspをrbpにコピー()).unwrap();
+    writer
+        .write_all(&codegen::rspから即値を引く(26 * 4))
+        .unwrap();
+
     codegen::exprを評価してediレジスタへ(&mut writer, &expr);
+
     writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
     writer.write_all(&[0x0f, 0x05]).unwrap();
     Ok(())

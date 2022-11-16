@@ -36,6 +36,20 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 iter.next();
                 continue;
             }
+            'a'..='z' => {
+                iter.next();
+                ans.push(Token {
+                    payload: TokenPayload::Identifier(c),
+                    pos,
+                });
+            }
+            ';' => {
+                iter.next();
+                ans.push(Token {
+                    payload: TokenPayload::Semicolon,
+                    pos,
+                });
+            }
             '+' => {
                 iter.next();
                 ans.push(Token {
@@ -89,11 +103,10 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                         });
                     }
                     _ => {
-                        return Err(AppError {
-                            message: "`=`演算子はありません".to_string(),
-                            input: input.to_string(),
+                        ans.push(Token {
+                            payload: TokenPayload::Assign,
                             pos,
-                        })
+                        });
                     }
                 }
             }

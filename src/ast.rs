@@ -8,6 +8,8 @@ pub enum BinaryOp {
     LessThanOrEqual,
     Equal,
     NotEqual,
+    AndThen,
+    Assign,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -20,6 +22,10 @@ pub enum Expr {
     },
     Numeric {
         val: u8,
+        pos: usize,
+    },
+    Identifier {
+        ident: char,
         pos: usize,
     },
 }
