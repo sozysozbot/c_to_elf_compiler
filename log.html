@@ -41,6 +41,21 @@
 			text-size-adjust: 100%;
 			-webkit-text-size-adjust: 100%;
 		}
+		.permalink {
+			margin-left: 15px;
+			padding: .2em .6em .3em;
+			font-size: 75%;
+			font-weight: 700;
+			line-height: 1;
+			color: #fff;
+			text-align: center;
+			white-space: nowrap;
+			vertical-align: center;
+			border-radius: .25em;
+			background-color: #666666;
+			text-decoration: none;
+			visibility: hidden;
+		}
 	</style>
 	<link rel="stylesheet" href="vs.min.css">
 	<script src="highlight.min.js"></script>
@@ -55,44 +70,44 @@
 <h2>会話ログ本体</h2><h3 class="date">2022年10月3日（Discord にて）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_95d88f0ac94e8d1025e3d1eec271a1bb').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_95d88f0ac94e8d1025e3d1eec271a1bb').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_95d88f0ac94e8d1025e3d1eec271a1bb" href="#permalink_95d88f0ac94e8d1025e3d1eec271a1bb" class="permalink">¶</a>
 		<div class="content">そういや C コンパイラやってないな。アセンブリ言語を機械語にするのに binutils のを使うのもどうなんだろと思ってたらそのまま数ヶ月経ってた</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_3f2a03d776d134865ea86738cf71dd63').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_3f2a03d776d134865ea86738cf71dd63').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_3f2a03d776d134865ea86738cf71dd63" href="#permalink_3f2a03d776d134865ea86738cf71dd63" class="permalink">¶</a>
 		<div class="content">いいですね。だったら、Rui 本の原則に則って、『step 1 からもう ELF バイナリへとコンパイルしちゃう』『常に実行形式をコンパイラが生成し続けられるようにする』というのでやってみませんか？</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1ff958f9377fd22e8367451f0a272399').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1ff958f9377fd22e8367451f0a272399').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_1ff958f9377fd22e8367451f0a272399" href="#permalink_1ff958f9377fd22e8367451f0a272399" class="permalink">¶</a>
 		<div class="content">なるほど</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_671c245347ecd6731eaf4f9ba276e82f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_671c245347ecd6731eaf4f9ba276e82f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_671c245347ecd6731eaf4f9ba276e82f" href="#permalink_671c245347ecd6731eaf4f9ba276e82f" class="permalink">¶</a>
 		<div class="content">C → アセンブラのコンパイラをセルフホストしたあとにアセンブラとリンカと libc と書くのは既に ushitora_anqou がやってるけど、最初から ELF バイナリへとコンパイルしつづける形式で Rui 本を走ってる人を私は知らないので、やってみるとおもしろそう</div>
 		<div class="content">教材書けとは言わんので、作業ログでもいいんで書いてみません？言語はどれでやるんです？</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_770da497666650cc1b0b2648b7612410').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_770da497666650cc1b0b2648b7612410').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_770da497666650cc1b0b2648b7612410" href="#permalink_770da497666650cc1b0b2648b7612410" class="permalink">¶</a>
 		<div class="content">もちろん Rust</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_cc97c50cfe1e67a2658c96151f6e1d2d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_cc97c50cfe1e67a2658c96151f6e1d2d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_cc97c50cfe1e67a2658c96151f6e1d2d" href="#permalink_cc97c50cfe1e67a2658c96151f6e1d2d" class="permalink">¶</a>
 		<div class="content">じゃあ、step 1 は『return 3; するやつと return 42; するやつを gcc でコンパイルして ELF バイナリを吐いて、その差分を比較してどのバイトを置き換えるべきかを調べ、それを &#x60;include_bytes!()&#x60; する』という方針にするのがよさそう</div>
 		<div class="content">なので、step 1 ではアセンブラもリンカもない。まあ、拡張していくと、機械語を直にいじるのがじきにきつくなるので、だんだんアセンブリ言語が育っていって、それは GNU のアセンブリ言語とそれなりに互換性があることが期待されるが、別にそれを目標にするわけではない。</div>
 		<div class="content">という感じでやっていくとよさそう。今日はもう寝ます？</div>
@@ -100,23 +115,23 @@
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_2549241bf7ae5f463ba351590415956b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_2549241bf7ae5f463ba351590415956b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_2549241bf7ae5f463ba351590415956b" href="#permalink_2549241bf7ae5f463ba351590415956b" class="permalink">¶</a>
 		<div class="content">いま布団の中です</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_bef481b97aada825069536205dcb453f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_bef481b97aada825069536205dcb453f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_bef481b97aada825069536205dcb453f" href="#permalink_bef481b97aada825069536205dcb453f" class="permalink">¶</a>
 		<div class="content">ではでは、おやすみなさい〜</div>
 	</div>
 </div>
 <h3 class="date">2022年10月3日（一人で作業）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_8e86cb6e213cb27b3a5ab911be5549a5').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8e86cb6e213cb27b3a5ab911be5549a5').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_8e86cb6e213cb27b3a5ab911be5549a5" href="#permalink_8e86cb6e213cb27b3a5ab911be5549a5" class="permalink">¶</a>
 		<div class="content">じゃあ私が勝手に step 1 を実装するか。なんなら会話ログももうレンダリングできるようにしておこう</div>
 		<div class="content">とりあえず docs フォルダを立てて、docs/dialog.txt に会話を書いて docs/ 内で node index.js したらログがレンダリングできるようにしておいた</div>
 		<div class="content">このリポジトリに招待を飛ばしておいて、</div>
@@ -150,30 +165,30 @@ clean:
 <h3 class="date">2022年10月3日（yukata_yu との会話）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/yukata_yu" target="_blank" rel="noopener noreferrer"><img alt="ゆかたゆ" class="icon" src="icons/ゆかたゆ.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/yukata_yu" target="_blank" rel="noopener noreferrer">ゆかたゆ</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_049f6dcd21896d3f1dc0920038a74215').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_049f6dcd21896d3f1dc0920038a74215').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/yukata_yu" target="_blank" rel="noopener noreferrer">ゆかたゆ</a></span><a id="permalink_049f6dcd21896d3f1dc0920038a74215" href="#permalink_049f6dcd21896d3f1dc0920038a74215" class="permalink">¶</a>
 		<div class="content">-O1 を使わないのですか？ (エイリアスなんでしたっけ)</div>
 		<div class="content">あー， -Osがあるんだ…</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_8ea4f902ea0033bc92d29429e5baa815').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8ea4f902ea0033bc92d29429e5baa815').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_8ea4f902ea0033bc92d29429e5baa815" href="#permalink_8ea4f902ea0033bc92d29429e5baa815" class="permalink">¶</a>
 		<div class="content">-O1 を導入せず、gcc を消し飛ばして nasm で作るようにします</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/yukata_yu" target="_blank" rel="noopener noreferrer"><img alt="ゆかたゆ" class="icon" src="icons/ゆかたゆ.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/yukata_yu" target="_blank" rel="noopener noreferrer">ゆかたゆ</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e98a8badb501679c38398e0088e8b483').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e98a8badb501679c38398e0088e8b483').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/yukata_yu" target="_blank" rel="noopener noreferrer">ゆかたゆ</a></span><a id="permalink_e98a8badb501679c38398e0088e8b483" href="#permalink_e98a8badb501679c38398e0088e8b483" class="permalink">¶</a>
 		<div class="content">なるほ</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_92f7f54b86e83f024726da054ab0a5db').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_92f7f54b86e83f024726da054ab0a5db').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_92f7f54b86e83f024726da054ab0a5db" href="#permalink_92f7f54b86e83f024726da054ab0a5db" class="permalink">¶</a>
 		<div class="content">-Os を使うと、3 + 4 - 2 とかが畳み込まれちゃう気がするので</div>
 		<div class="content">まあ一応 -Os でどれくらい減るのかも実験しておくか。そもそも nasm にする予定だけど。CFLAGS=-std=c17 -Wall -s -Os で試すと、</div>
 		<pre><code class="language-shell">hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ make 3
@@ -189,8 +204,8 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ wc -c 3
 <h3 class="date">2022年10月3日（一人で作業）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7bd3a87583996ba4a89e989af9ee14d7').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7bd3a87583996ba4a89e989af9ee14d7').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_7bd3a87583996ba4a89e989af9ee14d7" href="#permalink_7bd3a87583996ba4a89e989af9ee14d7" class="permalink">¶</a>
 		<div class="content">とりあえず、原典にこうあるけど、</div>
 		<pre><code class="language-x86asm">  ; tiny.asm
   BITS 32
@@ -395,300 +410,300 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 <h3 class="date">2022年10月15日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_776345dcf24b83983b634024dc21ee83').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_776345dcf24b83983b634024dc21ee83').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_776345dcf24b83983b634024dc21ee83" href="#permalink_776345dcf24b83983b634024dc21ee83" class="permalink">¶</a>
 		<div class="content">そういえば、あの実行形式まで作る c-to-elf-compiler</div>
 		<div class="content">あれステップの偶奇で交互にやりません？</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_3edcb1c9d03799deaded0284c0037468').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_3edcb1c9d03799deaded0284c0037468').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_3edcb1c9d03799deaded0284c0037468" href="#permalink_3edcb1c9d03799deaded0284c0037468" class="permalink">¶</a>
 		<div class="content">あそこから先ってどうやるつもりなんです？</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_a5e38cf1f66271d8f6a94d174487b79a').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_a5e38cf1f66271d8f6a94d174487b79a').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_a5e38cf1f66271d8f6a94d174487b79a" href="#permalink_a5e38cf1f66271d8f6a94d174487b79a" class="permalink">¶</a>
 		<div class="content">いまは写経させてるわけですけど、ステップが進むごとに、その写経してる実行ファイルの内容を少しずつ学ばないといけない</div>
 		<div class="content">逆に、学ばなくていいところは未来に先送りする</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_b08f0e4aa2dd086ecc5d5628c2c15808').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_b08f0e4aa2dd086ecc5d5628c2c15808').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_b08f0e4aa2dd086ecc5d5628c2c15808" href="#permalink_b08f0e4aa2dd086ecc5d5628c2c15808" class="permalink">¶</a>
 		<div class="content">そこらへんの仕様って……ネットで調べれば落ちてるか</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_6a99f7d55f0c0423d2afa70274c2b030').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_6a99f7d55f0c0423d2afa70274c2b030').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_6a99f7d55f0c0423d2afa70274c2b030" href="#permalink_6a99f7d55f0c0423d2afa70274c2b030" class="permalink">¶</a>
 		<div class="content">それを調べてログに書くのもステップの一部とする、という方針で考えてます</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/yuchiki1000yen" target="_blank" rel="noopener noreferrer"><img alt="yuchiki" class="icon" src="icons/yuchiki.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/yuchiki1000yen" target="_blank" rel="noopener noreferrer">yuchiki</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_6e6d11cc98d6a8933b9e0ee02d205b47').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_6e6d11cc98d6a8933b9e0ee02d205b47').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/yuchiki1000yen" target="_blank" rel="noopener noreferrer">yuchiki</a></span><a id="permalink_6e6d11cc98d6a8933b9e0ee02d205b47" href="#permalink_6e6d11cc98d6a8933b9e0ee02d205b47" class="permalink">¶</a>
 		<div class="content">教育的授業だ</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_bf486d7b2a2c1a5ef6ec2dbe4a18b619').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_bf486d7b2a2c1a5ef6ec2dbe4a18b619').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_bf486d7b2a2c1a5ef6ec2dbe4a18b619" href="#permalink_bf486d7b2a2c1a5ef6ec2dbe4a18b619" class="permalink">¶</a>
 		<div class="content">自分でバイナリを吐き出したい、と</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_d2c1d15a6d8e11663fde07e6cb842be5').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_d2c1d15a6d8e11663fde07e6cb842be5').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_d2c1d15a6d8e11663fde07e6cb842be5" href="#permalink_d2c1d15a6d8e11663fde07e6cb842be5" class="permalink">¶</a>
 		<div class="content">つまり、要は作る側が頑張らないことで、読む側も頑張らなくて済む。少しずつ、ELF の中身を謎解きしていく追体験ができる</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_975190c17473c286ddf30539ac76566b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_975190c17473c286ddf30539ac76566b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_975190c17473c286ddf30539ac76566b" href="#permalink_975190c17473c286ddf30539ac76566b" class="permalink">¶</a>
 		<div class="content">まあたしかにたしかに</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_a46ab2cc04f56602aceac18ab5c9f06d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_a46ab2cc04f56602aceac18ab5c9f06d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_a46ab2cc04f56602aceac18ab5c9f06d" href="#permalink_a46ab2cc04f56602aceac18ab5c9f06d" class="permalink">¶</a>
 		<div class="content">というのを考えています。ということで、ステップ 2 『足し算と引き算』やってみません？</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_9d026e2f629913f144b8538b22e09e5c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_9d026e2f629913f144b8538b22e09e5c').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_9d026e2f629913f144b8538b22e09e5c" href="#permalink_9d026e2f629913f144b8538b22e09e5c" class="permalink">¶</a>
 		<div class="content">足し算と引き算をやって、終了コードで返す</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_fd5fcb5999be919888b9000f46c9098e').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_fd5fcb5999be919888b9000f46c9098e').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_fd5fcb5999be919888b9000f46c9098e" href="#permalink_fd5fcb5999be919888b9000f46c9098e" class="permalink">¶</a>
 		<div class="content">そうそう</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_d3e635471d6c8f6ed280d6fe74eb5cd8').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_d3e635471d6c8f6ed280d6fe74eb5cd8').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_d3e635471d6c8f6ed280d6fe74eb5cd8" href="#permalink_d3e635471d6c8f6ed280d6fe74eb5cd8" class="permalink">¶</a>
 		<div class="content">結局 main 関数からリターンするだけか</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_21e1e82ad5a00aff60b5f4350041dabb').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_21e1e82ad5a00aff60b5f4350041dabb').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_21e1e82ad5a00aff60b5f4350041dabb" href="#permalink_21e1e82ad5a00aff60b5f4350041dabb" class="permalink">¶</a>
 		<div class="content">実はですね、今の実装は（ログに書いてありますが）_start なので、リンクせずに ebx レジスタに値をセットして、残りを OS に任せてる</div>
 		<div class="content">これにより、リンクが要らない</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_51fe2ef55f6bf0a4500100a9a288de38').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_51fe2ef55f6bf0a4500100a9a288de38').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_51fe2ef55f6bf0a4500100a9a288de38" href="#permalink_51fe2ef55f6bf0a4500100a9a288de38" class="permalink">¶</a>
 		<div class="content">musl と crt とリンクさせる方針じゃなくても直接吐けばいいのか</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7e30f0026f4ce6a59d006627f49abc57').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7e30f0026f4ce6a59d006627f49abc57').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_7e30f0026f4ce6a59d006627f49abc57" href="#permalink_7e30f0026f4ce6a59d006627f49abc57" class="permalink">¶</a>
 		<div class="content">いずれは C コンパイラになることが期待されているので、いずれは関数 main や関数 foo が宣言できるようになる予定だけど、ステップ 1 を実現するのにはどう考えてもいらないので、したがって省いている</div>
 		<div class="content">そう、要はなにかというと、この方法を取ることによって、まず謎解き感覚になって面白い。次に、『調べすぎちゃいけない』という縛りにしておくことで、我々ともに下手するとコンパイラにかまけて授業とか研究の手を抜きそうな民なので、それをある程度抑止できる</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_57d668909bf3b4a2ec6db14bd1e5e4c7').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_57d668909bf3b4a2ec6db14bd1e5e4c7').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_57d668909bf3b4a2ec6db14bd1e5e4c7" href="#permalink_57d668909bf3b4a2ec6db14bd1e5e4c7" class="permalink">¶</a>
 		<div class="content">なるべくラクしてバイナリを吐こう、ってことか</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_19649451ea1a2ab0ec1f15b19fbeca3c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_19649451ea1a2ab0ec1f15b19fbeca3c').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_19649451ea1a2ab0ec1f15b19fbeca3c" href="#permalink_19649451ea1a2ab0ec1f15b19fbeca3c" class="permalink">¶</a>
 		<div class="content">そうそう。要は compilerbook ってかなりよく書かれた教材なので、逆に言うとあの本をそのまま再走してもあんま面白くない。私に至っては 4 年前にやったし</div>
 		<div class="content">となると、こういう企画にするのが、『我々にとっての面白さ』『我々にとっての勉強になる度』『学校・趣味バランス』の 3 点において優れている、と主張します</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_155fa3a0d065d7566d704057c3341300').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_155fa3a0d065d7566d704057c3341300').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_155fa3a0d065d7566d704057c3341300" href="#permalink_155fa3a0d065d7566d704057c3341300" class="permalink">¶</a>
 		<div class="content">前は gcc のコンパイル結果を比較してた？</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_5eb42e8dba7c977d7a54af80a4456378').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_5eb42e8dba7c977d7a54af80a4456378').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_5eb42e8dba7c977d7a54af80a4456378" href="#permalink_5eb42e8dba7c977d7a54af80a4456378" class="permalink">¶</a>
 		<div class="content">実はリポジトリに会話ログを全部取ってあって、リポジトリが <a href="https://github.com/sozysozbot/c_to_elf_compiler" target="_blank" rel="noopener noreferrer">https://github.com/sozysozbot/c_to_elf_compiler</a> 、ログが <a href="https://sozysozbot.github.io/c_to_elf_compiler/log.html" target="_blank" rel="noopener noreferrer">https://sozysozbot.github.io/c_to_elf_compiler/log.html</a> </div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_8857b292525df7826c18c6841fa7ddce').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8857b292525df7826c18c6841fa7ddce').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_8857b292525df7826c18c6841fa7ddce" href="#permalink_8857b292525df7826c18c6841fa7ddce" class="permalink">¶</a>
 		<div class="content">なんか招待来てたな</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_879027ce81c5750d693c6347341f8b3e').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_879027ce81c5750d693c6347341f8b3e').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_879027ce81c5750d693c6347341f8b3e" href="#permalink_879027ce81c5750d693c6347341f8b3e" class="permalink">¶</a>
 		<div class="content">じゃあ再送しときます</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f328a6c9737e21f70e7565974fcba948').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f328a6c9737e21f70e7565974fcba948').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_f328a6c9737e21f70e7565974fcba948" href="#permalink_f328a6c9737e21f70e7565974fcba948" class="permalink">¶</a>
 		<div class="content">受け取った気がする</div>
 		<div class="content">足し算ステップってなにやるんでしたっけ</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1a2399f4f6ff6bd3531fc4b78919d733').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1a2399f4f6ff6bd3531fc4b78919d733').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_1a2399f4f6ff6bd3531fc4b78919d733" href="#permalink_1a2399f4f6ff6bd3531fc4b78919d733" class="permalink">¶</a>
 		<div class="content">3+5-2とかをコンパイルする</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1b4559e877b3044382348470a15fe1fc').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1b4559e877b3044382348470a15fe1fc').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_1b4559e877b3044382348470a15fe1fc" href="#permalink_1b4559e877b3044382348470a15fe1fc" class="permalink">¶</a>
 		<div class="content">スタックは使わないやつだった気がする</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4f237fbef1240b754134426c1ade0ea2').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4f237fbef1240b754134426c1ade0ea2').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_4f237fbef1240b754134426c1ade0ea2" href="#permalink_4f237fbef1240b754134426c1ade0ea2" class="permalink">¶</a>
 		<div class="content">そう</div>
 		<div class="content">構成としては、最初はマジでわけが分からずバイナリをただ写経してただけだったのが、ステップを進めていくうちに『これを実装するには、自分の理解を増やすことを強いられるな……』が積み重なって、最終的にアセンブラとリンカが勝手に生えてくる</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_d0b83bc0897e55589339e1c517359752').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_d0b83bc0897e55589339e1c517359752').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_d0b83bc0897e55589339e1c517359752" href="#permalink_d0b83bc0897e55589339e1c517359752" class="permalink">¶</a>
 		<div class="content">ELF の数値の表現ってどうでしたっけ。127 以下だとどうこう、だっけ</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e92b3002157bb7585a563b95f97fb2ef').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e92b3002157bb7585a563b95f97fb2ef').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_e92b3002157bb7585a563b95f97fb2ef" href="#permalink_e92b3002157bb7585a563b95f97fb2ef" class="permalink">¶</a>
 		<div class="content">最初は小さい数だけが動けばよし！</div>
 		<div class="content">というのが、そもそも Rui 本のスピリット</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e7e5b5fba690d3673304d1f5b1e906f8').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e7e5b5fba690d3673304d1f5b1e906f8').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_e7e5b5fba690d3673304d1f5b1e906f8" href="#permalink_e7e5b5fba690d3673304d1f5b1e906f8" class="permalink">¶</a>
 		<div class="content">たしかに</div>
 		<div class="content">なんて名前でしたっけ、可変長の表現の名前。そうだleb128だ</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_dd6521e28da7314fdccb4694b6682549').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_dd6521e28da7314fdccb4694b6682549').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_dd6521e28da7314fdccb4694b6682549" href="#permalink_dd6521e28da7314fdccb4694b6682549" class="permalink">¶</a>
 		<div class="content">そういう話も、調べて、メモって、『ここ対応できるようにしたいなぁ』となったときに初めて書く、という方針になるわけですね</div>
 		<div class="content">あと言うべきこととしては、とりあえずリポジトリのドキュメンテーションはそれなりには書いたので、読めば分かる</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_019733818af50ca0a38be4385b98d432').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_019733818af50ca0a38be4385b98d432').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_019733818af50ca0a38be4385b98d432" href="#permalink_019733818af50ca0a38be4385b98d432" class="permalink">¶</a>
 		<div class="content">開発環境は？</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_26bb1c75b943195fa18e8da39c1b681e').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_26bb1c75b943195fa18e8da39c1b681e').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_26bb1c75b943195fa18e8da39c1b681e" href="#permalink_26bb1c75b943195fa18e8da39c1b681e" class="permalink">¶</a>
 		<div class="content">Ubuntu on WSL</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e20fb0e97fd48c91f07d8d99dd8e00b6').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e20fb0e97fd48c91f07d8d99dd8e00b6').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_e20fb0e97fd48c91f07d8d99dd8e00b6" href="#permalink_e20fb0e97fd48c91f07d8d99dd8e00b6" class="permalink">¶</a>
 		<div class="content">WSL 上じゃないと開発できないようになってそう</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f1919ce259e895fdc0a8164fa71b3cc4').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f1919ce259e895fdc0a8164fa71b3cc4').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_f1919ce259e895fdc0a8164fa71b3cc4" href="#permalink_f1919ce259e895fdc0a8164fa71b3cc4" class="permalink">¶</a>
 		<div class="content">正解のバイナリを吐くのに使ってるアセンブラ nasm が、比較的最近 --reproducible ってオプションを実装してくれたので、LTS の Ubuntu で apt で入るやつにはまだこのオプションがなく、自分で configure して make する必要がある</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_39bad6d3ab37c251fdf8536e6284ec68').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_39bad6d3ab37c251fdf8536e6284ec68').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_39bad6d3ab37c251fdf8536e6284ec68" href="#permalink_39bad6d3ab37c251fdf8536e6284ec68" class="permalink">¶</a>
 		<div class="content">nasm でしたっけ</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_cdc4bc05c8de5f42d2b51b572e57d1e5').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_cdc4bc05c8de5f42d2b51b572e57d1e5').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_cdc4bc05c8de5f42d2b51b572e57d1e5" href="#permalink_cdc4bc05c8de5f42d2b51b572e57d1e5" class="permalink">¶</a>
 		<div class="content">実をいうと、nasm が動かなくても、nasm が生成してくれたバイナリは『コミットしてある』ので、なくても我々の c-to-elf コンパイラは走る</div>
 		<div class="content">あと、ログのレンダリングは私が雑に実装したレンダラでやってて、CI のセットアップしてないので、</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_a7e837f16af289d29d8d24141ba5900c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_a7e837f16af289d29d8d24141ba5900c').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_a7e837f16af289d29d8d24141ba5900c" href="#permalink_a7e837f16af289d29d8d24141ba5900c" class="permalink">¶</a>
 		<div class="content">勝手にはされない、と</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7db7f177fe29c6fec509435169fdc8a2').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7db7f177fe29c6fec509435169fdc8a2').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_7db7f177fe29c6fec509435169fdc8a2" href="#permalink_7db7f177fe29c6fec509435169fdc8a2" class="permalink">¶</a>
 		<div class="content">node index.js をコミット前にする必要がある</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1c47768436bc0d9c4a60bc02eed2dd4c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1c47768436bc0d9c4a60bc02eed2dd4c').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_1c47768436bc0d9c4a60bc02eed2dd4c" href="#permalink_1c47768436bc0d9c4a60bc02eed2dd4c" class="permalink">¶</a>
 		<div class="content">nasm の 2.15 だと動きます？</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_155028e5c0d93bb6cb93f92c1453a083').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_155028e5c0d93bb6cb93f92c1453a083').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_155028e5c0d93bb6cb93f92c1453a083" href="#permalink_155028e5c0d93bb6cb93f92c1453a083" class="permalink">¶</a>
 		<div class="content">自信ないけど 2.16 以降が必要だったかな</div>
 	</div>
 </div>
 <h3 class="date">2022年10月16日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_dc2876834cbd13f59b52401128da150d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_dc2876834cbd13f59b52401128da150d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_dc2876834cbd13f59b52401128da150d" href="#permalink_dc2876834cbd13f59b52401128da150d" class="permalink">¶</a>
 		<div class="content">加減算の実装</div>
 		<div class="content">&#x60;experiment/tiny3&#x60; のサイズが4kを超えていて機械語どころかアセンブリも詳しくない人には厳しい。</div>
 		<div class="content">以下プログラムで127バイトのelfを生成して実行すると終了コード0を出力することを確認。<a href="https://github.com/tchajed/minimal-elf" target="_blank" rel="noopener noreferrer">https://github.com/tchajed/minimal-elf</a></div>
@@ -699,8 +714,8 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 <h3 class="date">2022年10月17日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f1c2f3cca27c834a18e455680da1d6fc').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f1c2f3cca27c834a18e455680da1d6fc').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_f1c2f3cca27c834a18e455680da1d6fc" href="#permalink_f1c2f3cca27c834a18e455680da1d6fc" class="permalink">¶</a>
 		<div class="content"></div>
 		<div class="content">えーと次にやるべきは……『<a href="https://www.sigbus.info/compilerbook#%E3%82%B9%E3%83%86%E3%83%83%E3%83%973%E3%83%88%E3%83%BC%E3%82%AF%E3%83%8A%E3%82%A4%E3%82%B6%E3%82%92%E5%B0%8E%E5%85%A5">ステップ3：トークナイザを導入</a>』か。すぐ終わりそう</div>
 		<div class="content">check 2 &quot;5 - 3&quot; を走らせ、テストが無事落ちることを確認。</div>
@@ -710,8 +725,8 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 <h3 class="date">2022年10月27日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_0314cf3f3f5e8aba97d25eccf9be3133').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_0314cf3f3f5e8aba97d25eccf9be3133').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_0314cf3f3f5e8aba97d25eccf9be3133" href="#permalink_0314cf3f3f5e8aba97d25eccf9be3133" class="permalink">¶</a>
 		<div class="content">エラーメッセージを改善するだけ</div>
 		<div class="content">エラー型を定義して関数分割して実装。分岐を少なくするためにtokenにeofを追加</div>
 	</div>
@@ -719,39 +734,39 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 <h3 class="date">2022年10月29日（一人で作業）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_cb79ec7e5c13f1a1980fe29388b12e53').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_cb79ec7e5c13f1a1980fe29388b12e53').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_cb79ec7e5c13f1a1980fe29388b12e53" href="#permalink_cb79ec7e5c13f1a1980fe29388b12e53" class="permalink">¶</a>
 		<div class="content">tkr からプルリクが来ておる。コードを読んだ。なるほどね。マージ</div>
 	</div>
 </div>
 <h3 class="date">2022年10月29日（Discord にて）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e859820effc6566b471cfcfca220cadd').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e859820effc6566b471cfcfca220cadd').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_e859820effc6566b471cfcfca220cadd" href="#permalink_e859820effc6566b471cfcfca220cadd" class="permalink">¶</a>
 		<div class="content">とまあこういうことをやってるんですよ</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer"><img alt="hiromi_mi" class="icon" src="icons/hiromi_mi.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer">hiromi_mi</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_cf1df300e9c18d4fddd307a8e9b97757').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_cf1df300e9c18d4fddd307a8e9b97757').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer">hiromi_mi</a></span><a id="permalink_cf1df300e9c18d4fddd307a8e9b97757" href="#permalink_cf1df300e9c18d4fddd307a8e9b97757" class="permalink">¶</a>
 		<div class="content">おもしろかったです、ushitora_anqouと違ってELFファイルを出力できるような状態をたもちつつ拡張するなど、アイデアに一本取られました</div>
 		<div class="content">LEB128 はこれですね <a href="https://ja.osdn.net/projects/drdeamon64/wiki/LEB128%E3%81%AA%E6%95%B0%E3%81%AE%E8%A1%A8%E7%8F%BE" target="_blank" rel="noopener noreferrer">https://ja.osdn.net/projects/drdeamon64/wiki/LEB128%E3%81%AA%E6%95%B0%E3%81%AE%E8%A1%A8%E7%8F%BE</a> </div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_0bfa2d49560c30d5588d81f60e09e182').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_0bfa2d49560c30d5588d81f60e09e182').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_0bfa2d49560c30d5588d81f60e09e182" href="#permalink_0bfa2d49560c30d5588d81f60e09e182" class="permalink">¶</a>
 		<div class="content">ふむふむ。わりと自然な発想のエンコーディングですね</div>
 	</div>
 </div>
 <h3 class="date">2022年10月29日（一人で作業）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_8f33bc9708a4a396fb603b7896001e84').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8f33bc9708a4a396fb603b7896001e84').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_8f33bc9708a4a396fb603b7896001e84" href="#permalink_8f33bc9708a4a396fb603b7896001e84" class="permalink">¶</a>
 		<div class="content">さてやっていこう。compilerbook のステップ 5 には</div>
 		<blockquote>説明の都合上、一気に*、/、()を実装しているような話の流れになっていますが、実際には一気に実装することは避ける方がよいでしょう。
 元々、加減算ができる機能があったわけですから、まずはその機能を壊さずに、抽象構文木とそれを使ったコードジェネレータを導入するようにしてみてください。
@@ -766,8 +781,8 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 <h3 class="date">2022年10月30日（一人で作業）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1c655b71d5d85463db69d6f591b175bb').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1c655b71d5d85463db69d6f591b175bb').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_1c655b71d5d85463db69d6f591b175bb" href="#permalink_1c655b71d5d85463db69d6f591b175bb" class="permalink">¶</a>
 		<div class="content">そして抽象構文木を導入</div>
 		<div class="content">さて、コードジェネレーターでこれを使わなきゃいけないんだよな</div>
 	</div>
@@ -775,37 +790,37 @@ hsjoihs@LAPTOP-BKHPSENK:~/c_to_elf_compiler/experiment$ cmp -l ./tiny42 ./tiny3
 <h3 class="date">2022年10月30日（Discord にて）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_ea3cf2e058f8392a7b8eb2baaedbaab2').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_ea3cf2e058f8392a7b8eb2baaedbaab2').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_ea3cf2e058f8392a7b8eb2baaedbaab2" href="#permalink_ea3cf2e058f8392a7b8eb2baaedbaab2" class="permalink">¶</a>
 		<div class="content">とまあこういうことをやっています</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/ikubaku10" target="_blank" rel="noopener noreferrer"><img alt="ikubaku" class="icon" src="icons/ikubaku.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/ikubaku10" target="_blank" rel="noopener noreferrer">ikubaku</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7c3f3ecc1b31296179b0b264dfccb0ca').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7c3f3ecc1b31296179b0b264dfccb0ca').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/ikubaku10" target="_blank" rel="noopener noreferrer">ikubaku</a></span><a id="permalink_7c3f3ecc1b31296179b0b264dfccb0ca" href="#permalink_7c3f3ecc1b31296179b0b264dfccb0ca" class="permalink">¶</a>
 		<div class="content">実行形式の中でも ELF にしてるのってどういう理由です？ELF はそれなりに複雑であり、難易度が上がる気がしていますけど</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1b1f4ef9eddfccd5f59c04bb367d3789').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1b1f4ef9eddfccd5f59c04bb367d3789').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_1b1f4ef9eddfccd5f59c04bb367d3789" href="#permalink_1b1f4ef9eddfccd5f59c04bb367d3789" class="permalink">¶</a>
 		<div class="content">一番ポピュラーであり、私の WSL 環境で動くからです。あと、その複雑さを上手く回避する小技を導入しています（step 1 をどう実装したかを見せる）</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer"><img alt="hiromi_mi" class="icon" src="icons/hiromi_mi.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer">hiromi_mi</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4977d1186cc476a2c0af300da656df3b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4977d1186cc476a2c0af300da656df3b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer">hiromi_mi</a></span><a id="permalink_4977d1186cc476a2c0af300da656df3b" href="#permalink_4977d1186cc476a2c0af300da656df3b" class="permalink">¶</a>
 		<div class="content">最近の Linux では a.out フォーマットのサポートが消えたので、ELF を選択するという判断は妥当そうに思えます。Windows の com も今はダメですし</div>
 	</div>
 </div>
 <h3 class="date">2022年10月30日（コードジェネレーター）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_3043e58678ee7f4aa7cc4eb0e01f71f0').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_3043e58678ee7f4aa7cc4eb0e01f71f0').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_3043e58678ee7f4aa7cc4eb0e01f71f0" href="#permalink_3043e58678ee7f4aa7cc4eb0e01f71f0" class="permalink">¶</a>
 		<div class="content">抽象構文木を導入したことにより、許容される式の自由度が真に上がったので、コードジェネレーターを書き換えねばならない。</div>
 		<div class="content">……よな？ここをちゃんと確認しないと『必要最低限のみを調べる』という縛りに抵触してしまう。</div>
 		<div class="content">うむ、一方向にのみ伸びているとは限らない木を処理できるようにするには、スタックマシンの仕組みを導入しないと無理ですな</div>
@@ -912,8 +927,8 @@ fn parse_and_codegen(
 <h3 class="date">2022年10月30日（乗算）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1b28c8027b05825cacf886323884e99a').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1b28c8027b05825cacf886323884e99a').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_1b28c8027b05825cacf886323884e99a" href="#permalink_1b28c8027b05825cacf886323884e99a" class="permalink">¶</a>
 		<div class="content">次は乗算を組んでいこう。まず構文木に BinaryOp::Mul を加える。対応するバイナリ表現も調べる</div>
 		<pre><code class="language-rust">fn ediをeax倍にする() -&gt; [u8; 3] {
     [0x0f, 0xaf, 0xf8]
@@ -959,45 +974,45 @@ fn eaxをプッシュ() -&gt; [u8; 1] {
 <h3 class="date">2022年10月31日（Discordにて）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_ca831b8a56a7c365a365176b1a395618').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_ca831b8a56a7c365a365176b1a395618').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_ca831b8a56a7c365a365176b1a395618" href="#permalink_ca831b8a56a7c365a365176b1a395618" class="permalink">¶</a>
 		<div class="content">コードレビューお願いします</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_fadde74faef94ad4b48c034a1156818b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_fadde74faef94ad4b48c034a1156818b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_fadde74faef94ad4b48c034a1156818b" href="#permalink_fadde74faef94ad4b48c034a1156818b" class="permalink">¶</a>
 		<div class="content">diff がでかくて見るのが大変で放置してた</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_3ae073460abb79cdc6419b3f5e23433c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_3ae073460abb79cdc6419b3f5e23433c').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_3ae073460abb79cdc6419b3f5e23433c" href="#permalink_3ae073460abb79cdc6419b3f5e23433c" class="permalink">¶</a>
 		<div class="content">まあ再帰下降にする過程で全部書き直す羽目になりますからねぇ</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_254d1ad01548c243fe4c97615b7e2486').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_254d1ad01548c243fe4c97615b7e2486').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_254d1ad01548c243fe4c97615b7e2486" href="#permalink_254d1ad01548c243fe4c97615b7e2486" class="permalink">¶</a>
 		<div class="content">わかるなぁ</div>
 		<div class="content">そういえば、ログのページを生成するのも CI にしたい。えーと今は master ブランチの上の GitHub Pages を直に公開してるのか</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_3cd63bac44e2773ac5eba6c3a59aec4d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_3cd63bac44e2773ac5eba6c3a59aec4d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_3cd63bac44e2773ac5eba6c3a59aec4d" href="#permalink_3cd63bac44e2773ac5eba6c3a59aec4d" class="permalink">¶</a>
 		<div class="content">じゃあ step 8 の代わりに CI の整備とかお願いしていいですかね。本来の step 8 はコンパイラのソースコードをファイル分割して Makefile をセットアップするプロセスなんですけど、Rust で書いている我々にとっては既にそれは解決されているので</div>
 	</div>
 </div>
 <h3 class="date">2022年10月31日（GitHubにて）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_eb926e9e0618b979e705a25a46220017').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_eb926e9e0618b979e705a25a46220017').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_eb926e9e0618b979e705a25a46220017" href="#permalink_eb926e9e0618b979e705a25a46220017" class="permalink">¶</a>
 		<div class="content">これposどこにするか迷う 🤔</div>
 		<div class="content">エラーメッセージ的にはここが正しそうだけど「unexpected token」的なエラーメッセージとどっちが分かりやすいんだろう</div>
 		<pre><code class="language-rust">                _ =&gt; Err(AppError {
@@ -1010,15 +1025,15 @@ fn eaxをプッシュ() -&gt; [u8; 1] {
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_623da2754d9a13aa2e732b9dc394497b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_623da2754d9a13aa2e732b9dc394497b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_623da2754d9a13aa2e732b9dc394497b" href="#permalink_623da2754d9a13aa2e732b9dc394497b" class="permalink">¶</a>
 		<div class="content">まあ理想的には Rust みたいに「範囲」でエラーを持つ方がきれいですよね。まあ Rui 本はあんまりエラーに凝らない設計なので、あんま深く考えなくていいでしょう</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_440e5c364874e021496b2b407cacaeed').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_440e5c364874e021496b2b407cacaeed').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_440e5c364874e021496b2b407cacaeed" href="#permalink_440e5c364874e021496b2b407cacaeed" class="permalink">¶</a>
 		<div class="content">あとは Peekable 使うかスライス使うかとか迷うなぁ</div>
 		<div class="content">パーサのファイル分割とかはstep8？でやるかー</div>
 	</div>
@@ -1026,8 +1041,8 @@ fn eaxをプッシュ() -&gt; [u8; 1] {
 <h3 class="date">2022年11月7日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_83d515068a98112f517a67f012288f3d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_83d515068a98112f517a67f012288f3d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_83d515068a98112f517a67f012288f3d" href="#permalink_83d515068a98112f517a67f012288f3d" class="permalink">¶</a>
 		<div class="content">そろそろやらなければ</div>
 		<div class="content">単項演算子の実装はパーサー少し変更するだけっぽいので一瞬で終わった</div>
 		<div class="content">色々テスト書いて終わり</div>
@@ -1037,8 +1052,8 @@ fn eaxをプッシュ() -&gt; [u8; 1] {
 <h3 class="date">2022年11月9日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e03f7074bd5561684ee5a00d3b3d9580').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e03f7074bd5561684ee5a00d3b3d9580').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_e03f7074bd5561684ee5a00d3b3d9580" href="#permalink_e03f7074bd5561684ee5a00d3b3d9580" class="permalink">¶</a>
 		<div class="content">やるぞ</div>
 		<div class="content">比較演算子を実装。ここら辺は本当にやるだけだな</div>
 		<div class="content">関数が長くなりすぎて clippy が文句を言ってきているな。でもこれ過剰に分割しても読みやすくならないだろうし、#[allow(clippy::too_many_lines)] でお茶を濁そう</div>
@@ -1047,8 +1062,8 @@ fn eaxをプッシュ() -&gt; [u8; 1] {
 <h3 class="date">2022年11月10日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_851228c2ce77ea9f2b04f90377355ba2').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_851228c2ce77ea9f2b04f90377355ba2').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_851228c2ce77ea9f2b04f90377355ba2" href="#permalink_851228c2ce77ea9f2b04f90377355ba2" class="permalink">¶</a>
 		<div class="content">CIの整備をします</div>
 		<div class="content">github pagesの設定を修正してactionsからのアップロードみたいなのに変更する必要があるけど権限ないのでお願いします</div>
 		<div class="content">やったことはコミットメッセージに</div>
@@ -1057,8 +1072,8 @@ fn eaxをプッシュ() -&gt; [u8; 1] {
 <h3 class="date">2022年11月11日（CIの修正）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1191af1a99124606724e61679c923bb2').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1191af1a99124606724e61679c923bb2').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_1191af1a99124606724e61679c923bb2" href="#permalink_1191af1a99124606724e61679c923bb2" class="permalink">¶</a>
 		<div class="content">tkr からプルリクが来ておるな</div>
 		<div class="content">CIの整備と、ファイル分割がされている。ありがたい。まずマージして、</div>
 		<div class="content">設定を変更して、えっと</div>
@@ -1123,8 +1138,8 @@ Error: Ensure GITHUB_TOKEN has permission &quot;idToken: write&quot;.
 <h3 class="date">2022年11月11日（一文字変数）</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_874905eba43503712b5fd73718fe67dc').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_874905eba43503712b5fd73718fe67dc').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_874905eba43503712b5fd73718fe67dc" href="#permalink_874905eba43503712b5fd73718fe67dc" class="permalink">¶</a>
 		<div class="content">さて、次は複文と一文字変数</div>
 		<div class="content">そういえば、compilerbook では『一番最後の式の結果をプログラム全体の計算結果とすることにします』として、構文定義がこうなってるけど、</div>
 		<blockquote>program    = stmt*
@@ -1176,23 +1191,23 @@ primary    = num | ident | &quot;(&quot; expr &quot;)&quot;
 <h3 class="date">2022年11月21日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7a3da0f0db1edd3974e41bdb1909e8b4').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7a3da0f0db1edd3974e41bdb1909e8b4').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_7a3da0f0db1edd3974e41bdb1909e8b4" href="#permalink_7a3da0f0db1edd3974e41bdb1909e8b4" class="permalink">¶</a>
 		<div class="content">そういやこの 139 ってなんなんですかね。SIGSEGV のシグナル自体は 139 ではなかった気がするんですけど</div>
 		<div class="content">あー、シグナルが 11 で exit code が 139 か</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer"><img alt="hiromi_mi" class="icon" src="icons/hiromi_mi.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer">hiromi_mi</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7be1a50a776247fcbc68f5ec6317c574').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7be1a50a776247fcbc68f5ec6317c574').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/_hiromi_mi" target="_blank" rel="noopener noreferrer">hiromi_mi</a></span><a id="permalink_7be1a50a776247fcbc68f5ec6317c574" href="#permalink_7be1a50a776247fcbc68f5ec6317c574" class="permalink">¶</a>
 		<div class="content">『なんらかの異常値である』必要はそりゃあると思いますけど、具体的になんで 139 なんですかね</div>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7bef5bd2a3692070fa6b5ea724c7de8a').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7bef5bd2a3692070fa6b5ea724c7de8a').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_7bef5bd2a3692070fa6b5ea724c7de8a" href="#permalink_7bef5bd2a3692070fa6b5ea724c7de8a" class="permalink">¶</a>
 		<div class="content">あ、128 + 11 ってことなのかな</div>
 	</div>
 </div>
