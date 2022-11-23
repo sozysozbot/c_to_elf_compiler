@@ -1,4 +1,7 @@
 #![warn(clippy::pedantic)]
+use std::collections::HashMap;
+use std::io::Seek;
+use std::io::SeekFrom;
 use std::io::Write;
 
 use c_to_elf_compiler::apperror::AppError;
@@ -22,7 +25,7 @@ fn main() -> std::io::Result<()> {
 }
 
 fn parse_and_codegen(
-    mut writer: &mut impl Write,
+    mut writer: &mut (impl Write + Seek),
     tokens: &[Token],
     input: &str,
 ) -> Result<(), AppError> {
@@ -34,13 +37,14 @@ fn parse_and_codegen(
 
     writer.write_all(&codegen::rbpをプッシュ()).unwrap();
     writer.write_all(&codegen::rspをrbpにコピー()).unwrap();
-    writer
-        .write_all(&codegen::rspから即値を引く(26 * 4))
-        .unwrap();
-
-    codegen::exprを評価してediレジスタへ(&mut writer, &expr);
+    let lvars_count_pos = codegen::rspから即値を引く(writer);
+    let mut idents = HashMap::new();
+    codegen::exprを評価してediレジスタへ(&mut writer, &expr, &mut idents);
 
     writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
     writer.write_all(&[0x0f, 0x05]).unwrap();
+
+    writer.seek(SeekFrom::Start(lvars_count_pos)).unwrap();
+    writer.write_all(&[idents.len() as u8 * 4]).unwrap();
     Ok(())
 }

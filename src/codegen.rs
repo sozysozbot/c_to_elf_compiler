@@ -1,5 +1,8 @@
 use crate::ast::*;
-use std::io::Write;
+use std::{
+    collections::HashMap,
+    io::{Seek, SeekFrom, Write},
+};
 
 /*
 fn ediに即値を足す(n: u8) -> [u8; 3] {
@@ -35,8 +38,9 @@ pub fn rspをrbpにコピー() -> [u8; 3] {
     [0x48, 0x89, 0xe5]
 }
 
-pub fn rspから即値を引く(n: u8) -> [u8; 4] {
-    [0x48, 0x83, 0xec, n]
+pub fn rspから即値を引く(writer: &mut (impl Write + Seek)) -> u64 {
+    writer.write_all(&[0x48, 0x83, 0xec, 0]).unwrap();
+    writer.stream_position().unwrap() - 1
 }
 
 fn ediへとポップ() -> [u8; 1] {
@@ -106,10 +110,13 @@ fn raxが指す位置にediを代入() -> [u8; 2] {
 pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
     writer: &mut impl Write,
     expr: &Expr,
+    idents: &mut HashMap<String, u8>,
 ) {
     match expr {
         Expr::Identifier { ident, pos: _ } => {
-            let offset = (((*ident as usize) - ('a' as usize)) * 4) as u8;
+            let len = idents.len();
+            let idx = idents.entry(ident.clone()).or_insert(len as u8);
+            let offset = *idx * 4;
             writer.write_all(&rbpをプッシュ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
             writer.write_all(&rdiから即値を引く(offset)).unwrap();
@@ -119,7 +126,11 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
+pub fn exprを評価してediレジスタへ(
+    writer: &mut impl Write,
+    expr: &Expr,
+    idents: &mut HashMap<String, u8>,
+) {
     match expr {
         Expr::BinaryExpr {
             op: BinaryOp::Assign,
@@ -127,15 +138,19 @@ pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Exp
             左辺,
             右辺,
         } => {
-            exprを左辺値として評価してアドレスをrdiレジスタへ(writer, 左辺);
+            exprを左辺値として評価してアドレスをrdiレジスタへ(
+                writer, 左辺, idents,
+            );
             writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺);
+            exprを評価してediレジスタへ(writer, 右辺, idents);
 
             writer.write_all(&eaxへとポップ()).unwrap(); // 左辺のアドレス
             writer.write_all(&raxが指す位置にediを代入()).unwrap();
         }
         Expr::Identifier { .. } => {
-            exprを左辺値として評価してアドレスをrdiレジスタへ(writer, expr);
+            exprを左辺値として評価してアドレスをrdiレジスタへ(
+                writer, expr, idents,
+            );
             writer.write_all(&rdiを間接参照()).unwrap();
         }
         Expr::BinaryExpr {
@@ -144,8 +159,8 @@ pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Exp
             左辺,
             右辺,
         } => {
-            exprを評価してediレジスタへ(writer, 左辺); // 左辺は push せずに捨てる
-            exprを評価してediレジスタへ(writer, 右辺);
+            exprを評価してediレジスタへ(writer, 左辺, idents); // 左辺は push せずに捨てる
+            exprを評価してediレジスタへ(writer, 右辺, idents);
         }
         Expr::BinaryExpr {
             op: BinaryOp::Add,
@@ -153,9 +168,9 @@ pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Exp
             左辺,
             右辺,
         } => {
-            exprを評価してediレジスタへ(writer, 左辺);
+            exprを評価してediレジスタへ(writer, 左辺, idents);
             writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺);
+            exprを評価してediレジスタへ(writer, 右辺, idents);
             writer.write_all(&ediをプッシュ()).unwrap();
             writer.write_all(&eaxへとポップ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
@@ -167,9 +182,9 @@ pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Exp
             左辺,
             右辺,
         } => {
-            exprを評価してediレジスタへ(writer, 左辺);
+            exprを評価してediレジスタへ(writer, 左辺, idents);
             writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺);
+            exprを評価してediレジスタへ(writer, 右辺, idents);
             writer.write_all(&ediをプッシュ()).unwrap();
             writer.write_all(&eaxへとポップ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
@@ -181,9 +196,9 @@ pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Exp
             左辺,
             右辺,
         } => {
-            exprを評価してediレジスタへ(writer, 左辺);
+            exprを評価してediレジスタへ(writer, 左辺, idents);
             writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺);
+            exprを評価してediレジスタへ(writer, 右辺, idents);
             writer.write_all(&ediをプッシュ()).unwrap();
             writer.write_all(&eaxへとポップ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
@@ -196,9 +211,9 @@ pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Exp
             左辺,
             右辺,
         } => {
-            exprを評価してediレジスタへ(writer, 左辺);
+            exprを評価してediレジスタへ(writer, 左辺, idents);
             writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺);
+            exprを評価してediレジスタへ(writer, 右辺, idents);
             writer.write_all(&ediをプッシュ()).unwrap();
 
             // 右辺を edi に、左辺を eax に入れる必要がある
@@ -225,6 +240,7 @@ pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Exp
                 左辺,
                 右辺,
                 &フラグを読んで等しいかどうかをalにセット(),
+                idents,
             );
         }
         Expr::BinaryExpr {
@@ -238,6 +254,7 @@ pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Exp
                 左辺,
                 右辺,
                 &フラグを読んで異なっているかどうかをalにセット(),
+                idents,
             );
         }
         Expr::BinaryExpr {
@@ -251,6 +268,7 @@ pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Exp
                 左辺,
                 右辺,
                 &フラグを読んで未満であるかどうかをalにセット(),
+                idents,
             );
         }
         Expr::BinaryExpr {
@@ -264,6 +282,7 @@ pub fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Exp
                 左辺,
                 右辺,
                 &フラグを読んで以下であるかどうかをalにセット(),
+                idents,
             );
         }
         Expr::Numeric { val, pos: _ } => {
@@ -277,10 +296,11 @@ fn 比較演算を評価してediレジスタへ(
     左辺: &Expr,
     右辺: &Expr,
     フラグをalに移す: &[u8],
+    idents: &mut HashMap<String, u8>,
 ) {
-    exprを評価してediレジスタへ(writer, 左辺);
+    exprを評価してediレジスタへ(writer, 左辺, idents);
     writer.write_all(&ediをプッシュ()).unwrap();
-    exprを評価してediレジスタへ(writer, 右辺);
+    exprを評価してediレジスタへ(writer, 右辺, idents);
     writer.write_all(&ediをプッシュ()).unwrap();
 
     writer.write_all(&ediへとポップ()).unwrap();
