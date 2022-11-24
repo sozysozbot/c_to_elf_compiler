@@ -11,12 +11,12 @@ fn parse_test() {
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
         parse(&mut tokens, input).unwrap(),
-        Expr::BinaryExpr {
+        Program::Expr(Box::new(Expr::BinaryExpr {
             op: BinaryOp::Sub,
             op_pos: 2,
             左辺: Box::new(Expr::Numeric { val: 5, pos: 0 }),
             右辺: Box::new(Expr::Numeric { val: 3, pos: 4 })
-        }
+        }))
     );
 }
 
@@ -303,8 +303,8 @@ fn parse_expr(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, A
     }
 }
 
-fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
-    let mut expr = parse_expr(tokens, input)?;
+fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Program, AppError> {
+    let mut expr = Program::Expr(Box::new(parse_expr(tokens, input)?));
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -315,9 +315,8 @@ fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_expr(tokens, input)?);
-                expr = Expr::BinaryExpr {
-                    op: BinaryOp::AndThen,
-                    op_pos: *op_pos,
+                expr = Program::AndThen {
+                    semicolon_pos: *op_pos,
                     左辺,
                     右辺,
                 }
@@ -329,11 +328,11 @@ fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
     }
 }
 
-pub fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
-    let expr = parse_program(tokens, input)?;
+pub fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Program, AppError> {
+    let program = parse_program(tokens, input)?;
     let tok = tokens.peek().unwrap();
     if tok.payload == TokenPayload::Eof {
-        Ok(expr)
+        Ok(program)
     } else {
         Err(AppError {
             message: "期待されたeofが来ませんでした".to_string(),

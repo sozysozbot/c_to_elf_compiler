@@ -29,3 +29,13 @@ pub enum Expr {
         pos: usize,
     },
 }
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum Program {
+    AndThen {
+        semicolon_pos: usize,
+        左辺: Box<Program>,
+        右辺: Box<Expr>,
+    },
+    Expr(Box<Expr>),
+}

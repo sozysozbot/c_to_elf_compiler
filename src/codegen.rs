@@ -125,6 +125,26 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
     }
 }
 
+pub fn programを評価してediレジスタへ(
+    writer: &mut impl Write,
+    program: &Program,
+    idents: &mut HashMap<String, u8>,
+) {
+    match program {
+        Program::AndThen {
+            semicolon_pos: _,
+            左辺,
+            右辺,
+        } => {
+            programを評価してediレジスタへ(writer, 左辺, idents);
+            exprを評価してediレジスタへ(writer, 右辺, idents);
+        }
+        Program::Expr(expr) => {
+            exprを評価してediレジスタへ(writer, expr, idents);
+        }
+    }
+}
+
 #[allow(clippy::too_many_lines)]
 pub fn exprを評価してediレジスタへ(
     writer: &mut impl Write,
