@@ -37,7 +37,7 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
             pos,
         } => {
             let expr = Expr::Identifier {
-                ident: *ident,
+                ident: ident.clone(),
                 pos: *pos,
             };
             Ok(expr)

@@ -36,10 +36,21 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 iter.next();
                 continue;
             }
-            'a'..='z' => {
+            'a'..='z' | '_' => {
                 iter.next();
+                let mut ident = String::new();
+                ident.push(c);
+                while let Some(&(_, c)) = iter.peek() {
+                    match c {
+                        'a'..='z' | '0'..='9' | '_' => {
+                            iter.next();
+                            ident.push(c);
+                        }
+                        _ => break,
+                    }
+                }
                 ans.push(Token {
-                    payload: TokenPayload::Identifier(c),
+                    payload: TokenPayload::Identifier(ident),
                     pos,
                 });
             }

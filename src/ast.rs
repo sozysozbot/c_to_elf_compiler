@@ -25,7 +25,7 @@ pub enum Expr {
         pos: usize,
     },
     Identifier {
-        ident: char,
+        ident: String,
         pos: usize,
     },
 }
