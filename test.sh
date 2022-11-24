@@ -53,4 +53,6 @@ check 7 "a = b = 7; return a;"
 check 7 "a = b = 7; return b;"
 check 7 "hoge = foo = 7; return hoge;"
 check 14 "hoge = foo = 7; return foo + hoge;"
+check 7 "return 7; return 3;"
+check 7 "a = 3; b = 4; return a + b; b = 7; return a + b;"
 rm a.out
