@@ -10,9 +10,9 @@ check() {
   actual="$?"
 
   if [ "$actual" = "$expected" ]; then
-    echo -e "\033[32m[PASS]\033[m $input => $actual"
+    printf "\033[32m[PASS]\033[m $input => $actual\n"
   else
-    echo -e "\033[31m[FAIL]\033[m $input => $expected expected, but got $actual"
+    printf "\033[31m[FAIL]\033[m $input => $expected expected, but got $actual\n"
     exit 1
   fi
 }
