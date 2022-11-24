@@ -6,17 +6,20 @@ use std::{iter::Peekable, slice::Iter};
 #[test]
 fn parse_test() {
     use crate::tokenize::tokenize;
-    let input = "5 - 3";
+    let input = "5 - 3;";
     let tokens = tokenize(input).unwrap();
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
         parse(&mut tokens, input).unwrap(),
-        Program::Expr(Box::new(Expr::BinaryExpr {
-            op: BinaryOp::Sub,
-            op_pos: 2,
-            左辺: Box::new(Expr::Numeric { val: 5, pos: 0 }),
-            右辺: Box::new(Expr::Numeric { val: 3, pos: 4 })
-        }))
+        Program::Statements(vec![Statement::Expr {
+            expr: Box::new(Expr::BinaryExpr {
+                op: BinaryOp::Sub,
+                op_pos: 2,
+                左辺: Box::new(Expr::Numeric { val: 5, pos: 0 }),
+                右辺: Box::new(Expr::Numeric { val: 3, pos: 4 })
+            }),
+            semicolon_pos: 5
+        }])
     );
 }
 
@@ -303,29 +306,59 @@ fn parse_expr(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, A
     }
 }
 
-fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Program, AppError> {
-    let mut expr = Program::Expr(Box::new(parse_expr(tokens, input)?));
-    loop {
-        let tok = tokens.peek().unwrap();
-        match tok {
-            Token {
-                payload: TokenPayload::Semicolon,
-                pos: op_pos,
-            } => {
-                tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_expr(tokens, input)?);
-                expr = Program::AndThen {
-                    semicolon_pos: *op_pos,
-                    左辺,
-                    右辺,
-                }
-            }
-            _ => {
-                return Ok(expr);
+fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Statement, AppError> {
+    let tok = tokens.peek().unwrap();
+    let is_return = match tok {
+        Token {
+            payload: TokenPayload::Return,
+            pos: _,
+        } => {
+            tokens.next();
+            true
+        }
+        _ => false,
+    };
+    let expr = Box::new(parse_expr(tokens, input)?);
+    let tok = tokens.peek().unwrap();
+    match tok {
+        Token {
+            payload: TokenPayload::Semicolon,
+            pos,
+        } => {
+            tokens.next();
+
+            if is_return {
+                Ok(Statement::Return {
+                    expr,
+                    semicolon_pos: *pos,
+                })
+            } else {
+                Ok(Statement::Expr {
+                    expr,
+                    semicolon_pos: *pos,
+                })
             }
         }
+        _ => Err(AppError {
+            message: "期待されたセミコロンが来ませんでした".to_string(),
+            input: input.to_string(),
+            pos: tok.pos,
+        }),
     }
+}
+
+fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Program, AppError> {
+    let mut statements = vec![];
+    while !matches!(
+        tokens.peek(),
+        Some(Token {
+            payload: TokenPayload::Eof,
+            pos: _,
+        }),
+    ) {
+        statements.push(parse_statement(tokens, input)?);
+    }
+    Ok(Program::Statements(statements))
 }
 
 pub fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Program, AppError> {

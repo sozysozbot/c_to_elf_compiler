@@ -31,11 +31,18 @@ pub enum Expr {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Program {
-    AndThen {
+pub enum Statement {
+    Expr {
+        expr: Box<Expr>,
         semicolon_pos: usize,
-        左辺: Box<Program>,
-        右辺: Box<Expr>,
     },
-    Expr(Box<Expr>),
+    Return {
+        expr: Box<Expr>,
+        semicolon_pos: usize,
+    },
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum Program {
+    Statements(Vec<Statement>),
 }

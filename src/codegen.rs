@@ -131,16 +131,25 @@ pub fn programを評価してediレジスタへ(
     idents: &mut HashMap<String, u8>,
 ) {
     match program {
-        Program::AndThen {
-            semicolon_pos: _,
-            左辺,
-            右辺,
-        } => {
-            programを評価してediレジスタへ(writer, 左辺, idents);
-            exprを評価してediレジスタへ(writer, 右辺, idents);
-        }
-        Program::Expr(expr) => {
-            exprを評価してediレジスタへ(writer, expr, idents);
+        Program::Statements(statements) => {
+            for stmt in statements {
+                match stmt {
+                    Statement::Expr {
+                        expr,
+                        semicolon_pos: _,
+                    } => {
+                        exprを評価してediレジスタへ(writer, expr, idents);
+                    }
+                    Statement::Return {
+                        expr,
+                        semicolon_pos: _,
+                    } => {
+                        exprを評価してediレジスタへ(writer, expr, idents);
+                        writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
+                        writer.write_all(&[0x0f, 0x05]).unwrap();
+                    }
+                }
+            }
         }
     }
 }

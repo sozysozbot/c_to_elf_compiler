@@ -41,9 +41,6 @@ fn parse_and_codegen(
     let mut idents = HashMap::new();
     codegen::programを評価してediレジスタへ(&mut writer, &program, &mut idents);
 
-    writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
-    writer.write_all(&[0x0f, 0x05]).unwrap();
-
     writer.seek(SeekFrom::Start(lvars_count_pos)).unwrap();
     writer.write_all(&[idents.len() as u8 * 4]).unwrap();
     Ok(())
