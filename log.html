@@ -1223,6 +1223,29 @@ primary    = num | ident | &quot;(&quot; expr &quot;)&quot;
 		<div class="content">compilerbookだとこのステップ終わっても26個しか変数使えなくない？この制限解除しようとすると &#x60;rspから即値を引く&#x60; の段階では変数の数決まらないからきついな。とりあえず &#x60;Write + Seek&#x60; にするか</div>
 	</div>
 </div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_0989c89f653118769f1d4cbd4eacbe70').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_0989c89f653118769f1d4cbd4eacbe70').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_0989c89f653118769f1d4cbd4eacbe70" href="#permalink_0989c89f653118769f1d4cbd4eacbe70" class="permalink">¶</a>
+		<div class="content">tkr からのプルリクを読みます</div>
+		<div class="content">読んだ。マージした。</div>
+		<div class="content">さて、今回は return 文なわけで、これによって既存のテストケースを変更する必要がある</div>
+		<pre><code class="language-diff">-   a = b = 7; a 
++   a = b = 7; return a;
+</code></pre>
+		<div class="content">みたいな変更を全部に入れる必要があり、とりあえずそれのコンパイルを通す必要がある</div>
+		<div class="content">まあ、とりあえずは return キーワードをトークナイザに足すところからですな</div>
+		<div class="content">一瞬で足せた。payload をすり替えるだけだな。で、次にパーサーに手を加える必要がある。今まではセミコロンを 2 項演算子として扱っていたので、それを修正する必要がある</div>
+		<div class="content">まず、Expr と Program を分離していく。定義を複製してすり替えることで、とりあえず動くものを作る</div>
+		<div class="content">次に、Statement 型を立てていく。parse_statement を立て、それの繰り返しにより parse_program を定義する。Program は Vec&lt;Statement&gt; とする</div>
+		<div class="content">えーっと、今回は return してるわけじゃないんだよな。とはいえ syscall したら帰ってこないから、普通にエピローグを出力すればいいのか</div>
+		<div class="content">これはテストケースにもう return を足して、return 文も実装してしまおう</div>
+		<div class="content">えーと通らない。『数値リテラルでも開き丸括弧でもないものが来ました』というメッセージ。多分再帰下降のどこかで「エラーを出さずにスルー」を忘れている</div>
+		<div class="content">いや違うな。eof トークンがあるから while tokens.peek().is_some() ではダメなんだ。</div>
+		<div class="content">直したら動いた</div>
+		<div class="content">よしプルリクエストを作成。あ、テストケースを増やした方がいいな</div>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>
