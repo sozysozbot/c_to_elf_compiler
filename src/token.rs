@@ -17,6 +17,7 @@ pub enum TokenPayload {
     Assign,
     Semicolon,
     Identifier(String),
+    Return,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

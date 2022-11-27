@@ -29,3 +29,20 @@ pub enum Expr {
         pos: usize,
     },
 }
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum Statement {
+    Expr {
+        expr: Box<Expr>,
+        semicolon_pos: usize,
+    },
+    Return {
+        expr: Box<Expr>,
+        semicolon_pos: usize,
+    },
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum Program {
+    Statements(Vec<Statement>),
+}

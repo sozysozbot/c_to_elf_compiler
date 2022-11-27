@@ -1,7 +1,7 @@
 use crate::ast::*;
 use std::{
     collections::HashMap,
-    io::{Seek, SeekFrom, Write},
+    io::{Seek, Write},
 };
 
 /*
@@ -122,6 +122,35 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
             writer.write_all(&rdiから即値を引く(offset)).unwrap();
         }
         _ => panic!("代入式の左辺に左辺値以外が来ています"),
+    }
+}
+
+pub fn programを評価してediレジスタへ(
+    writer: &mut impl Write,
+    program: &Program,
+    idents: &mut HashMap<String, u8>,
+) {
+    match program {
+        Program::Statements(statements) => {
+            for stmt in statements {
+                match stmt {
+                    Statement::Expr {
+                        expr,
+                        semicolon_pos: _,
+                    } => {
+                        exprを評価してediレジスタへ(writer, expr, idents);
+                    }
+                    Statement::Return {
+                        expr,
+                        semicolon_pos: _,
+                    } => {
+                        exprを評価してediレジスタへ(writer, expr, idents);
+                        writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
+                        writer.write_all(&[0x0f, 0x05]).unwrap();
+                    }
+                }
+            }
+        }
     }
 }
 

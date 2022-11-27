@@ -49,10 +49,14 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                         _ => break,
                     }
                 }
-                ans.push(Token {
-                    payload: TokenPayload::Identifier(ident),
-                    pos,
-                });
+
+                let payload = if ident == "return" {
+                    TokenPayload::Return
+                } else {
+                    TokenPayload::Identifier(ident)
+                };
+
+                ans.push(Token { payload, pos });
             }
             ';' => {
                 iter.next();
