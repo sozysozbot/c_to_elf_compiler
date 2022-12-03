@@ -18,6 +18,10 @@ pub enum TokenPayload {
     Semicolon,
     Identifier(String),
     Return,
+    If,
+    Else,
+    While,
+    For,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
