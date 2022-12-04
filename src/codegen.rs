@@ -1,8 +1,5 @@
-use crate::ast::*;
-use std::{
-    collections::HashMap,
-    io::{Seek, Write},
-};
+use crate::{ast::*, Buf};
+use std::{collections::HashMap, io::Write};
 
 /*
 fn ediに即値を足す(n: u8) -> [u8; 3] {
@@ -38,9 +35,8 @@ pub fn rspをrbpにコピー() -> [u8; 3] {
     [0x48, 0x89, 0xe5]
 }
 
-pub fn rspから即値を引く(writer: &mut (impl Write + Seek)) -> u64 {
-    writer.write_all(&[0x48, 0x83, 0xec, 0]).unwrap();
-    writer.stream_position().unwrap() - 1
+pub fn rspから即値を引く(x: u8) -> Buf {
+    Buf::from([0x48, 0x83, 0xec, x])
 }
 
 fn ediへとポップ() -> [u8; 1] {
@@ -147,6 +143,9 @@ pub fn programを評価してediレジスタへ(
                         exprを評価してediレジスタへ(writer, expr, idents);
                         writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
                         writer.write_all(&[0x0f, 0x05]).unwrap();
+                    }
+                    _ => {
+                        unimplemented!();
                     }
                 }
             }
