@@ -40,6 +40,24 @@ pub enum Statement {
         expr: Box<Expr>,
         semicolon_pos: usize,
     },
+    If {
+        cond: Box<Expr>,
+        then: Box<Statement>,
+        else_: Option<Box<Statement>>,
+        pos: usize,
+    },
+    While {
+        cond: Box<Expr>,
+        body: Box<Statement>,
+        pos: usize,
+    },
+    For {
+        init: Option<Box<Expr>>,
+        cond: Option<Box<Expr>>,
+        update: Option<Box<Expr>>,
+        body: Box<Statement>,
+        pos: usize,
+    },
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
