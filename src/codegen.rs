@@ -157,10 +157,7 @@ pub fn statmentを評価してediレジスタへ(
             Buf::from(writer)
         }
         Statement::If {
-            cond,
-            then,
-            else_,
-            pos,
+            cond, then, else_, ..
         } => {
             let else_buf = else_
                 .as_ref()
@@ -185,6 +182,20 @@ pub fn statmentを評価してediレジスタへ(
             cond_buf
                 .join(then_buf)
                 .join(else_buf.unwrap_or_else(Buf::new))
+        }
+        Statement::While { cond, body, .. } => {
+            let body_buf = statmentを評価してediレジスタへ(body.as_ref(), idents);
+            let cond_buf = {
+                let mut v = Vec::new();
+                exprを評価してediレジスタへ(&mut v, cond, idents);
+                v.write_all(&ediが0かを確認()).unwrap();
+                v.write_all(&je(i8::try_from(body_buf.len() + 2).unwrap()))
+                    .unwrap();
+                Buf::from(v)
+            };
+            let buf = cond_buf.join(body_buf);
+            let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap();
+            buf.join(Buf::from(jmp(buf_len)))
         }
         _ => {
             unimplemented!();
