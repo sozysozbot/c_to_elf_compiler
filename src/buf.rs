@@ -14,6 +14,12 @@ pub enum Buf {
     },
 }
 
+impl Default for Buf {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Buf {
     pub fn new() -> Self {
         Self::from(Vec::new())
@@ -23,6 +29,13 @@ impl Buf {
         let mut vec = Vec::new();
         self.write_to_vec(&mut vec);
         vec
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match &self {
+            Self::Leaf { buf } => buf.is_empty(),
+            Self::Branch { len, .. } => *len == 0,
+        }
     }
 
     pub fn len(&self) -> usize {

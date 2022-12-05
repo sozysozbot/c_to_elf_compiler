@@ -1,7 +1,5 @@
 #![warn(clippy::pedantic)]
 use std::collections::HashMap;
-use std::io::Seek;
-use std::io::SeekFrom;
 use std::io::Write;
 
 use c_to_elf_compiler::apperror::AppError;

@@ -133,10 +133,7 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
     }
 }
 
-pub fn statementを評価(
-    stmt: &Statement,
-    idents: &mut HashMap<String, u8>,
-) -> Buf {
+pub fn statementを評価(stmt: &Statement, idents: &mut HashMap<String, u8>) -> Buf {
     match stmt {
         Statement::Expr {
             expr,
@@ -207,7 +204,7 @@ pub fn statementを評価(
             &Statement::Block {
                 statements: vec![
                     init.clone().map(|init| Statement::Expr {
-                        expr: init.clone(),
+                        expr: init,
                         semicolon_pos: *pos,
                     }),
                     Some(Statement::While {
@@ -218,7 +215,7 @@ pub fn statementを評価(
                             statements: vec![
                                 Some(body.as_ref().clone()),
                                 update.clone().map(|update| Statement::Expr {
-                                    expr: update.clone(),
+                                    expr: update,
                                     semicolon_pos: *pos,
                                 }),
                             ]
@@ -243,10 +240,7 @@ pub fn statementを評価(
     }
 }
 
-pub fn programを評価(
-    program: &Program,
-    idents: &mut HashMap<String, u8>,
-) -> Buf {
+pub fn programを評価(program: &Program, idents: &mut HashMap<String, u8>) -> Buf {
     match program {
         Program::Statements(statements) => statements
             .iter()
