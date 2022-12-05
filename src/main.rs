@@ -41,11 +41,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Buf, AppError> {
     let buf = buf.join(Buf::from(codegen::rbpをプッシュ()));
     let buf = buf.join(Buf::from(codegen::rspをrbpにコピー()));
     let mut idents = HashMap::new();
-    let program_buf = {
-        let mut v = Vec::new();
-        codegen::programを評価してediレジスタへ(&mut v, &program, &mut idents);
-        Buf::from(v)
-    };
+    let program_buf = codegen::programを評価してediレジスタへ(&program, &mut idents);
 
     let buf = buf.join(codegen::rspから即値を引く(idents.len() as u8 * 4));
     let buf = buf.join(program_buf);

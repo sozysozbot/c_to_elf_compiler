@@ -103,6 +103,18 @@ fn raxが指す位置にediを代入() -> [u8; 2] {
     [0x89, 0x38]
 }
 
+fn ediが0かを確認() -> [u8; 3] {
+    [0x83, 0xff, 0x00]
+}
+
+fn jmp(n: i8) -> [u8; 2] {
+    [0xeb, n.to_le_bytes()[0]]
+}
+
+fn je(n: i8) -> [u8; 2] {
+    [0x74, n.to_le_bytes()[0]]
+}
+
 pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
     writer: &mut impl Write,
     expr: &Expr,
@@ -121,35 +133,74 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
     }
 }
 
+pub fn statmentを評価してediレジスタへ(
+    stmt: &Statement,
+    idents: &mut HashMap<String, u8>,
+) -> Buf {
+    match stmt {
+        Statement::Expr {
+            expr,
+            semicolon_pos: _,
+        } => {
+            let mut writer = Vec::new();
+            exprを評価してediレジスタへ(&mut writer, expr, idents);
+            Buf::from(writer)
+        }
+        Statement::Return {
+            expr,
+            semicolon_pos: _,
+        } => {
+            let mut writer = Vec::new();
+            exprを評価してediレジスタへ(&mut writer, expr, idents);
+            writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
+            writer.write_all(&[0x0f, 0x05]).unwrap();
+            Buf::from(writer)
+        }
+        Statement::If {
+            cond,
+            then,
+            else_,
+            pos,
+        } => {
+            let else_buf = else_
+                .as_ref()
+                .map(|else_| statmentを評価してediレジスタへ(else_.as_ref(), idents));
+
+            let then_buf = statmentを評価してediレジスタへ(then.as_ref(), idents).join(
+                else_buf
+                    .as_ref()
+                    .map(|else_buf| Buf::from(jmp(i8::try_from(else_buf.len()).unwrap())))
+                    .unwrap_or_else(Buf::new),
+            );
+
+            let cond_buf = {
+                let mut v = Vec::new();
+                exprを評価してediレジスタへ(&mut v, cond, idents);
+                v.write_all(&ediが0かを確認()).unwrap();
+                v.write_all(&je(i8::try_from(then_buf.len()).unwrap()))
+                    .unwrap();
+                Buf::from(v)
+            };
+
+            cond_buf
+                .join(then_buf)
+                .join(else_buf.unwrap_or_else(Buf::new))
+        }
+        _ => {
+            unimplemented!();
+        }
+    }
+}
+
 pub fn programを評価してediレジスタへ(
-    writer: &mut impl Write,
     program: &Program,
     idents: &mut HashMap<String, u8>,
-) {
+) -> Buf {
     match program {
-        Program::Statements(statements) => {
-            for stmt in statements {
-                match stmt {
-                    Statement::Expr {
-                        expr,
-                        semicolon_pos: _,
-                    } => {
-                        exprを評価してediレジスタへ(writer, expr, idents);
-                    }
-                    Statement::Return {
-                        expr,
-                        semicolon_pos: _,
-                    } => {
-                        exprを評価してediレジスタへ(writer, expr, idents);
-                        writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
-                        writer.write_all(&[0x0f, 0x05]).unwrap();
-                    }
-                    _ => {
-                        unimplemented!();
-                    }
-                }
-            }
-        }
+        Program::Statements(statements) => statements
+            .iter()
+            .map(|stmt| statmentを評価してediレジスタへ(stmt, idents))
+            .fold(Buf::new(), Buf::join),
     }
 }
 

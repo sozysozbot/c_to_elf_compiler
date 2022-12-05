@@ -55,4 +55,8 @@ check 7 "hoge = foo = 7; return hoge;"
 check 14 "hoge = foo = 7; return foo + hoge;"
 check 7 "return 7; return 3;"
 check 7 "a = 3; b = 4; return a + b; b = 7; return a + b;"
+check 7 "if(1)a=7;else a=10; return a;"
+check 10 "if(0)a=7;else a=10; return a;"
+check 7 "a=10;if(1)a=7;return a;"
+check 10 "a=10;if(0)a=7;return a;"
 rm a.out
