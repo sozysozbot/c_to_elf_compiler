@@ -1,7 +1,5 @@
 #![warn(clippy::pedantic)]
 use std::collections::HashMap;
-use std::io::Seek;
-use std::io::SeekFrom;
 use std::io::Write;
 
 use c_to_elf_compiler::apperror::AppError;
@@ -9,6 +7,7 @@ use c_to_elf_compiler::codegen;
 use c_to_elf_compiler::parser;
 use c_to_elf_compiler::token::Token;
 use c_to_elf_compiler::tokenize;
+use c_to_elf_compiler::Buf;
 
 fn main() -> std::io::Result<()> {
     let input = std::env::args().nth(1).expect("入力が与えられていません");
@@ -17,31 +16,33 @@ fn main() -> std::io::Result<()> {
 
     let file = std::fs::File::create("a.out")?;
     let mut writer = std::io::BufWriter::new(file);
-    if let Err(e) = parse_and_codegen(&mut writer, &tokens, &input) {
-        eprintln!("{}", e);
-        std::process::exit(1);
+    match parse_and_codegen(&tokens, &input) {
+        Ok(buf) => {
+            writer.write_all(&buf.to_vec())?;
+        }
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        }
     }
+
     Ok(())
 }
 
-fn parse_and_codegen(
-    mut writer: &mut (impl Write + Seek),
-    tokens: &[Token],
-    input: &str,
-) -> Result<(), AppError> {
+fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Buf, AppError> {
     let mut tokens = tokens.iter().peekable();
     let program = parser::parse(&mut tokens, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
-    writer.write_all(&tiny[0..0x78]).unwrap();
+    let buf = Buf::from(&tiny[0..0x78]);
 
-    writer.write_all(&codegen::rbpをプッシュ()).unwrap();
-    writer.write_all(&codegen::rspをrbpにコピー()).unwrap();
-    let lvars_count_pos = codegen::rspから即値を引く(writer);
+    let buf = buf.join(Buf::from(codegen::rbpをプッシュ()));
+    let buf = buf.join(Buf::from(codegen::rspをrbpにコピー()));
     let mut idents = HashMap::new();
-    codegen::programを評価してediレジスタへ(&mut writer, &program, &mut idents);
+    let program_buf = codegen::programを評価(&program, &mut idents);
 
-    writer.seek(SeekFrom::Start(lvars_count_pos)).unwrap();
-    writer.write_all(&[idents.len() as u8 * 4]).unwrap();
-    Ok(())
+    let buf = buf.join(codegen::rspから即値を引く(idents.len() as u8 * 4));
+    let buf = buf.join(program_buf);
+
+    Ok(buf)
 }

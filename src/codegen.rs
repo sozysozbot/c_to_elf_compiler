@@ -1,8 +1,5 @@
-use crate::ast::*;
-use std::{
-    collections::HashMap,
-    io::{Seek, Write},
-};
+use crate::{ast::*, Buf};
+use std::{collections::HashMap, io::Write};
 
 /*
 fn ediに即値を足す(n: u8) -> [u8; 3] {
@@ -38,9 +35,8 @@ pub fn rspをrbpにコピー() -> [u8; 3] {
     [0x48, 0x89, 0xe5]
 }
 
-pub fn rspから即値を引く(writer: &mut (impl Write + Seek)) -> u64 {
-    writer.write_all(&[0x48, 0x83, 0xec, 0]).unwrap();
-    writer.stream_position().unwrap() - 1
+pub fn rspから即値を引く(x: u8) -> Buf {
+    Buf::from([0x48, 0x83, 0xec, x])
 }
 
 fn ediへとポップ() -> [u8; 1] {
@@ -107,6 +103,18 @@ fn raxが指す位置にediを代入() -> [u8; 2] {
     [0x89, 0x38]
 }
 
+fn ediが0かを確認() -> [u8; 3] {
+    [0x83, 0xff, 0x00]
+}
+
+fn jmp(n: i8) -> [u8; 2] {
+    [0xeb, n.to_le_bytes()[0]]
+}
+
+fn je(n: i8) -> [u8; 2] {
+    [0x74, n.to_le_bytes()[0]]
+}
+
 pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
     writer: &mut impl Write,
     expr: &Expr,
@@ -125,32 +133,119 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
     }
 }
 
-pub fn programを評価してediレジスタへ(
-    writer: &mut impl Write,
-    program: &Program,
-    idents: &mut HashMap<String, u8>,
-) {
-    match program {
-        Program::Statements(statements) => {
-            for stmt in statements {
-                match stmt {
-                    Statement::Expr {
-                        expr,
-                        semicolon_pos: _,
-                    } => {
-                        exprを評価してediレジスタへ(writer, expr, idents);
-                    }
-                    Statement::Return {
-                        expr,
-                        semicolon_pos: _,
-                    } => {
-                        exprを評価してediレジスタへ(writer, expr, idents);
-                        writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
-                        writer.write_all(&[0x0f, 0x05]).unwrap();
-                    }
-                }
-            }
+pub fn statementを評価(stmt: &Statement, idents: &mut HashMap<String, u8>) -> Buf {
+    match stmt {
+        Statement::Expr {
+            expr,
+            semicolon_pos: _,
+        } => {
+            let mut writer = Vec::new();
+            exprを評価してediレジスタへ(&mut writer, expr, idents);
+            Buf::from(writer)
         }
+        Statement::Return {
+            expr,
+            semicolon_pos: _,
+        } => {
+            let mut writer = Vec::new();
+            exprを評価してediレジスタへ(&mut writer, expr, idents);
+            writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
+            writer.write_all(&[0x0f, 0x05]).unwrap();
+            Buf::from(writer)
+        }
+        Statement::If {
+            cond, then, else_, ..
+        } => {
+            let else_buf = else_
+                .as_ref()
+                .map(|else_| statementを評価(else_.as_ref(), idents));
+
+            let then_buf = statementを評価(then.as_ref(), idents).join(
+                else_buf
+                    .as_ref()
+                    .map(|else_buf| Buf::from(jmp(i8::try_from(else_buf.len()).unwrap())))
+                    .unwrap_or_else(Buf::new),
+            );
+
+            let cond_buf = {
+                let mut v = Vec::new();
+                exprを評価してediレジスタへ(&mut v, cond, idents);
+                v.write_all(&ediが0かを確認()).unwrap();
+                v.write_all(&je(i8::try_from(then_buf.len()).unwrap()))
+                    .unwrap();
+                Buf::from(v)
+            };
+
+            cond_buf
+                .join(then_buf)
+                .join(else_buf.unwrap_or_else(Buf::new))
+        }
+        Statement::While { cond, body, .. } => {
+            let body_buf = statementを評価(body.as_ref(), idents);
+            let cond_buf = {
+                let mut v = Vec::new();
+                exprを評価してediレジスタへ(&mut v, cond, idents);
+                v.write_all(&ediが0かを確認()).unwrap();
+                v.write_all(&je(i8::try_from(body_buf.len() + 2).unwrap()))
+                    .unwrap();
+                Buf::from(v)
+            };
+            let buf = cond_buf.join(body_buf);
+            let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap();
+            buf.join(Buf::from(jmp(buf_len)))
+        }
+        Statement::For {
+            init,
+            cond,
+            update,
+            body,
+            pos,
+        } => statementを評価(
+            &Statement::Block {
+                statements: vec![
+                    init.clone().map(|init| Statement::Expr {
+                        expr: init,
+                        semicolon_pos: *pos,
+                    }),
+                    Some(Statement::While {
+                        cond: cond
+                            .clone()
+                            .unwrap_or_else(|| Box::new(Expr::Numeric { val: 1, pos: *pos })),
+                        body: Box::new(Statement::Block {
+                            statements: vec![
+                                Some(body.as_ref().clone()),
+                                update.clone().map(|update| Statement::Expr {
+                                    expr: update,
+                                    semicolon_pos: *pos,
+                                }),
+                            ]
+                            .into_iter()
+                            .flatten()
+                            .collect::<Vec<_>>(),
+                            pos: *pos,
+                        }),
+                        pos: *pos,
+                    }),
+                ]
+                .into_iter()
+                .flatten()
+                .collect::<Vec<_>>(),
+                pos: *pos,
+            },
+            idents,
+        ),
+        Statement::Block { statements, .. } => statements.iter().fold(Buf::new(), |acc, stmt| {
+            acc.join(statementを評価(stmt, idents))
+        }),
+    }
+}
+
+pub fn programを評価(program: &Program, idents: &mut HashMap<String, u8>) -> Buf {
+    match program {
+        Program::Statements(statements) => statements
+            .iter()
+            .map(|stmt| statementを評価(stmt, idents))
+            .fold(Buf::new(), Buf::join),
     }
 }
 

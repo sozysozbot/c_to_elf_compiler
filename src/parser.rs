@@ -308,42 +308,265 @@ fn parse_expr(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, A
 
 fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Statement, AppError> {
     let tok = tokens.peek().unwrap();
-    let is_return = match tok {
-        Token {
-            payload: TokenPayload::Return,
-            pos: _,
-        } => {
-            tokens.next();
-            true
-        }
-        _ => false,
-    };
-    let expr = Box::new(parse_expr(tokens, input)?);
-    let tok = tokens.peek().unwrap();
     match tok {
         Token {
-            payload: TokenPayload::Semicolon,
+            payload: TokenPayload::Return,
+            ..
+        } => {
+            tokens.next();
+            let expr = Box::new(parse_expr(tokens, input)?);
+            let tok = tokens.peek().unwrap();
+            let semicolon_pos = match tok {
+                Token {
+                    payload: TokenPayload::Semicolon,
+                    pos,
+                } => {
+                    tokens.next();
+                    *pos
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待されたセミコロンが来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
+            };
+            Ok(Statement::Return {
+                semicolon_pos,
+                expr,
+            })
+        }
+        Token {
+            payload: TokenPayload::If,
             pos,
         } => {
             tokens.next();
-
-            if is_return {
-                Ok(Statement::Return {
-                    expr,
-                    semicolon_pos: *pos,
-                })
-            } else {
-                Ok(Statement::Expr {
-                    expr,
-                    semicolon_pos: *pos,
-                })
+            let tok = tokens.peek().unwrap();
+            match tok {
+                Token {
+                    payload: TokenPayload::開き丸括弧,
+                    ..
+                } => {
+                    tokens.next();
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待された開き括弧が来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
             }
+            let cond = Box::new(parse_expr(tokens, input)?);
+
+            let tok = tokens.peek().unwrap();
+            match tok {
+                Token {
+                    payload: TokenPayload::閉じ丸括弧,
+                    ..
+                } => {
+                    tokens.next();
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待された閉じ括弧が来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
+            }
+            let then = Box::new(parse_statement(tokens, input)?);
+            let tok = tokens.peek().unwrap();
+            let else_ = match tok {
+                Token {
+                    payload: TokenPayload::Else,
+                    ..
+                } => {
+                    tokens.next();
+                    Some(Box::new(parse_statement(tokens, input)?))
+                }
+                _ => None,
+            };
+            Ok(Statement::If {
+                cond,
+                then,
+                else_,
+                pos: *pos,
+            })
         }
-        _ => Err(AppError {
-            message: "期待されたセミコロンが来ませんでした".to_string(),
-            input: input.to_string(),
-            pos: tok.pos,
-        }),
+        Token {
+            payload: TokenPayload::While,
+            pos,
+        } => {
+            tokens.next();
+            let tok = tokens.peek().unwrap();
+            match tok {
+                Token {
+                    payload: TokenPayload::開き丸括弧,
+                    ..
+                } => {
+                    tokens.next();
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待された開き括弧が来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
+            }
+            let cond = Box::new(parse_expr(tokens, input)?);
+
+            let tok = tokens.peek().unwrap();
+            match tok {
+                Token {
+                    payload: TokenPayload::閉じ丸括弧,
+                    ..
+                } => {
+                    tokens.next();
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待された閉じ括弧が来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
+            }
+            let body = Box::new(parse_statement(tokens, input)?);
+            Ok(Statement::While {
+                cond,
+                body,
+                pos: *pos,
+            })
+        }
+        Token {
+            payload: TokenPayload::For,
+            pos,
+        } => {
+            tokens.next();
+            let tok = tokens.peek().unwrap();
+            match tok {
+                Token {
+                    payload: TokenPayload::開き丸括弧,
+                    ..
+                } => {
+                    tokens.next();
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待された開き括弧が来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
+            }
+            let tok = tokens.peek().unwrap();
+            let init = match tok {
+                Token {
+                    payload: TokenPayload::Semicolon,
+                    ..
+                } => None,
+                _ => Some(Box::new(parse_expr(tokens, input)?)),
+            };
+            let tok = tokens.peek().unwrap();
+            match tok {
+                Token {
+                    payload: TokenPayload::Semicolon,
+                    ..
+                } => {
+                    tokens.next();
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待されたセミコロンが来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
+            }
+            let tok = tokens.peek().unwrap();
+            let cond = match tok {
+                Token {
+                    payload: TokenPayload::Semicolon,
+                    ..
+                } => None,
+                _ => Some(Box::new(parse_expr(tokens, input)?)),
+            };
+            let tok = tokens.peek().unwrap();
+            match tok {
+                Token {
+                    payload: TokenPayload::Semicolon,
+                    ..
+                } => {
+                    tokens.next();
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待されたセミコロンが来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
+            }
+            let tok = tokens.peek().unwrap();
+            let update = match tok {
+                Token {
+                    payload: TokenPayload::閉じ丸括弧,
+                    ..
+                } => None,
+                _ => Some(Box::new(parse_expr(tokens, input)?)),
+            };
+            let tok = tokens.peek().unwrap();
+            match tok {
+                Token {
+                    payload: TokenPayload::閉じ丸括弧,
+                    ..
+                } => {
+                    tokens.next();
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待された閉じ括弧が来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
+            }
+            let body = Box::new(parse_statement(tokens, input)?);
+            Ok(Statement::For {
+                init,
+                cond,
+                update,
+                body,
+                pos: *pos,
+            })
+        }
+        _ => {
+            let expr = Box::new(parse_expr(tokens, input)?);
+            let tok = tokens.peek().unwrap();
+            let semicolon_pos = match tok {
+                Token {
+                    payload: TokenPayload::Semicolon,
+                    pos,
+                } => {
+                    tokens.next();
+                    *pos
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待されたセミコロンが来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
+            };
+            Ok(Statement::Expr {
+                expr,
+                semicolon_pos,
+            })
+        }
     }
 }
 

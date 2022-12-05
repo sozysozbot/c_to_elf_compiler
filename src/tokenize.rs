@@ -50,10 +50,13 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     }
                 }
 
-                let payload = if ident == "return" {
-                    TokenPayload::Return
-                } else {
-                    TokenPayload::Identifier(ident)
+                let payload = match ident.as_str() {
+                    "return" => TokenPayload::Return,
+                    "if" => TokenPayload::If,
+                    "else" => TokenPayload::Else,
+                    "while" => TokenPayload::While,
+                    "for" => TokenPayload::For,
+                    _ => TokenPayload::Identifier(ident),
                 };
 
                 ans.push(Token { payload, pos });
