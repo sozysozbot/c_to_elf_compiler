@@ -770,3 +770,7 @@ tkr「前回書いたSeekを使う汚いコードをBufを使って書き直し�
 
 $DATE「2022年12月5日」
 tkr「ifとwhileのコード生成は前回の調査結果から実装。forはwhileのsyntax sugarとして実装」
+hsjoihs「見ていくか」
+hsjoihs「statement が statment になってる誤字があるのと、そもそも関数「statementを評価してediレジスタへ」って値を「ediレジスタへ」確実に書いてくれるんでしたっけ？」
+$HTML「<ul><li>まずediレジスタへ確実に書いてくれるかわからん</li><li>書いてくれていたとしても、「edi レジスタに書きこんでいる」を前提としたコードは文のレベルでは不存在っぽそう？</li></ul>」
+hsjoihs「ということで、関数名だけ変更してマージしておきますね」
