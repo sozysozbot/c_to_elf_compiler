@@ -58,6 +58,10 @@ pub enum Statement {
         body: Box<Statement>,
         pos: usize,
     },
+    Block {
+        statements: Vec<Statement>,
+        pos: usize,
+    },
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

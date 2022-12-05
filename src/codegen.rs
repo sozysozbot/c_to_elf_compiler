@@ -197,9 +197,49 @@ pub fn statmentを評価してediレジスタへ(
             let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap();
             buf.join(Buf::from(jmp(buf_len)))
         }
-        _ => {
-            unimplemented!();
-        }
+        Statement::For {
+            init,
+            cond,
+            update,
+            body,
+            pos,
+        } => statmentを評価してediレジスタへ(
+            &Statement::Block {
+                statements: vec![
+                    init.clone().map(|init| Statement::Expr {
+                        expr: init.clone(),
+                        semicolon_pos: *pos,
+                    }),
+                    Some(Statement::While {
+                        cond: cond
+                            .clone()
+                            .unwrap_or_else(|| Box::new(Expr::Numeric { val: 1, pos: *pos })),
+                        body: Box::new(Statement::Block {
+                            statements: vec![
+                                Some(body.as_ref().clone()),
+                                update.clone().map(|update| Statement::Expr {
+                                    expr: update.clone(),
+                                    semicolon_pos: *pos,
+                                }),
+                            ]
+                            .into_iter()
+                            .flatten()
+                            .collect::<Vec<_>>(),
+                            pos: *pos,
+                        }),
+                        pos: *pos,
+                    }),
+                ]
+                .into_iter()
+                .flatten()
+                .collect::<Vec<_>>(),
+                pos: *pos,
+            },
+            idents,
+        ),
+        Statement::Block { statements, .. } => statements.iter().fold(Buf::new(), |acc, stmt| {
+            acc.join(statmentを評価してediレジスタへ(stmt, idents))
+        }),
     }
 }
 

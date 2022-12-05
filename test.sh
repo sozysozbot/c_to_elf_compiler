@@ -60,4 +60,5 @@ check 10 "if(0)a=7;else a=10; return a;"
 check 7 "a=10;if(1)a=7;return a;"
 check 10 "a=10;if(0)a=7;return a;"
 check 16 "a=2;while(a<10)a=a*a;return a;"
+check 26 "for(a=1;a<10;a=a+1)a=a*a;return a;"
 rm a.out
