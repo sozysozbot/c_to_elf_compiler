@@ -1246,6 +1246,43 @@ primary    = num | ident | &quot;(&quot; expr &quot;)&quot;
 		<div class="content">よしプルリクエストを作成。あ、テストケースを増やした方がいいな</div>
 	</div>
 </div>
+<h3 class="date">2022年12月3日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f88cdba870ca7e94245dcc780e85f92c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f88cdba870ca7e94245dcc780e85f92c').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_f88cdba870ca7e94245dcc780e85f92c" href="#permalink_f88cdba870ca7e94245dcc780e85f92c" class="permalink">¶</a>
+		<div class="content">とりあえずトークナイザ実装</div>
+		<div class="content">jmp/jeのバイナリ表現を調べたら0xEB バイト数/0x74 バイト数であることが分かった。前方ジャンプは負の数かつジャンプ命令自体のサイズを含むので-2となることに注意。</div>
+	</div>
+</div>
+<h3 class="date">2022年12月4日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1773a208b83b6508a36fcd13aba1c908').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1773a208b83b6508a36fcd13aba1c908').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_1773a208b83b6508a36fcd13aba1c908" href="#permalink_1773a208b83b6508a36fcd13aba1c908" class="permalink">¶</a>
+		<div class="content">コード生成のインターフェイスをもう少し整備したい。jmp命令という中間の命令列のバイト数情報が必要なコードの生成を考えるとWrite + Seekを持ち回すのは限界を感じる。RopeっぽいBufを実装する</div>
+		<div class="content">parser実装。forの初期化部はint i = 0のような変数定義が許されるので厳密には式ではないけど今の仕様だと定義なしで代入すると変数が作られる仕様なのでとりあえず式でいいか</div>
+		<div class="content">前回書いたSeekを使う汚いコードをBufを使って書き直した</div>
+	</div>
+</div>
+<h3 class="date">2022年12月5日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_bc52690208a2b75d371d584c28abaea5').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_bc52690208a2b75d371d584c28abaea5').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_bc52690208a2b75d371d584c28abaea5" href="#permalink_bc52690208a2b75d371d584c28abaea5" class="permalink">¶</a>
+		<div class="content">ifとwhileのコード生成は前回の調査結果から実装。forはwhileのsyntax sugarとして実装</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_3abc7cb49d60a3a3cc685b049f168fea').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_3abc7cb49d60a3a3cc685b049f168fea').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_3abc7cb49d60a3a3cc685b049f168fea" href="#permalink_3abc7cb49d60a3a3cc685b049f168fea" class="permalink">¶</a>
+		<div class="content">見ていくか</div>
+		<div class="content">statement が statment になってる誤字があるのと、そもそも関数「statementを評価してediレジスタへ」って値を「ediレジスタへ」確実に書いてくれるんでしたっけ？</div>
+		<div class="content"><ul><li>まずediレジスタへ確実に書いてくれるかわからん</li><li>書いてくれていたとしても、「edi レジスタに書きこんでいる」を前提としたコードは文のレベルでは不存在っぽそう？</li></ul></div>
+		<div class="content">ということで、関数名だけ変更してマージしておきますね</div>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>
