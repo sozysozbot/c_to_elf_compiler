@@ -133,7 +133,7 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
     }
 }
 
-pub fn statementを評価してediレジスタへ(
+pub fn statementを評価(
     stmt: &Statement,
     idents: &mut HashMap<String, u8>,
 ) -> Buf {
@@ -161,9 +161,9 @@ pub fn statementを評価してediレジスタへ(
         } => {
             let else_buf = else_
                 .as_ref()
-                .map(|else_| statementを評価してediレジスタへ(else_.as_ref(), idents));
+                .map(|else_| statementを評価(else_.as_ref(), idents));
 
-            let then_buf = statementを評価してediレジスタへ(then.as_ref(), idents).join(
+            let then_buf = statementを評価(then.as_ref(), idents).join(
                 else_buf
                     .as_ref()
                     .map(|else_buf| Buf::from(jmp(i8::try_from(else_buf.len()).unwrap())))
@@ -184,7 +184,7 @@ pub fn statementを評価してediレジスタへ(
                 .join(else_buf.unwrap_or_else(Buf::new))
         }
         Statement::While { cond, body, .. } => {
-            let body_buf = statementを評価してediレジスタへ(body.as_ref(), idents);
+            let body_buf = statementを評価(body.as_ref(), idents);
             let cond_buf = {
                 let mut v = Vec::new();
                 exprを評価してediレジスタへ(&mut v, cond, idents);
@@ -203,7 +203,7 @@ pub fn statementを評価してediレジスタへ(
             update,
             body,
             pos,
-        } => statementを評価してediレジスタへ(
+        } => statementを評価(
             &Statement::Block {
                 statements: vec![
                     init.clone().map(|init| Statement::Expr {
@@ -238,19 +238,19 @@ pub fn statementを評価してediレジスタへ(
             idents,
         ),
         Statement::Block { statements, .. } => statements.iter().fold(Buf::new(), |acc, stmt| {
-            acc.join(statementを評価してediレジスタへ(stmt, idents))
+            acc.join(statementを評価(stmt, idents))
         }),
     }
 }
 
-pub fn programを評価してediレジスタへ(
+pub fn programを評価(
     program: &Program,
     idents: &mut HashMap<String, u8>,
 ) -> Buf {
     match program {
         Program::Statements(statements) => statements
             .iter()
-            .map(|stmt| statementを評価してediレジスタへ(stmt, idents))
+            .map(|stmt| statementを評価(stmt, idents))
             .fold(Buf::new(), Buf::join),
     }
 }
