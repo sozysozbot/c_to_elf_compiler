@@ -543,6 +543,40 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                 pos: *pos,
             })
         }
+        Token {
+            payload: TokenPayload::開き波括弧,
+            pos,
+        } => {
+            tokens.next();
+            let mut statements = vec![];
+            loop {
+                match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::Eof,
+                        pos,
+                    } => {
+                        return Err(AppError {
+                            message: "期待された閉じ波括弧が来ませんでした".to_string(),
+                            input: input.to_string(),
+                            pos: *pos,
+                        })
+                    }
+                    Token {
+                        payload: TokenPayload::閉じ波括弧,
+                        ..
+                    } => {
+                        tokens.next();
+
+                        break;
+                    }
+                    _ => statements.push(parse_statement(tokens, input)?),
+                }
+            }
+            Ok(Statement::Block {
+                statements,
+                pos: *pos,
+            })
+        }
         _ => {
             let expr = Box::new(parse_expr(tokens, input)?);
             let tok = tokens.peek().unwrap();

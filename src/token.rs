@@ -22,6 +22,8 @@ pub enum TokenPayload {
     Else,
     While,
     For,
+    開き波括弧,
+    閉じ波括弧,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
