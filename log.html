@@ -1275,13 +1275,16 @@ primary    = num | ident | &quot;(&quot; expr &quot;)&quot;
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_833390d260fdbd886ec6ae1336b107aa').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_833390d260fdbd886ec6ae1336b107aa').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_833390d260fdbd886ec6ae1336b107aa" href="#permalink_833390d260fdbd886ec6ae1336b107aa" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_8dbf6abb4f9913efeb9e13bb539f4654').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8dbf6abb4f9913efeb9e13bb539f4654').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_8dbf6abb4f9913efeb9e13bb539f4654" href="#permalink_8dbf6abb4f9913efeb9e13bb539f4654" class="permalink">¶</a>
 		<div class="content">見ていくか</div>
 		<div class="content">statement が statment になってる誤字があるのと、そもそも関数「statementを評価してediレジスタへ」って値を「ediレジスタへ」確実に書いてくれるんでしたっけ？</div>
 		<div class="content"><ul><li>まずediレジスタへ確実に書いてくれるかわからん</li><li>書いてくれていたとしても、「edi レジスタに書きこんでいる」を前提としたコードは文のレベルでは不存在っぽそう？</li></ul></div>
 		<div class="content">ということで、関数名だけ変更してマージしておきますね</div>
 		<div class="content">あ、clippy が Buf に Default とか is_empty を足せと言ってくるので一応足しておく</div>
+		<div class="content">マージしたので、step 13 をやっていく。ブロックか。簡単だ</div>
+		<div class="content">波括弧をトークナイザに追加し、パーサで読み、ああコードジェネレータにはもう既にあるのか（for を while に書き換える際に必要であったため）。</div>
+		<div class="content">ということで、かなり少ない作業量でブロックの実装が完了。dangling else のテストケースも追加しておこう。よし通った</div>
 	</div>
 </div>
 
