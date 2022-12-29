@@ -788,6 +788,15 @@ hsjoihs「まず __builtin_three()（3 を rax に入れて ret するだけ）�
 
 
 $DATE「2022年12月30日」
+tkr「トークナイザは変更しなくていい。パーサーは」
+hsjoihs「primary_expression の定義を変えるんだっけ」
+tkr「compilerbook はそうしてますね。まずは引数のないやつだけ組むのか」
+hsjoihs「__builtin_three がちょうどいいですね」
+tkr「パーサーの実装の入れ子が深くなっちゃうな」
+hsjoihs「まあ後で浅くなるので気にしなくてよいのでは」
+tkr「パーサーはこれでいい。codegen 面倒だなぁ」
+hsjoihs「まあね」
+
 hsjoihs「関数名が __builtin_three じゃなかったらエラー吐いて落ちればいいでしょ」
 tkr「codegen ではエラーを吐かない方がいいのでは？」
 hsjoihs「関数の不存在はリンクエラーの領分だし、codegen が落ちてもいいでしょ」
@@ -796,3 +805,105 @@ tkr「えーと jmp が必要で」
 hsjoihs「いえ、call です」
 tkr「名前では呼べませんよね」
 hsjoihs「そりゃあね」 
+tkr「とりあえずアセンブリを書いてビルドしてみて実践するしかないか」
+
+$source
+```
+GLOBAL _start
+SECTION .text
+_test:
+        ;mov rax, 3
+        ret
+_start:
+            mov     eax, 1
+            call    _test
+            mov     ebx, eax
+            int     0x80
+```
+
+tkr「なんで 0 を返して正常終了するんだろう。3 が返ってきてほしいのに」
+hsjoihs「./tiny ではなく ./tiny3 を走らせる必要がありませんか？」
+tkr「ほんとだ。そうすると……セグフォ？なぜ」
+tkr「rsp の操作が要りそうだな」
+hsjoihs「ん、call はそこら辺ちゃんとやってくれるから要らないのでは」
+tkr「pop が要るんじゃね？」
+hsjoihs「いや、要らないと思うけどなぁ。gcc で return 3; をコンパイルしたアセンブリはどうなります？」
+
+hsjoihs「セグフォなんですが、ありそうだと思ってるのが、実はビルドが完成していなくて、本来はリンカが call の対象を直して実行ファイルにするんですけど、その直すのがされていないままの、リンカを通っていないやつを実行してセグフォしているのでは？という気もします」
+tkr「Makefile の中で ld 通ってますよ」
+hsjoihs「たしかに〜」
+tkr「call を jmp にすり替えたらセグフォせずに無限ループになっているので、そこの問題はないと思われますが」
+hsjoihs「もう gdb で攻める以外の方法思いつかない」
+tkr「使ったことない〜。でも使わないと今後きつそう。まあとりあえず gcc でコンパイルしてみよう」 
+
+hsjoihs — 今日 01:20
+tkr「ベースポインタの退避とかしなくていいんですかね。call 命令はやってくれる？」
+hsjoihs「call 命令は退避はしてくれないので、呼ぶ側はプロローグ書かないとですね。呼ばれる方の builtin_three は要らない」
+tkr「あーじゃあそれのせいだな」
+hsjoihs「プロローグは compilerbook にあるのでそれを使えばいいでしょう」
+tkr「でも compilerbook はプロローグ無しで call できてそうだけど」
+hsjoihs「具体的にどこの？」
+tkr「ここですね」
+$blockquote
+```
+このCコードに対応するアセンブリは次のようになります。
+
+.intel_syntax noprefix
+.globl plus, main
+
+plus:
+        add rsi, rdi
+        mov rax, rsi
+        ret
+
+main:
+        mov rdi, 3
+        mov rsi, 4
+        call plus
+        ret
+```
+hsjoihs「たしかにね。このコードを標準的な gcc でビルドすることによってまず動かして、どこを nasm にすり替えるとこれがこわれるのかを調べるのが近道かな？」 
+
+tkr「call 終わった時点ではセグフォ起きてない。これ↓がセグフォせず無限ループしてるので」
+$source
+```
+GLOBAL _start
+SECTION .text
+_test:
+        mov eax, 3
+        ret
+_start:
+            call    _test
+a:
+            jmp a
+            mov     ebx, eax
+            int     0x80
+```
+kr「なんでこれがセグフォしないんだ？」
+tkr「あ、もしかして int 0x80 が eax に 1 を必要とする？」
+hsjoihs「可能性がある。int 0x80 の直前に mov eax, 1 書いたらどうなります？」
+tkr「いけた。call のせいじゃなくて syscall の使い方間違えてるだけだったわ」
+tkr「あーそうか、syscall 番号が eax か。0x80 がシステムコール番号なのではなくて」 
+hsjoihs「私も一時期その勘違いしてた気がするな」 
+tkr「syscall 命令みたいなのなかったっけ」
+hsjoihs「とりあえず動いたのでヨシ」
+hsjoihs「で、結局バイナリを見て call がどう翻訳されてるかを確認したかったんですよね？」
+$source
+```
+GLOBAL _start
+SECTION .text
+_test:
+        mov eax, 3
+        ret
+_start:
+        call    _test
+        mov     ebx, eax
+        mov     eax, 1
+        int     0x80
+```
+hsjoihs「とりあえずその前に、動いたアセンブリとバイナリをコミットし、」
+hsjoihs「私が書いてるログも入れるとよさそう」
+tkr「Makefile いじろう」
+tkr「既存のファイルが .out に変わるけどとりあえず今のところは影響ないか」
+tkr「てかコミットしてるなら clean 自体が要らない気がするな」
+tkr「あ、Makefile のルールをそもそも拡張子なしにできるからそれでいいのか」
