@@ -28,6 +28,10 @@ pub enum Expr {
         ident: String,
         pos: usize,
     },
+    Call {
+        ident: String,
+        pos: usize,
+    },
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

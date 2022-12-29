@@ -412,6 +412,11 @@ pub fn exprを評価してediレジスタへ(
         Expr::Numeric { val, pos: _ } => {
             writer.write_all(&ediに代入(*val)).unwrap();
         }
+        Expr::Call { ident, pos: _ } => {
+            if ident != "__builtin_three" {
+                panic!("現在 __builtin_three 関数しか存在しません")
+            }
+        }
     }
 }
 
