@@ -786,3 +786,13 @@ hsjoihs「リンカ実装は明らかに荷が重いので、なんらかの sys
 tkr「たーしかに…とりあえずビルドイン関数でなんとかしますかー。グローバル変数はまだまだ先だったしそれが楽そう」
 hsjoihs「まず __builtin_three()（3 を rax に入れて ret するだけ）を実装し、次に __builtin_putchar(int char) を実装、といった感じかなぁ」
 
+
+$DATE「2022年12月30日」
+hsjoihs「関数名が __builtin_three じゃなかったらエラー吐いて落ちればいいでしょ」
+tkr「codegen ではエラーを吐かない方がいいのでは？」
+hsjoihs「関数の不存在はリンクエラーの領分だし、codegen が落ちてもいいでしょ」
+tkr「たしかにそうか」
+tkr「えーと jmp が必要で」
+hsjoihs「いえ、call です」
+tkr「名前では呼べませんよね」
+hsjoihs「そりゃあね」 
