@@ -139,13 +139,9 @@ fn call_rax() -> [u8; 2] {
     [0xff, 0xd0]
 }
 
-fn eaxに即値をセット(n: u8) -> [u8; 2] {
-    [0xb8, n]
-}
-
-fn eaxに16bit即値をセット(n: u16) -> [u8; 3] {
+fn eaxに即値をセット(n: u32) -> [u8; 5] {
     let buf = n.to_le_bytes();
-    [0xb8, buf[0], buf[1]]
+    [0xb8, buf[0], buf[1], buf[2], buf[3]]
 }
 
 fn ret() -> [u8; 1] {
@@ -476,7 +472,7 @@ pub fn exprを評価してediレジスタへ(
                 .get(ident)
                 .expect(format!("関数 {} が見つかりません", ident).as_str());
             writer
-                .write_all(&eaxに16bit即値をセット(*function as u16))
+                .write_all(&eaxに即値をセット(*function + 0x00400000))
                 .unwrap();
             writer.write_all(&call_rax()).unwrap();
             writer.write_all(&eaxをediにmov()).unwrap();
