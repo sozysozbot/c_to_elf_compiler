@@ -74,6 +74,7 @@ check 3 "a = 3; if (a) { b = 1; c = 2; } else { b = 5; c = 7; } return b + c;"
 check 12 "a = 0; if (a) { b = 1; c = 2; } else { b = 5; c = 7; } return b + c;"
 check 3 "a = 0; b = 0; c = 3; if (a) if (b) { c = 2; } else { c = 7; } return c;"
 check 7 "a = 0; b = 0; c = 3; if (a) {if (b) { c = 2; }} else { c = 7; } return c;"
+check 3 "return __builtin_three();"
 
 for job in `jobs -p`
 do

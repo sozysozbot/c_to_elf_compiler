@@ -39,6 +39,21 @@ pub fn rspから即値を引く(x: u8) -> Buf {
     Buf::from([0x48, 0x83, 0xec, x])
 }
 
+pub fn プロローグ(x: u8) -> Buf {
+    Buf::from(rbpをプッシュ())
+        .join(rspをrbpにコピー())
+        .join(rspから即値を引く(x))
+}
+
+// leave = mov rsp, rbp + pop rbp
+pub fn leave() -> Buf {
+    Buf::from([0xc9])
+}
+
+pub fn エピローグ() -> Buf {
+    Buf::from(leave()).join(ret())
+}
+
 fn ediへとポップ() -> [u8; 1] {
     [0x5f]
 }
@@ -115,6 +130,36 @@ fn je(n: i8) -> [u8; 2] {
     [0x74, n.to_le_bytes()[0]]
 }
 
+fn call(n: i8) -> [u8; 5] {
+    let buf = n.to_le_bytes();
+    [0xe8, buf[0], buf[1], buf[2], buf[3]]
+}
+
+fn call_rax() -> [u8; 2] {
+    [0xff, 0xd0]
+}
+
+fn eaxに即値をセット(n: u8) -> [u8; 2] {
+    [0xb8, n]
+}
+
+fn eaxに16bit即値をセット(n: u16) -> [u8; 3] {
+    let buf = n.to_le_bytes();
+    [0xb8, buf[0], buf[1]]
+}
+
+fn ret() -> [u8; 1] {
+    [0xc3]
+}
+
+fn eaxをediにmov() -> [u8; 2] {
+    [0x89, 0xc7]
+}
+
+pub fn builtin_three関数を生成() -> Buf {
+    プロローグ(0).join(eaxに即値をセット(3)).join(エピローグ())
+}
+
 pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
     writer: &mut impl Write,
     expr: &Expr,
@@ -133,14 +178,18 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
     }
 }
 
-pub fn statementを評価(stmt: &Statement, idents: &mut HashMap<String, u8>) -> Buf {
+pub fn statementを評価(
+    stmt: &Statement,
+    idents: &mut HashMap<String, u8>,
+    functions: &HashMap<String, u32>,
+) -> Buf {
     match stmt {
         Statement::Expr {
             expr,
             semicolon_pos: _,
         } => {
             let mut writer = Vec::new();
-            exprを評価してediレジスタへ(&mut writer, expr, idents);
+            exprを評価してediレジスタへ(&mut writer, expr, idents, functions);
             Buf::from(writer)
         }
         Statement::Return {
@@ -148,7 +197,7 @@ pub fn statementを評価(stmt: &Statement, idents: &mut HashMap<String, u8>) ->
             semicolon_pos: _,
         } => {
             let mut writer = Vec::new();
-            exprを評価してediレジスタへ(&mut writer, expr, idents);
+            exprを評価してediレジスタへ(&mut writer, expr, idents, functions);
             writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
             writer.write_all(&[0x0f, 0x05]).unwrap();
             Buf::from(writer)
@@ -158,9 +207,9 @@ pub fn statementを評価(stmt: &Statement, idents: &mut HashMap<String, u8>) ->
         } => {
             let else_buf = else_
                 .as_ref()
-                .map(|else_| statementを評価(else_.as_ref(), idents));
+                .map(|else_| statementを評価(else_.as_ref(), idents, functions));
 
-            let then_buf = statementを評価(then.as_ref(), idents).join(
+            let then_buf = statementを評価(then.as_ref(), idents, functions).join(
                 else_buf
                     .as_ref()
                     .map(|else_buf| Buf::from(jmp(i8::try_from(else_buf.len()).unwrap())))
@@ -169,7 +218,7 @@ pub fn statementを評価(stmt: &Statement, idents: &mut HashMap<String, u8>) ->
 
             let cond_buf = {
                 let mut v = Vec::new();
-                exprを評価してediレジスタへ(&mut v, cond, idents);
+                exprを評価してediレジスタへ(&mut v, cond, idents, functions);
                 v.write_all(&ediが0かを確認()).unwrap();
                 v.write_all(&je(i8::try_from(then_buf.len()).unwrap()))
                     .unwrap();
@@ -181,10 +230,10 @@ pub fn statementを評価(stmt: &Statement, idents: &mut HashMap<String, u8>) ->
                 .join(else_buf.unwrap_or_else(Buf::new))
         }
         Statement::While { cond, body, .. } => {
-            let body_buf = statementを評価(body.as_ref(), idents);
+            let body_buf = statementを評価(body.as_ref(), idents, functions);
             let cond_buf = {
                 let mut v = Vec::new();
-                exprを評価してediレジスタへ(&mut v, cond, idents);
+                exprを評価してediレジスタへ(&mut v, cond, idents, functions);
                 v.write_all(&ediが0かを確認()).unwrap();
                 v.write_all(&je(i8::try_from(body_buf.len() + 2).unwrap()))
                     .unwrap();
@@ -233,18 +282,23 @@ pub fn statementを評価(stmt: &Statement, idents: &mut HashMap<String, u8>) ->
                 pos: *pos,
             },
             idents,
+            functions,
         ),
         Statement::Block { statements, .. } => statements.iter().fold(Buf::new(), |acc, stmt| {
-            acc.join(statementを評価(stmt, idents))
+            acc.join(statementを評価(stmt, idents, functions))
         }),
     }
 }
 
-pub fn programを評価(program: &Program, idents: &mut HashMap<String, u8>) -> Buf {
+pub fn programを評価(
+    program: &Program,
+    idents: &mut HashMap<String, u8>,
+    functions: &mut HashMap<String, u32>,
+) -> Buf {
     match program {
         Program::Statements(statements) => statements
             .iter()
-            .map(|stmt| statementを評価(stmt, idents))
+            .map(|stmt| statementを評価(stmt, idents, &*functions))
             .fold(Buf::new(), Buf::join),
     }
 }
@@ -254,6 +308,7 @@ pub fn exprを評価してediレジスタへ(
     writer: &mut impl Write,
     expr: &Expr,
     idents: &mut HashMap<String, u8>,
+    functions: &HashMap<String, u32>,
 ) {
     match expr {
         Expr::BinaryExpr {
@@ -266,7 +321,7 @@ pub fn exprを評価してediレジスタへ(
                 writer, 左辺, idents,
             );
             writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺, idents);
+            exprを評価してediレジスタへ(writer, 右辺, idents, functions);
 
             writer.write_all(&eaxへとポップ()).unwrap(); // 左辺のアドレス
             writer.write_all(&raxが指す位置にediを代入()).unwrap();
@@ -283,8 +338,8 @@ pub fn exprを評価してediレジスタへ(
             左辺,
             右辺,
         } => {
-            exprを評価してediレジスタへ(writer, 左辺, idents); // 左辺は push せずに捨てる
-            exprを評価してediレジスタへ(writer, 右辺, idents);
+            exprを評価してediレジスタへ(writer, 左辺, idents, functions); // 左辺は push せずに捨てる
+            exprを評価してediレジスタへ(writer, 右辺, idents, functions);
         }
         Expr::BinaryExpr {
             op: BinaryOp::Add,
@@ -292,9 +347,9 @@ pub fn exprを評価してediレジスタへ(
             左辺,
             右辺,
         } => {
-            exprを評価してediレジスタへ(writer, 左辺, idents);
+            exprを評価してediレジスタへ(writer, 左辺, idents, functions);
             writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺, idents);
+            exprを評価してediレジスタへ(writer, 右辺, idents, functions);
             writer.write_all(&ediをプッシュ()).unwrap();
             writer.write_all(&eaxへとポップ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
@@ -306,9 +361,9 @@ pub fn exprを評価してediレジスタへ(
             左辺,
             右辺,
         } => {
-            exprを評価してediレジスタへ(writer, 左辺, idents);
+            exprを評価してediレジスタへ(writer, 左辺, idents, functions);
             writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺, idents);
+            exprを評価してediレジスタへ(writer, 右辺, idents, functions);
             writer.write_all(&ediをプッシュ()).unwrap();
             writer.write_all(&eaxへとポップ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
@@ -320,9 +375,9 @@ pub fn exprを評価してediレジスタへ(
             左辺,
             右辺,
         } => {
-            exprを評価してediレジスタへ(writer, 左辺, idents);
+            exprを評価してediレジスタへ(writer, 左辺, idents, functions);
             writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺, idents);
+            exprを評価してediレジスタへ(writer, 右辺, idents, functions);
             writer.write_all(&ediをプッシュ()).unwrap();
             writer.write_all(&eaxへとポップ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
@@ -335,9 +390,9 @@ pub fn exprを評価してediレジスタへ(
             左辺,
             右辺,
         } => {
-            exprを評価してediレジスタへ(writer, 左辺, idents);
+            exprを評価してediレジスタへ(writer, 左辺, idents, functions);
             writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺, idents);
+            exprを評価してediレジスタへ(writer, 右辺, idents, functions);
             writer.write_all(&ediをプッシュ()).unwrap();
 
             // 右辺を edi に、左辺を eax に入れる必要がある
@@ -365,6 +420,7 @@ pub fn exprを評価してediレジスタへ(
                 右辺,
                 &フラグを読んで等しいかどうかをalにセット(),
                 idents,
+                functions,
             );
         }
         Expr::BinaryExpr {
@@ -379,6 +435,7 @@ pub fn exprを評価してediレジスタへ(
                 右辺,
                 &フラグを読んで異なっているかどうかをalにセット(),
                 idents,
+                functions,
             );
         }
         Expr::BinaryExpr {
@@ -393,6 +450,7 @@ pub fn exprを評価してediレジスタへ(
                 右辺,
                 &フラグを読んで未満であるかどうかをalにセット(),
                 idents,
+                functions,
             );
         }
         Expr::BinaryExpr {
@@ -407,15 +465,21 @@ pub fn exprを評価してediレジスタへ(
                 右辺,
                 &フラグを読んで以下であるかどうかをalにセット(),
                 idents,
+                functions,
             );
         }
         Expr::Numeric { val, pos: _ } => {
             writer.write_all(&ediに代入(*val)).unwrap();
         }
         Expr::Call { ident, pos: _ } => {
-            if ident != "__builtin_three" {
-                panic!("現在 __builtin_three 関数しか存在しません")
-            }
+            let function = functions
+                .get(ident)
+                .expect(format!("関数 {} が見つかりません", ident).as_str());
+            writer
+                .write_all(&eaxに16bit即値をセット(*function as u16))
+                .unwrap();
+            writer.write_all(&call_rax()).unwrap();
+            writer.write_all(&eaxをediにmov()).unwrap();
         }
     }
 }
@@ -426,10 +490,11 @@ fn 比較演算を評価してediレジスタへ(
     右辺: &Expr,
     フラグをalに移す: &[u8],
     idents: &mut HashMap<String, u8>,
+    functions: &HashMap<String, u32>,
 ) {
-    exprを評価してediレジスタへ(writer, 左辺, idents);
+    exprを評価してediレジスタへ(writer, 左辺, idents, functions);
     writer.write_all(&ediをプッシュ()).unwrap();
-    exprを評価してediレジスタへ(writer, 右辺, idents);
+    exprを評価してediレジスタへ(writer, 右辺, idents, functions);
     writer.write_all(&ediをプッシュ()).unwrap();
 
     writer.write_all(&ediへとポップ()).unwrap();
