@@ -1,6 +1,6 @@
 %.o: %.asm
-	nasm -felf64  --reproducible $<
+	nasm -felf64 --reproducible $<
 
 %: %.o
-	ld $< -o $@
-	strip $@
+	$${BINTOOLS_PREFIX}ld $< -o $@
+	$${BINTOOLS_PREFIX}strip $@
