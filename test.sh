@@ -1,13 +1,18 @@
 #!/bin/bash
 
-check() {
+cd $(dirname $0)
+cargo build
+
+check_inner() {
+  TMPDIR=$(mktemp -d --tmpdir=testwork)
   expected="$1"
   input="$2"
 
-  cargo run -- "$input"
-  chmod 755 ./a.out
-  ./run-on-linux.sh ./a.out
+  (cd $TMPDIR && ../../target/debug/c_to_elf_compiler "$input")
+  chmod 755 $TMPDIR/a.out
+  ./run-on-linux.sh $TMPDIR/a.out
   actual="$?"
+  rm -rf $TMPDIR
 
   if [ "$actual" = "$expected" ]; then
     printf "\033[32m[PASS]\033[m $input => $actual\n"
@@ -15,6 +20,10 @@ check() {
     printf "\033[31m[FAIL]\033[m $input => $expected expected, but got $actual\n"
     exit 1
   fi
+}
+
+check() {
+  check_inner "$1" "$2" &
 }
 check 8 "return 8;"
 check 27 "return 27;"
@@ -65,4 +74,12 @@ check 3 "a = 3; if (a) { b = 1; c = 2; } else { b = 5; c = 7; } return b + c;"
 check 12 "a = 0; if (a) { b = 1; c = 2; } else { b = 5; c = 7; } return b + c;"
 check 3 "a = 0; b = 0; c = 3; if (a) if (b) { c = 2; } else { c = 7; } return c;"
 check 7 "a = 0; b = 0; c = 3; if (a) {if (b) { c = 2; }} else { c = 7; } return c;"
-rm a.out
+check 3 "return __builtin_three();"
+check 6 "return __builtin_three()+__builtin_three();"
+check 4 "return __builtin_three()+1;"
+check 4 "return 1+__builtin_three();"
+for job in `jobs -p`
+do
+echo $job
+    wait $job
+done

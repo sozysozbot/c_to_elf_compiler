@@ -38,13 +38,39 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
         Token {
             payload: TokenPayload::Identifier(ident),
             pos,
-        } => {
-            let expr = Expr::Identifier {
-                ident: ident.clone(),
-                pos: *pos,
-            };
-            Ok(expr)
-        }
+        } => match tokens.peek().unwrap() {
+            Token {
+                payload: TokenPayload::開き丸括弧,
+                pos: open_pos,
+            } => {
+                tokens.next();
+                match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::閉じ丸括弧,
+                        pos: _,
+                    } => {
+                        tokens.next();
+                        let expr = Expr::Call {
+                            ident: ident.clone(),
+                            pos: *pos,
+                        };
+                        Ok(expr)
+                    }
+                    _ => Err(AppError {
+                        message: "閉じ丸括弧が期待されていました".to_string(),
+                        input: input.to_string(),
+                        pos: *open_pos + 1,
+                    }),
+                }
+            }
+            _ => {
+                let expr = Expr::Identifier {
+                    ident: ident.clone(),
+                    pos: *pos,
+                };
+                Ok(expr)
+            }
+        },
         Token {
             payload: TokenPayload::開き丸括弧,
             pos,

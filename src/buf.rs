@@ -45,7 +45,8 @@ impl Buf {
         }
     }
 
-    pub fn join(self, other: Self) -> Self {
+    pub fn join(self, other: impl Into<Buf>) -> Self {
+        let other = other.into();
         let len = self.len() + other.len();
 
         Self::Branch {

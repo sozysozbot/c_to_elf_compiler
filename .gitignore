@@ -1,1 +1,3 @@
 /target
+/testwork/**
+!/testwork/.gitkeep
