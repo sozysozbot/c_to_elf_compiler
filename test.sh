@@ -80,6 +80,5 @@ check 4 "return __builtin_three()+1;"
 check 4 "return 1+__builtin_three();"
 for job in `jobs -p`
 do
-echo $job
     wait $job
 done
