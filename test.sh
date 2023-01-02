@@ -78,6 +78,7 @@ check 3 "return __builtin_three();"
 check 6 "return __builtin_three()+__builtin_three();"
 check 4 "return __builtin_three()+1;"
 check 4 "return 1+__builtin_three();"
+check 1 "__builtin_putchar(65); return 1;"
 for job in `jobs -p`
 do
     wait $job

@@ -44,23 +44,58 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
                 pos: open_pos,
             } => {
                 tokens.next();
+
+                let mut args = Vec::new();
+
                 match tokens.peek().unwrap() {
                     Token {
                         payload: TokenPayload::閉じ丸括弧,
-                        pos: _,
+                        ..
                     } => {
                         tokens.next();
                         let expr = Expr::Call {
                             ident: ident.clone(),
+                            args,
                             pos: *pos,
                         };
-                        Ok(expr)
+                        return Ok(expr);
                     }
-                    _ => Err(AppError {
-                        message: "閉じ丸括弧が期待されていました".to_string(),
-                        input: input.to_string(),
-                        pos: *open_pos + 1,
-                    }),
+                    _ => {
+                        let expr = parse_expr(tokens, input)?;
+                        args.push(expr);
+                    }
+                }
+
+                loop {
+                    match tokens.peek().unwrap() {
+                        Token {
+                            payload: TokenPayload::閉じ丸括弧,
+                            ..
+                        } => {
+                            tokens.next();
+                            let expr = Expr::Call {
+                                ident: ident.clone(),
+                                args,
+                                pos: *pos,
+                            };
+                            break Ok(expr);
+                        }
+                        Token {
+                            payload: TokenPayload::Comma,
+                            ..
+                        } => {
+                            tokens.next();
+                            let expr = parse_expr(tokens, input)?;
+                            args.push(expr);
+                        }
+                        _ => {
+                            break Err(AppError {
+                                message: "閉じ丸括弧かカンマが期待されていました".to_string(),
+                                input: input.to_string(),
+                                pos: *open_pos + 1,
+                            })
+                        }
+                    }
                 }
             }
             _ => {

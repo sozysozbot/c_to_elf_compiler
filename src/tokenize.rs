@@ -201,6 +201,13 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 })?),
                 pos,
             }),
+            ',' => {
+                iter.next();
+                ans.push(Token {
+                    payload: TokenPayload::Comma,
+                    pos,
+                });
+            }
             _ => {
                 return Err(AppError {
                     message: "トークナイズできない不正な文字です".to_string(),
