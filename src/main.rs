@@ -38,12 +38,12 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
 
     let mut functions = HashMap::new();
     let builtin_three_pos = buf.len() as u32;
-    let buf = buf.join(Buf::from(codegen::builtin_three関数を生成()));
+    let buf = buf.join(codegen::builtin_three関数を生成());
     functions.insert("__builtin_three".to_string(), builtin_three_pos);
 
     let entry_pos = buf.len() as u16;
-    let buf = buf.join(Buf::from(codegen::rbpをプッシュ()));
-    let buf = buf.join(Buf::from(codegen::rspをrbpにコピー()));
+    let buf = buf.join(codegen::rbpをプッシュ());
+    let buf = buf.join(codegen::rspをrbpにコピー());
     let mut idents = HashMap::new();
     let program_buf = codegen::programを評価(&program, &mut idents, &mut functions);
 

@@ -51,7 +51,7 @@ pub fn leave() -> Buf {
 }
 
 pub fn エピローグ() -> Buf {
-    Buf::from(leave()).join(ret())
+    leave().join(ret())
 }
 
 fn ediへとポップ() -> [u8; 1] {
@@ -128,11 +128,6 @@ fn jmp(n: i8) -> [u8; 2] {
 
 fn je(n: i8) -> [u8; 2] {
     [0x74, n.to_le_bytes()[0]]
-}
-
-fn call(n: i8) -> [u8; 5] {
-    let buf = n.to_le_bytes();
-    [0xe8, buf[0], buf[1], buf[2], buf[3]]
 }
 
 fn call_rax() -> [u8; 2] {
@@ -470,7 +465,7 @@ pub fn exprを評価してediレジスタへ(
         Expr::Call { ident, pos: _ } => {
             let function = functions
                 .get(ident)
-                .expect(format!("関数 {} が見つかりません", ident).as_str());
+                .unwrap_or_else(|| panic!("関数 {} が見つかりません", ident));
             writer
                 .write_all(&eaxに即値をセット(*function + 0x00400000))
                 .unwrap();
