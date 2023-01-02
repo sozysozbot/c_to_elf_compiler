@@ -1287,6 +1287,489 @@ primary    = num | ident | &quot;(&quot; expr &quot;)&quot;
 		<div class="content">ということで、かなり少ない作業量でブロックの実装が完了。dangling else のテストケースも追加しておこう。よし通った</div>
 	</div>
 </div>
+<h3 class="date">2022年12月7日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_fa47efc706fae850b8ed2de48f8bac19').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_fa47efc706fae850b8ed2de48f8bac19').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_fa47efc706fae850b8ed2de48f8bac19" href="#permalink_fa47efc706fae850b8ed2de48f8bac19" class="permalink">¶</a>
+		<div class="content">step14のテストどうしましょう。本だとオブジェクトファイルを生成して自作関数とリンクすることになっていますが、、 </div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f2dc12b4e19a010bc93a2e5d259cf5ec').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f2dc12b4e19a010bc93a2e5d259cf5ec').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_f2dc12b4e19a010bc93a2e5d259cf5ec" href="#permalink_f2dc12b4e19a010bc93a2e5d259cf5ec" class="permalink">¶</a>
+		<div class="content">リンカ実装は明らかに荷が重いので、なんらかの syscall を呼ぶ関数を最初の魔法の 78 バイト付近に埋め込んで、__builtin() でその関数をコールできるようにする、でどうでしょう？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4327c7f5b23b612fb17efe0b67d11ece').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4327c7f5b23b612fb17efe0b67d11ece').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_4327c7f5b23b612fb17efe0b67d11ece" href="#permalink_4327c7f5b23b612fb17efe0b67d11ece" class="permalink">¶</a>
+		<div class="content">たーしかに…とりあえずビルドイン関数でなんとかしますかー。グローバル変数はまだまだ先だったしそれが楽そう</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_a59bb0655e753bc5b7f0604d3f3a8327').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_a59bb0655e753bc5b7f0604d3f3a8327').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_a59bb0655e753bc5b7f0604d3f3a8327" href="#permalink_a59bb0655e753bc5b7f0604d3f3a8327" class="permalink">¶</a>
+		<div class="content">まず __builtin_three()（3 を rax に入れて ret するだけ）を実装し、次に __builtin_putchar(int char) を実装、といった感じかなぁ</div>
+	</div>
+</div>
+<h3 class="date">2022年12月30日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4cfd130d847c4e4534161afb6cc68684').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4cfd130d847c4e4534161afb6cc68684').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_4cfd130d847c4e4534161afb6cc68684" href="#permalink_4cfd130d847c4e4534161afb6cc68684" class="permalink">¶</a>
+		<div class="content">トークナイザは変更しなくていい。パーサーは</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_38a0b50d8d173fbbf1563268751dd112').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_38a0b50d8d173fbbf1563268751dd112').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_38a0b50d8d173fbbf1563268751dd112" href="#permalink_38a0b50d8d173fbbf1563268751dd112" class="permalink">¶</a>
+		<div class="content">primary_expression の定義を変えるんだっけ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_8c5f631277ba7a4d789e973a42074587').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8c5f631277ba7a4d789e973a42074587').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_8c5f631277ba7a4d789e973a42074587" href="#permalink_8c5f631277ba7a4d789e973a42074587" class="permalink">¶</a>
+		<div class="content">compilerbook はそうしてますね。まずは引数のないやつだけ組むのか</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4ba734bf162cf881cda83fc773f3027a').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4ba734bf162cf881cda83fc773f3027a').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_4ba734bf162cf881cda83fc773f3027a" href="#permalink_4ba734bf162cf881cda83fc773f3027a" class="permalink">¶</a>
+		<div class="content">__builtin_three がちょうどいいですね</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_096bcafca9321f50f114cc9da0f00cf1').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_096bcafca9321f50f114cc9da0f00cf1').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_096bcafca9321f50f114cc9da0f00cf1" href="#permalink_096bcafca9321f50f114cc9da0f00cf1" class="permalink">¶</a>
+		<div class="content">パーサーの実装の入れ子が深くなっちゃうな</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_af9b177458ed53aeae0ef7c4170ad049').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_af9b177458ed53aeae0ef7c4170ad049').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_af9b177458ed53aeae0ef7c4170ad049" href="#permalink_af9b177458ed53aeae0ef7c4170ad049" class="permalink">¶</a>
+		<div class="content">まあ後で浅くなるので気にしなくてよいのでは</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_fff26bd35192a0ae1869633f43e83ded').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_fff26bd35192a0ae1869633f43e83ded').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_fff26bd35192a0ae1869633f43e83ded" href="#permalink_fff26bd35192a0ae1869633f43e83ded" class="permalink">¶</a>
+		<div class="content">パーサーはこれでいい。codegen 面倒だなぁ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_5a2b91f707233ca79262da61ffbd2a57').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_5a2b91f707233ca79262da61ffbd2a57').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_5a2b91f707233ca79262da61ffbd2a57" href="#permalink_5a2b91f707233ca79262da61ffbd2a57" class="permalink">¶</a>
+		<div class="content">まあね</div>
+		<div class="content">関数名が __builtin_three じゃなかったらエラー吐いて落ちればいいでしょ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_34d6e9540777ed36505b2bfbc6647f5a').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_34d6e9540777ed36505b2bfbc6647f5a').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_34d6e9540777ed36505b2bfbc6647f5a" href="#permalink_34d6e9540777ed36505b2bfbc6647f5a" class="permalink">¶</a>
+		<div class="content">codegen ではエラーを吐かない方がいいのでは？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_b8327cd6e857578383426cbc00f792ed').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_b8327cd6e857578383426cbc00f792ed').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_b8327cd6e857578383426cbc00f792ed" href="#permalink_b8327cd6e857578383426cbc00f792ed" class="permalink">¶</a>
+		<div class="content">関数の不存在はリンクエラーの領分だし、codegen が落ちてもいいでしょ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_294fae39036d29034a1f42cd636508fb').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_294fae39036d29034a1f42cd636508fb').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_294fae39036d29034a1f42cd636508fb" href="#permalink_294fae39036d29034a1f42cd636508fb" class="permalink">¶</a>
+		<div class="content">たしかにそうか</div>
+		<div class="content">えーと jmp が必要で</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_754dbeedb3f30122f7d47ae0afac9905').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_754dbeedb3f30122f7d47ae0afac9905').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_754dbeedb3f30122f7d47ae0afac9905" href="#permalink_754dbeedb3f30122f7d47ae0afac9905" class="permalink">¶</a>
+		<div class="content">いえ、call です</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_66ef058170c6c8445dcbe2a7ac04049b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_66ef058170c6c8445dcbe2a7ac04049b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_66ef058170c6c8445dcbe2a7ac04049b" href="#permalink_66ef058170c6c8445dcbe2a7ac04049b" class="permalink">¶</a>
+		<div class="content">名前では呼べませんよね</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_053dbe393d279544a44d70303870ba16').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_053dbe393d279544a44d70303870ba16').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_053dbe393d279544a44d70303870ba16" href="#permalink_053dbe393d279544a44d70303870ba16" class="permalink">¶</a>
+		<div class="content">そりゃあね</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4d265879bad6dbd3e0ffdd51a618df34').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4d265879bad6dbd3e0ffdd51a618df34').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_4d265879bad6dbd3e0ffdd51a618df34" href="#permalink_4d265879bad6dbd3e0ffdd51a618df34" class="permalink">¶</a>
+		<div class="content">とりあえずアセンブリを書いてビルドしてみて実践するしかないか</div>
+		<pre><code class="language-">GLOBAL _start
+SECTION .text
+_test:
+        ;mov rax, 3
+        ret
+_start:
+            mov     eax, 1
+            call    _test
+            mov     ebx, eax
+            int     0x80
+</code></pre>
+		<div class="content">なんで 0 を返して正常終了するんだろう。3 が返ってきてほしいのに</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f23ad521630e9574c19c22ed489199b4').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f23ad521630e9574c19c22ed489199b4').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_f23ad521630e9574c19c22ed489199b4" href="#permalink_f23ad521630e9574c19c22ed489199b4" class="permalink">¶</a>
+		<div class="content">./tiny ではなく ./tiny3 を走らせる必要がありませんか？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_6b7e7f4c5eb6e1d846dffde42202774a').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_6b7e7f4c5eb6e1d846dffde42202774a').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_6b7e7f4c5eb6e1d846dffde42202774a" href="#permalink_6b7e7f4c5eb6e1d846dffde42202774a" class="permalink">¶</a>
+		<div class="content">ほんとだ。そうすると……セグフォ？なぜ</div>
+		<div class="content">rsp の操作が要りそうだな</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f2dc8a03d3729d694543d0ec1dd2b3a9').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f2dc8a03d3729d694543d0ec1dd2b3a9').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_f2dc8a03d3729d694543d0ec1dd2b3a9" href="#permalink_f2dc8a03d3729d694543d0ec1dd2b3a9" class="permalink">¶</a>
+		<div class="content">ん、call はそこら辺ちゃんとやってくれるから要らないのでは</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_ceee19966bb36ce70b7ce9f6450333d1').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_ceee19966bb36ce70b7ce9f6450333d1').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_ceee19966bb36ce70b7ce9f6450333d1" href="#permalink_ceee19966bb36ce70b7ce9f6450333d1" class="permalink">¶</a>
+		<div class="content">pop が要るんじゃね？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_cb2e80e64c0df222eba737722ce000e2').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_cb2e80e64c0df222eba737722ce000e2').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_cb2e80e64c0df222eba737722ce000e2" href="#permalink_cb2e80e64c0df222eba737722ce000e2" class="permalink">¶</a>
+		<div class="content">いや、要らないと思うけどなぁ。gcc で return 3; をコンパイルしたアセンブリはどうなります？</div>
+		<div class="content">セグフォなんですが、ありそうだと思ってるのが、実はビルドが完成していなくて、本来はリンカが call の対象を直して実行ファイルにするんですけど、その直すのがされていないままの、リンカを通っていないやつを実行してセグフォしているのでは？という気もします</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_757addb79269fd025d71082aeb8156b2').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_757addb79269fd025d71082aeb8156b2').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_757addb79269fd025d71082aeb8156b2" href="#permalink_757addb79269fd025d71082aeb8156b2" class="permalink">¶</a>
+		<div class="content">Makefile の中で ld 通ってますよ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f02dd6c638ec5f2bed3312ca235ccb11').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f02dd6c638ec5f2bed3312ca235ccb11').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_f02dd6c638ec5f2bed3312ca235ccb11" href="#permalink_f02dd6c638ec5f2bed3312ca235ccb11" class="permalink">¶</a>
+		<div class="content">たしかに〜</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_d6be51604dd11882428b26d93b2e9c04').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_d6be51604dd11882428b26d93b2e9c04').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_d6be51604dd11882428b26d93b2e9c04" href="#permalink_d6be51604dd11882428b26d93b2e9c04" class="permalink">¶</a>
+		<div class="content">call を jmp にすり替えたらセグフォせずに無限ループになっているので、そこの問題はないと思われますが</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_156e32405e2de76ad58c67e127178b58').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_156e32405e2de76ad58c67e127178b58').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_156e32405e2de76ad58c67e127178b58" href="#permalink_156e32405e2de76ad58c67e127178b58" class="permalink">¶</a>
+		<div class="content">もう gdb で攻める以外の方法思いつかない</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1e8dc42e907957fa53a3227d9f44757b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1e8dc42e907957fa53a3227d9f44757b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_1e8dc42e907957fa53a3227d9f44757b" href="#permalink_1e8dc42e907957fa53a3227d9f44757b" class="permalink">¶</a>
+		<div class="content">使ったことない〜。でも使わないと今後きつそう。まあとりあえず gcc でコンパイルしてみよう</div>
+		<div class="content">ベースポインタの退避とかしなくていいんですかね。call 命令はやってくれる？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_892d1c90557e435439b2eab5fe180f7d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_892d1c90557e435439b2eab5fe180f7d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_892d1c90557e435439b2eab5fe180f7d" href="#permalink_892d1c90557e435439b2eab5fe180f7d" class="permalink">¶</a>
+		<div class="content">call 命令は退避はしてくれないので、呼ぶ側はプロローグ書かないとですね。呼ばれる方の builtin_three は要らない</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1e47cd610e56e8ed9acd88ab5f5f5169').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1e47cd610e56e8ed9acd88ab5f5f5169').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_1e47cd610e56e8ed9acd88ab5f5f5169" href="#permalink_1e47cd610e56e8ed9acd88ab5f5f5169" class="permalink">¶</a>
+		<div class="content">あーじゃあそれのせいだな</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_9847d5f106f51a20e69b31f3de3758bd').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_9847d5f106f51a20e69b31f3de3758bd').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_9847d5f106f51a20e69b31f3de3758bd" href="#permalink_9847d5f106f51a20e69b31f3de3758bd" class="permalink">¶</a>
+		<div class="content">プロローグは compilerbook にあるのでそれを使えばいいでしょう</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_0b0abc7f42bd1335cd3cde6ddc8fd816').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_0b0abc7f42bd1335cd3cde6ddc8fd816').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_0b0abc7f42bd1335cd3cde6ddc8fd816" href="#permalink_0b0abc7f42bd1335cd3cde6ddc8fd816" class="permalink">¶</a>
+		<div class="content">でも compilerbook はプロローグ無しで call できてそうだけど</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4e78b2d9959af189165b8e5bf961ccbd').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4e78b2d9959af189165b8e5bf961ccbd').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_4e78b2d9959af189165b8e5bf961ccbd" href="#permalink_4e78b2d9959af189165b8e5bf961ccbd" class="permalink">¶</a>
+		<div class="content">具体的にどこの？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_69dca9b29d08519e82459bacd7fc0553').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_69dca9b29d08519e82459bacd7fc0553').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_69dca9b29d08519e82459bacd7fc0553" href="#permalink_69dca9b29d08519e82459bacd7fc0553" class="permalink">¶</a>
+		<div class="content">ここですね</div>
+		<blockquote>このCコードに対応するアセンブリは次のようになります。
+
+.intel_syntax noprefix
+.globl plus, main
+
+plus:
+        add rsi, rdi
+        mov rax, rsi
+        ret
+
+main:
+        mov rdi, 3
+        mov rsi, 4
+        call plus
+        ret
+</blockquote>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_3a319ac7c79e1a0ec6c70255b69d2042').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_3a319ac7c79e1a0ec6c70255b69d2042').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_3a319ac7c79e1a0ec6c70255b69d2042" href="#permalink_3a319ac7c79e1a0ec6c70255b69d2042" class="permalink">¶</a>
+		<div class="content">たしかにね。このコードを標準的な gcc でビルドすることによってまず動かして、どこを nasm にすり替えるとこれがこわれるのかを調べるのが近道かな？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_093e4d5f8e4e6d28a6c4c3f7021282d6').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_093e4d5f8e4e6d28a6c4c3f7021282d6').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_093e4d5f8e4e6d28a6c4c3f7021282d6" href="#permalink_093e4d5f8e4e6d28a6c4c3f7021282d6" class="permalink">¶</a>
+		<div class="content">call 終わった時点ではセグフォ起きてない。これ↓がセグフォせず無限ループしてるので</div>
+		<pre><code class="language-">GLOBAL _start
+SECTION .text
+_test:
+        mov eax, 3
+        ret
+_start:
+            call    _test
+a:
+            jmp a
+            mov     ebx, eax
+            int     0x80
+</code></pre>
+	</div>
+</div>
+<div class="one_person">
+	<div><img alt="kr" class="icon" src="icons/kr.webp" height="48px"></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_0ef97bcd1c98740d628d93a81c00fd31').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_0ef97bcd1c98740d628d93a81c00fd31').style.visibility = 'hidden'">
+		<span class="name">kr</span><a id="permalink_0ef97bcd1c98740d628d93a81c00fd31" href="#permalink_0ef97bcd1c98740d628d93a81c00fd31" class="permalink">¶</a>
+		<div class="content">なんでこれがセグフォしないんだ？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e4490e6dd92bc39322c35e2985896101').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e4490e6dd92bc39322c35e2985896101').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_e4490e6dd92bc39322c35e2985896101" href="#permalink_e4490e6dd92bc39322c35e2985896101" class="permalink">¶</a>
+		<div class="content">あ、もしかして int 0x80 が eax に 1 を必要とする？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_eefa3eb25b43ac16daa8d0d2bd6c452f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_eefa3eb25b43ac16daa8d0d2bd6c452f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_eefa3eb25b43ac16daa8d0d2bd6c452f" href="#permalink_eefa3eb25b43ac16daa8d0d2bd6c452f" class="permalink">¶</a>
+		<div class="content">可能性がある。int 0x80 の直前に mov eax, 1 書いたらどうなります？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_5d929ff296eb90c2eb155b88e1a5b84d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_5d929ff296eb90c2eb155b88e1a5b84d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_5d929ff296eb90c2eb155b88e1a5b84d" href="#permalink_5d929ff296eb90c2eb155b88e1a5b84d" class="permalink">¶</a>
+		<div class="content">いけた。call のせいじゃなくて syscall の使い方間違えてるだけだったわ</div>
+		<div class="content">あーそうか、syscall 番号が eax か。0x80 がシステムコール番号なのではなくて</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_d5206284212ba19cd8592e5d83e5c251').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_d5206284212ba19cd8592e5d83e5c251').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_d5206284212ba19cd8592e5d83e5c251" href="#permalink_d5206284212ba19cd8592e5d83e5c251" class="permalink">¶</a>
+		<div class="content">私も一時期その勘違いしてた気がするな</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7f398bd730903ead733dfdc49d0e1a6f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7f398bd730903ead733dfdc49d0e1a6f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_7f398bd730903ead733dfdc49d0e1a6f" href="#permalink_7f398bd730903ead733dfdc49d0e1a6f" class="permalink">¶</a>
+		<div class="content">syscall 命令みたいなのなかったっけ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_83affce9d9092db782d4b9720b14b041').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_83affce9d9092db782d4b9720b14b041').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_83affce9d9092db782d4b9720b14b041" href="#permalink_83affce9d9092db782d4b9720b14b041" class="permalink">¶</a>
+		<div class="content">とりあえず動いたのでヨシ</div>
+		<div class="content">で、結局バイナリを見て call がどう翻訳されてるかを確認したかったんですよね？</div>
+		<pre><code class="language-">GLOBAL _start
+SECTION .text
+_test:
+        mov eax, 3
+        ret
+_start:
+        call    _test
+        mov     ebx, eax
+        mov     eax, 1
+        int     0x80
+</code></pre>
+		<div class="content">とりあえずその前に、動いたアセンブリとバイナリをコミットし、</div>
+		<div class="content">私が書いてるログも入れるとよさそう</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_c4797d9bf074e0253e2a44717a5b687b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_c4797d9bf074e0253e2a44717a5b687b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_c4797d9bf074e0253e2a44717a5b687b" href="#permalink_c4797d9bf074e0253e2a44717a5b687b" class="permalink">¶</a>
+		<div class="content">Makefile いじろう</div>
+		<div class="content">既存のファイルが .out に変わるけどとりあえず今のところは影響ないか</div>
+		<div class="content">てかコミットしてるなら clean 自体が要らない気がするな</div>
+		<div class="content">あ、Makefile のルールをそもそも拡張子なしにできるからそれでいいのか</div>
+	</div>
+</div>
+<h3 class="date">2022年1月1日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_b56696eebef24f43dc9a8eab3231661e').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_b56696eebef24f43dc9a8eab3231661e').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_b56696eebef24f43dc9a8eab3231661e" href="#permalink_b56696eebef24f43dc9a8eab3231661e" class="permalink">¶</a>
+		<div class="content">Macだとasm-&gt;elfの実験ができなかったりテスト遅かったりして開発しにくかったので改善</div>
+		<div class="content">call命令も相対アドレスなのかなりめんどくさい。jmpは文を先に生成してサイズ見てでよかったけどcallは今まで生成したコードサイズを記録しないといけないからかなり大変</div>
+		<div class="content">call レジスタ名 と指定すれば絶対アドレスでいけるらしいのでとりあえずこれでいいかな。多分ダイナミックディスパッチと同じで遅いけど</div>
+		<div class="content">またセグフォー、多分これ__builtin_threeがエントリポイントになってるなうげ〜。出力バイナリの0x18から2バイト(?)をエントリポイントのアドレスに書き換えたらいけるかも</div>
+		<div class="content">そろそろLEB128の実装が必要そう</div>
+		<div class="content">mov rax, 120; call rax; (120は__builtin_threeのアドレス)しても必ずraxに120が入ってる。そもそも__builtin_threeが実行されていなさそう。謎</div>
+		<div class="content">eaxに即値をセットする命令は4byte指定しないといけなかったのと、call命令は0x00400000をelf内のアドレスに足さないといけなかったらしい。gdbの使い方少し覚えた。0x00400000がベースアドレスだったのか</div>
+	</div>
+</div>
+<h3 class="date">2022年1月2日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1cdf95f4f2e4107f6c63e31471aee172').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1cdf95f4f2e4107f6c63e31471aee172').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_1cdf95f4f2e4107f6c63e31471aee172" href="#permalink_1cdf95f4f2e4107f6c63e31471aee172" class="permalink">¶</a>
+		<div class="content">お、できておる。すごい。えーと clippy が通っていない</div>
+		<div class="content">なるほど、i32 じゃなくて i8 の to_le_bytes してるところがあるのか。でも呼ばれてないから今の所問題が露呈していない、と</div>
+		<div class="content">それを直していただいたら、とりあえずこれでマージしちゃって、__builtin_putchar は step14-2 ってブランチでやっちゃいましょう</div>
+		<div class="content">しかしなんとか突破できて本当によかった。ステップ 14 はだいぶ苦しくなるだろうと思ってたし、クリアがなされたのはめちゃめちゃえらいんだよな</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_16e6a4782aa751221334b3fdaa7e1335').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_16e6a4782aa751221334b3fdaa7e1335').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_16e6a4782aa751221334b3fdaa7e1335" href="#permalink_16e6a4782aa751221334b3fdaa7e1335" class="permalink">¶</a>
+		<div class="content">そもそもアセンブリもよく知らない状況だったから大変だった</div>
+		<div class="content">どこらへんでぶっ壊れてるかもわからんから gdb の使い方から調べて。思ったよりハードコアだった。x64 のバイナリフォーマット相当複雑じゃないですか？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_03b8f2fbe6784c9f768b35ddce6a5351').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_03b8f2fbe6784c9f768b35ddce6a5351').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_03b8f2fbe6784c9f768b35ddce6a5351" href="#permalink_03b8f2fbe6784c9f768b35ddce6a5351" class="permalink">¶</a>
+		<div class="content">実はね</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_73d743bf056b85b89ed1c61234de4e4f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_73d743bf056b85b89ed1c61234de4e4f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_73d743bf056b85b89ed1c61234de4e4f" href="#permalink_73d743bf056b85b89ed1c61234de4e4f" class="permalink">¶</a>
+		<div class="content">wasm は本当にラクだったけど、x64 やばすぎる</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_ce3551c3cbdbc800feede420c0dc003f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_ce3551c3cbdbc800feede420c0dc003f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_ce3551c3cbdbc800feede420c0dc003f" href="#permalink_ce3551c3cbdbc800feede420c0dc003f" class="permalink">¶</a>
+		<div class="content">ところで、この追加されてる .nix とか .lock とかについて知るには何を読めばいいですか？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_ba2f29631fefc2d64053eaf57ad4c1e4').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_ba2f29631fefc2d64053eaf57ad4c1e4').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_ba2f29631fefc2d64053eaf57ad4c1e4" href="#permalink_ba2f29631fefc2d64053eaf57ad4c1e4" class="permalink">¶</a>
+		<div class="content">Mac での開発用に足しただけなので、Linux でやってるなら気にしなくていいです</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_5c86e8180ceab4cac507b45d99970b7b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_5c86e8180ceab4cac507b45d99970b7b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_5c86e8180ceab4cac507b45d99970b7b" href="#permalink_5c86e8180ceab4cac507b45d99970b7b" class="permalink">¶</a>
+		<div class="content">Mac で使えるのはうれしいので、これがなんであってどううれしいのか、みたいな話をお教えいただけると</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_be4365c36ffb92692dca0d4c482b492c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_be4365c36ffb92692dca0d4c482b492c').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_be4365c36ffb92692dca0d4c482b492c" href="#permalink_be4365c36ffb92692dca0d4c482b492c" class="permalink">¶</a>
+		<div class="content">なにしてたっけな。えっと、bintools とかを使えるようにした。Makefile で、Mac だと x64-linux 向けのリンカや strip コマンドが入っていないので、それを自動で入れて、Mac だったら自動でそれを使ってくれるように。experiment の中の Makefiles で BINTOOLS_PREFIX って書いてあるじゃないですか。ここに Mac だった場合に適切な prefix が入って、これがどこで定義されているかというと、break.nix の下の方に、x64-Linux だったら空、そうじゃない場合に適切な文字列を入れることで、Linux の ld とかが使えるようになって、それらをどこで開発環境にインストールしているかというと、24 行目を見ていただくと、開発用のシェルみたいなのを定義できるので、ここでインストールされている。この Linux パッケージというのは、ARM のだと用意されていなかったので、ARM の場合は x64 用のツールチェーンを使うように 18 行目で設定していて、そこら辺によって Linux 向けのリンカとかが簡単に使えるようになった</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_408df70bd5c20138161c612e9c6360a6').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_408df70bd5c20138161c612e9c6360a6').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_408df70bd5c20138161c612e9c6360a6" href="#permalink_408df70bd5c20138161c612e9c6360a6" class="permalink">¶</a>
+		<div class="content">つまりこれは experiments 用のみであって、コンパイラをビルドしたりテストしたりするのには使ってない？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_b9046510d295721fbd3a8b93899b0a5c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_b9046510d295721fbd3a8b93899b0a5c').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_b9046510d295721fbd3a8b93899b0a5c" href="#permalink_b9046510d295721fbd3a8b93899b0a5c" class="permalink">¶</a>
+		<div class="content">今のところは使ってない</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e321d78a082f67df38de9da2fefb8af2').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e321d78a082f67df38de9da2fefb8af2').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_e321d78a082f67df38de9da2fefb8af2" href="#permalink_e321d78a082f67df38de9da2fefb8af2" class="permalink">¶</a>
+		<div class="content">分かりました</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_fd72717b68b249f991155bdf59786b58').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_fd72717b68b249f991155bdf59786b58').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_fd72717b68b249f991155bdf59786b58" href="#permalink_fd72717b68b249f991155bdf59786b58" class="permalink">¶</a>
+		<div class="content">で、これを使う場合には nix とか dear-env ってのを入れなきゃいけなくて、入れると use-flake ってのでさっき定義してた develop 用の環境が勝手にロードされるという仕組みになっている。使う場合はいろいろインストールが必要</div>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>
