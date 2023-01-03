@@ -139,35 +139,13 @@ fn eaxに即値をセット(n: u32) -> [u8; 5] {
     [0xb8, buf[0], buf[1], buf[2], buf[3]]
 }
 
-fn ebxに即値をセット(n: u32) -> [u8; 5] {
-    let buf = n.to_le_bytes();
-    [0xbb, buf[0], buf[1], buf[2], buf[3]]
-}
-
-fn ecxに即値をセット(n: u32) -> [u8; 5] {
-    let buf = n.to_le_bytes();
-    [0xb9, buf[0], buf[1], buf[2], buf[3]]
-}
-
-fn rcxから即値を引く(x: u8) -> Buf {
-    Buf::from([0x48, 0x83, 0xe9, x])
-}
-
-fn rcxに即値を足す(x: u8) -> Buf {
-    Buf::from([0x48, 0x83, 0xc1, x])
-}
-
 fn edxに即値をセット(n: u32) -> [u8; 5] {
     let buf = n.to_le_bytes();
     [0xba, buf[0], buf[1], buf[2], buf[3]]
 }
 
-fn int0x80() -> [u8; 2] {
-    [0xcd, 0x80]
-}
-
-fn rcxにrspをセット() -> [u8; 3] {
-    [0x48, 0x89, 0xe1]
+fn syscall() -> [u8; 2] {
+    [0x0f, 0x05]
 }
 
 fn ret() -> [u8; 1] {
@@ -177,6 +155,9 @@ fn ret() -> [u8; 1] {
 fn eaxをediにmov() -> [u8; 2] {
     [0x89, 0xc7]
 }
+fn esiにespをセット() -> [u8; 3] {
+    [0x48, 0x89, 0xe6]
+}
 
 pub fn builtin_three関数を生成() -> Buf {
     プロローグ(0).join(eaxに即値をセット(3)).join(エピローグ())
@@ -185,11 +166,11 @@ pub fn builtin_three関数を生成() -> Buf {
 pub fn builtin_putchar関数を生成() -> Buf {
     プロローグ(0)
         .join(ediをプッシュ())
-        .join(edxに即値をセット(1))
-        .join(rcxにrspをセット())
-        .join(ebxに即値をセット(1))
-        .join(eaxに即値をセット(4))
-        .join(int0x80())
+        .join(eaxに即値をセット(1)) // write
+        .join(ediに代入(1)) // fd
+        .join(esiにespをセット()) // buf
+        .join(edxに即値をセット(1)) // count
+        .join(syscall())
         .join(エピローグ())
 }
 
