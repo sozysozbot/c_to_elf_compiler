@@ -5,7 +5,7 @@ _test:
         ret
 _start:
         call    _test
-        mov     ebx, eax
+        mov     edi, eax
 
-        mov     eax, 1
-        int     0x80
+        mov     eax, 60
+        syscall
