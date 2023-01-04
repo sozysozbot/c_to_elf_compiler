@@ -3,12 +3,13 @@ SECTION .text
 putchar:
         push rbp
         mov rbp, rsp
-        sub rsp, 0
+        sub rsp, 8
 
-        push rdi
+        mov [rbp-4], rdi
+        
         mov rax, 1 ; write
         mov rdi, 1 ; stdout
-        mov rsi, rsp ; buffer
+        lea rsi, [rbp-4] ; buffer
         mov rdx, 1 ; length
         syscall
 
