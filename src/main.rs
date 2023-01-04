@@ -50,7 +50,9 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     let buf = buf.join(codegen::rbpをプッシュ());
     let buf = buf.join(codegen::rspをrbpにコピー());
     let mut idents = HashMap::new();
-    let program_buf = codegen::programを評価(&program, &mut idents, &mut functions);
+    let mut stack_size = 8;
+    let program_buf =
+        codegen::programを評価(&program, &mut idents, &mut functions, &mut stack_size);
 
     let buf = buf.join(codegen::rspから即値を引く(idents.len() as u8 * 4));
     let buf = buf.join(program_buf);
