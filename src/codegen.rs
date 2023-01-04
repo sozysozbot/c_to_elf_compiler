@@ -163,12 +163,20 @@ pub fn builtin_three関数を生成() -> Buf {
     プロローグ(0).join(eaxに即値をセット(3)).join(エピローグ())
 }
 
+fn ediをrbpにoffsetを足した位置に代入(offset: i8) -> [u8; 3] {
+    [0x89, 0x7d, offset.to_le_bytes()[0]]
+}
+
+fn rsiにrbpにoffsetを足したアドレスを代入(offset: i8) -> [u8; 4] {
+    [0x48, 0x8d, 0x75, offset.to_le_bytes()[0]]
+}
+
 pub fn builtin_putchar関数を生成() -> Buf {
-    プロローグ(0)
-        .join(ediをプッシュ())
+    プロローグ(4)
+        .join(ediをrbpにoffsetを足した位置に代入(-4))
         .join(eaxに即値をセット(1)) // write
         .join(ediに代入(1)) // fd
-        .join(esiにespをセット()) // buf
+        .join(rsiにrbpにoffsetを足したアドレスを代入(-4)) // buf
         .join(edxに即値をセット(1)) // count
         .join(syscall())
         .join(エピローグ())
