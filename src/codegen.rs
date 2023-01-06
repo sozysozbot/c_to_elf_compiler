@@ -179,9 +179,6 @@ fn ret() -> [u8; 1] {
 fn eaxをediにmov() -> [u8; 2] {
     [0x89, 0xc7]
 }
-fn esiにespをセット() -> [u8; 3] {
-    [0x48, 0x89, 0xe6]
-}
 
 pub fn builtin_three関数を生成() -> Buf {
     プロローグ(0).join(eaxに即値をセット(3)).join(エピローグ())

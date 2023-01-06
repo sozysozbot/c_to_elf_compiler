@@ -7,23 +7,32 @@ check_inner() {
   TMPDIR=$(mktemp -d --tmpdir=testwork)
   expected="$1"
   input="$2"
+  stdout_expected="$3"
 
   (cd $TMPDIR && ../../target/debug/c_to_elf_compiler "$input")
   chmod 755 $TMPDIR/a.out
-  ./run-on-linux.sh $TMPDIR/a.out
+  stdout_actual=$(./run-on-linux.sh $TMPDIR/a.out)
   actual="$?"
   rm -rf $TMPDIR
 
-  if [ "$actual" = "$expected" ]; then
-    printf "\033[32m[PASS]\033[m $input => $actual\n"
-  else
+  if [ "$actual" != "$expected" ]; then
     printf "\033[31m[FAIL]\033[m $input => $expected expected, but got $actual\n"
     exit 1
   fi
+
+  if [ "$stdout_expected" != "" ]; then
+    if [ "$stdout_expected" != "$stdout_actual" ]; then
+      printf "\033[31m[FAIL]\033[m $input => $stdout_expected expected, but got $stdout_actual\n"
+      exit 1
+    fi
+  fi
+  
+
+  printf "\033[32m[PASS]\033[m $input => $actual\n"
 }
 
 check() {
-  check_inner "$1" "$2" &
+  check_inner "$@" &
 }
 check 8 "return 8;"
 check 27 "return 27;"
@@ -78,7 +87,7 @@ check 3 "return __builtin_three();"
 check 6 "return __builtin_three()+__builtin_three();"
 check 4 "return __builtin_three()+1;"
 check 4 "return 1+__builtin_three();"
-check 1 "__builtin_putchar(65); return 1;"
+check 1 "__builtin_putchar(65); return 1;" "A"
 for job in `jobs -p`
 do
     wait $job
