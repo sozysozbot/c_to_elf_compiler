@@ -295,7 +295,19 @@ pub fn statementを評価(
             let then_buf = statementを評価(then.as_ref(), idents, functions, stack_size).join(
                 else_buf
                     .as_ref()
-                    .map(|else_buf| Buf::from(jmp(i8::try_from(else_buf.len()).unwrap())))
+                    .map(|else_buf| {
+                        Buf::from(
+                            jmp(
+                                i8::try_from(else_buf.len())
+                                .unwrap_or_else(
+                                    |_| panic!(
+                                        "else でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です",
+                                        else_buf.len(), else_buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" ")
+                                    )
+                                )
+                            )
+                        )
+                    })
                     .unwrap_or_else(Buf::new),
             );
 
@@ -324,7 +336,7 @@ pub fn statementを評価(
             };
             let buf = cond_buf.join(body_buf);
             let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap_or_else(
-                |_| panic!("while 文の中でジャンプするためのバッファの長さが足りません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" "))
+                |_| panic!("while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" "))
             );
             buf.join(Buf::from(jmp(buf_len)))
         }
@@ -668,10 +680,12 @@ fn 比較演算を評価してediレジスタへ(
 pub fn 関数をコード生成しメインバッファに挿入(
     main_buf: &mut Buf,
     definition: &FunctionDefinition,
-    function_table: &HashMap<String, u32>,
+    function_table: &mut HashMap<String, u32>,
 ) -> u16 {
     let buf = std::mem::take(main_buf);
     let func_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
+    function_table.insert(definition.func_name.clone(), u32::from(func_pos));
+
     let buf = buf.join(rbpをプッシュ());
     let buf = buf.join(rspをrbpにコピー());
     let mut idents = HashMap::new();

@@ -51,12 +51,11 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     let mut buf = buf;
 
     for definition in function_definitions {
-        let func_pos = codegen::関数をコード生成しメインバッファに挿入(
+        codegen::関数をコード生成しメインバッファに挿入(
             &mut buf,
             &definition,
-            &function_table,
+            &mut function_table,
         );
-        function_table.insert(definition.func_name.clone(), u32::from(func_pos));
     }
 
     let entry: FunctionDefinition = {
@@ -68,7 +67,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     let entry_pos = codegen::関数をコード生成しメインバッファに挿入(
         &mut buf,
         &entry,
-        &function_table,
+        &mut function_table,
     );
 
     let mut buf = buf.to_vec();
