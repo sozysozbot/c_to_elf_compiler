@@ -1,4 +1,4 @@
-use crate::{ast::*, Buf};
+use crate::{ast::*, Buf, parser::FunctionDefinition};
 use std::{collections::HashMap, io::Write};
 
 /*
@@ -583,6 +583,7 @@ pub fn exprを評価してediレジスタへ(
                 *stack_size += 4;
             }
 
+            #[allow(clippy::len_zero)]
             if args.len() >= 1 {
                 writer.write_all(&ediへとポップ()).unwrap();
                 *stack_size -= 4;
@@ -654,4 +655,31 @@ fn 比較演算を評価してediレジスタへ(
     writer.write_all(フラグをalに移す).unwrap();
 
     writer.write_all(&alをゼロ拡張してediにセット()).unwrap();
+}
+
+pub fn 関数をコード生成しメインバッファに挿入(
+    main_buf: &mut Buf,
+    definition: &FunctionDefinition,
+    function_table: &HashMap<String, u32>,
+) -> u16 {
+    let buf = std::mem::take(main_buf);
+    let func_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
+    let buf = buf.join(rbpをプッシュ());
+    let buf = buf.join(rspをrbpにコピー());
+    let mut idents = HashMap::new();
+    let mut stack_size = 8;
+    let content_buf = 関数の中身を評価(
+        &definition.content,
+        &mut idents,
+        function_table,
+        &mut stack_size,
+    );
+
+    let buf = buf.join(rspから即値を引く(
+        u8::try_from(idents.len()).expect("識別子の個数が u8 に収まりません") * 4,
+    ));
+    let buf = buf.join(content_buf);
+
+    *main_buf = buf;
+    func_pos
 }

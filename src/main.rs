@@ -51,8 +51,11 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     let mut buf = buf;
 
     for definition in function_definitions {
-        let func_pos =
-            generate_function_and_insert_to_main_buf(&mut buf, &definition, &function_table);
+        let func_pos = codegen::関数をコード生成しメインバッファに挿入(
+            &mut buf,
+            &definition,
+            &function_table,
+        );
         function_table.insert(definition.ident.clone(), u32::from(func_pos));
     }
 
@@ -62,7 +65,8 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
         let mut tokens = tokens.iter().peekable();
         parser::parse_toplevel_function_definition(&mut tokens, input)?
     };
-    let entry_pos = generate_function_and_insert_to_main_buf(&mut buf, &entry, &function_table);
+    let entry_pos =
+        codegen::関数をコード生成しメインバッファに挿入(&mut buf, &entry, &function_table);
 
     let mut buf = buf.to_vec();
     // エントリポイント書き換え
@@ -71,31 +75,4 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     buf[0x19] = entry_pos_buf[1];
 
     Ok(buf)
-}
-
-fn generate_function_and_insert_to_main_buf(
-    main_buf: &mut Buf,
-    definition: &FunctionDefinition,
-    function_table: &HashMap<String, u32>,
-) -> u16 {
-    let buf = std::mem::take(main_buf);
-    let func_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
-    let buf = buf.join(codegen::rbpをプッシュ());
-    let buf = buf.join(codegen::rspをrbpにコピー());
-    let mut idents = HashMap::new();
-    let mut stack_size = 8;
-    let content_buf = codegen::関数の中身を評価(
-        &definition.content,
-        &mut idents,
-        function_table,
-        &mut stack_size,
-    );
-
-    let buf = buf.join(codegen::rspから即値を引く(
-        u8::try_from(idents.len()).expect("識別子の個数が u8 に収まりません") * 4,
-    ));
-    let buf = buf.join(content_buf);
-
-    *main_buf = buf;
-    func_pos
 }
