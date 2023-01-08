@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use std::io::Write;
 
 use c_to_elf_compiler::apperror::AppError;
-use c_to_elf_compiler::ast::FunctionContent;
 use c_to_elf_compiler::codegen;
 use c_to_elf_compiler::parser;
 use c_to_elf_compiler::parser::FunctionDefinition;
@@ -38,23 +37,23 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     let tiny = include_bytes!("../experiment/tiny");
     let buf = Buf::from(&tiny[0..0x78]);
 
-    let mut functions = HashMap::new();
+    let mut function_table = HashMap::new();
 
     let builtin_three_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     let buf = buf.join(codegen::builtin_three関数を生成());
-    functions.insert("__builtin_three".to_string(), builtin_three_pos);
+    function_table.insert("__builtin_three".to_string(), builtin_three_pos);
 
     let builtin_putchar_pos =
         u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     let buf = buf.join(codegen::builtin_putchar関数を生成());
-    functions.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
+    function_table.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
 
     let mut buf = buf;
 
     for definition in function_definitions {
-        let (buf_, main_pos) = generate_function(buf, &definition.content, &functions);
-        buf = buf_;
-        functions.insert(definition.ident, u32::from(main_pos));
+        let func_pos =
+            generate_function_and_insert_to_main_buf(&mut buf, &definition, &function_table);
+        function_table.insert(definition.ident.clone(), u32::from(func_pos));
     }
 
     let entry: FunctionDefinition = {
@@ -63,7 +62,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
         let mut tokens = tokens.iter().peekable();
         parser::parse_toplevel_function_definition(&mut tokens, input)?
     };
-    let (buf, entry_pos) = generate_function(buf, &entry.content, &functions);
+    let entry_pos = generate_function_and_insert_to_main_buf(&mut buf, &entry, &function_table);
 
     let mut buf = buf.to_vec();
     // エントリポイント書き換え
@@ -74,23 +73,29 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     Ok(buf)
 }
 
-fn generate_function(
-    buf: Buf,
-    content: &FunctionContent,
-    functions: &HashMap<String, u32>,
-) -> (Buf, u16) {
-    let function_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
+fn generate_function_and_insert_to_main_buf(
+    main_buf: &mut Buf,
+    definition: &FunctionDefinition,
+    function_table: &HashMap<String, u32>,
+) -> u16 {
+    let buf = std::mem::take(main_buf);
+    let func_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
     let buf = buf.join(codegen::rbpをプッシュ());
     let buf = buf.join(codegen::rspをrbpにコピー());
     let mut idents = HashMap::new();
     let mut stack_size = 8;
-    let content_buf =
-        codegen::関数の中身を評価(content, &mut idents, functions, &mut stack_size);
+    let content_buf = codegen::関数の中身を評価(
+        &definition.content,
+        &mut idents,
+        function_table,
+        &mut stack_size,
+    );
 
     let buf = buf.join(codegen::rspから即値を引く(
         u8::try_from(idents.len()).expect("識別子の個数が u8 に収まりません") * 4,
     ));
     let buf = buf.join(content_buf);
 
-    (buf, function_pos)
+    *main_buf = buf;
+    func_pos
 }

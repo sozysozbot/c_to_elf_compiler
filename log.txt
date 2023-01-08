@@ -1017,3 +1017,5 @@ one() { return 1; } two() { return one() + 1; } main() { return one() + two() + 
 ```
 hsjoihs「動きますね。やったぁ」
 hsjoihs「あとは仮引数をレジスタから読み出す処理を実装すれば、再帰でフィボナッチが呼べるはず」
+hsjoihs「その前に、ちょっとコードをきれいにして、codegen に住んでいてもよさそうな感じのコードにしておこう」
+hsjoihs「あー、std::mem::take ってこういうときに便利なのね。なるほどなぁ」
