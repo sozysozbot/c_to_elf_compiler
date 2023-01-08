@@ -188,48 +188,44 @@ fn leave_ret() -> [u8; 2] {
     [0xc9, 0xc3]
 }
 
-fn rbpよりn多いアドレスにediを書き込む(n: i8) -> [u8; 3] {
-    [0x89, 0x7d, n as u8]
+fn rbpにoffsetを足した位置にediを代入(offset: i8) -> [u8; 3] {
+    [0x89, 0x7d, offset.to_le_bytes()[0]]
 }
 
-fn rbpよりn多いアドレスにesiを書き込む(n: i8) -> [u8; 3] {
-    [0x89, 0x75, n as u8]
+fn rbpにoffsetを足した位置にesiを代入(offset: i8) -> [u8; 3] {
+    [0x89, 0x75, offset.to_le_bytes()[0]]
 }
 
-fn rbpよりn多いアドレスにedxを書き込む(n: i8) -> [u8; 3] {
-    [0x89, 0x55, n as u8]
+fn rbpにoffsetを足した位置にedxを代入(offset: i8) -> [u8; 3] {
+    [0x89, 0x55, offset.to_le_bytes()[0]]
 }
 
-fn rbpよりn多いアドレスにecxを書き込む(n: i8) -> [u8; 3] {
-    [0x89, 0x4d, n as u8]
+fn rbpにoffsetを足した位置にecxを代入(offset: i8) -> [u8; 3] {
+    [0x89, 0x4d, offset.to_le_bytes()[0]]
 }
 
-fn rbpよりn多いアドレスにr8dを書き込む(n: i8) -> [u8; 4] {
-    [0x44, 0x89, 0x45, n as u8]
+fn rbpにoffsetを足した位置にr8dを代入(offset: i8) -> [u8; 4] {
+    [0x44, 0x89, 0x45, offset.to_le_bytes()[0]]
 }
 
-fn rbpよりn多いアドレスにr9dを書き込む(n: i8) -> [u8; 4] {
-    [0x44, 0x89, 0x4d, n as u8]
+fn rbpにoffsetを足した位置にr9dを代入(offset: i8) -> [u8; 4] {
+    [0x44, 0x89, 0x4d, offset.to_le_bytes()[0]]
 }
 
 pub fn builtin_three関数を生成() -> Buf {
     プロローグ(0).join(eaxに即値をセット(3)).join(エピローグ())
 }
 
-fn ediをrbpにoffsetを足した位置に代入(offset: i8) -> [u8; 3] {
-    [0x89, 0x7d, offset.to_le_bytes()[0]]
-}
-
-fn rsiにrbpにoffsetを足したアドレスを代入(offset: i8) -> [u8; 4] {
+fn rbpにoffsetを足したアドレスをrsiに代入(offset: i8) -> [u8; 4] {
     [0x48, 0x8d, 0x75, offset.to_le_bytes()[0]]
 }
 
 pub fn builtin_putchar関数を生成() -> Buf {
     プロローグ(4)
-        .join(ediをrbpにoffsetを足した位置に代入(-4))
+        .join(rbpにoffsetを足した位置にediを代入(-4))
         .join(eaxに即値をセット(1)) // write
         .join(ediに代入(1)) // fd
-        .join(rsiにrbpにoffsetを足したアドレスを代入(-4)) // buf
+        .join(rbpにoffsetを足したアドレスをrsiに代入(-4)) // buf
         .join(edxに即値をセット(1)) // count
         .join(syscall())
         .join(エピローグ())
@@ -245,7 +241,7 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
         Expr::Identifier { ident, pos: _ } => {
             let len = idents.len();
             let idx = idents.entry(ident.clone()).or_insert(len as u8);
-            let offset = *idx * 4;
+            let offset = *idx * 4 + 4;
             writer.write_all(&rbpをプッシュ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
             writer.write_all(&rdiから即値を引く(offset)).unwrap();
@@ -327,7 +323,9 @@ pub fn statementを評価(
                 Buf::from(v)
             };
             let buf = cond_buf.join(body_buf);
-            let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap();
+            let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap_or_else(
+                |_| panic!("while 文の中でジャンプするためのバッファの長さが足りません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" "))
+            );
             buf.join(Buf::from(jmp(buf_len)))
         }
         Statement::For {
@@ -675,44 +673,63 @@ pub fn 関数をコード生成しメインバッファに挿入(
     let buf = std::mem::take(main_buf);
     let func_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
     let buf = buf.join(rbpをプッシュ());
-    let mut buf = buf.join(rspをrbpにコピー());
+    let buf = buf.join(rspをrbpにコピー());
     let mut idents = HashMap::new();
 
-    for (i, param) in definition.params.iter().enumerate() {
-        let tmp_buf = std::mem::take(&mut buf);
-
-        let len = idents.len();
-        if idents.contains_key(&param.ident) {
-            panic!(
-                "関数 `{}` の仮引数 {} が重複しています",
-                definition.func_name, param.ident
-            )
-        }
-        let idx = idents.entry(param.ident.clone()).or_insert(len as u8);
-        let offset = *idx * 4;
-        // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
-        // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
-        let n: i8 = -(offset as i8);
-        let tmp_buf = match i {
-            0 => tmp_buf.join(rbpよりn多いアドレスにediを書き込む(n)),
-            1 => tmp_buf.join(rbpよりn多いアドレスにesiを書き込む(n)),
-            2 => tmp_buf.join(rbpよりn多いアドレスにedxを書き込む(n)),
-            3 => tmp_buf.join(rbpよりn多いアドレスにecxを書き込む(n)),
-            4 => tmp_buf.join(rbpよりn多いアドレスにr8dを書き込む(n)),
-            5 => tmp_buf.join(rbpよりn多いアドレスにr9dを書き込む(n)),
-            _ => panic!(
-                "関数 `{}` に 7 つ以上の仮引数があります",
-                definition.func_name
-            ),
-        };
-        buf = tmp_buf;
-    }
-    let mut stack_size: u32 = 8 + 4 * idents.len() as u32;
     let content_buf = match &definition.content {
-        FunctionContent::Statements(statements) => statements
-            .iter()
-            .map(|stmt| statementを評価(stmt, &mut idents, &*function_table, &mut stack_size))
-            .fold(Buf::new(), Buf::join),
+        FunctionContent::Statements(statements) => {
+            let mut parameter_buf = Buf::new();
+            for (i, param) in definition.params.iter().enumerate() {
+                let tmp_buf = std::mem::take(&mut parameter_buf);
+
+                let len = idents.len();
+                if idents.contains_key(&param.ident) {
+                    panic!(
+                        "関数 `{}` の仮引数 {} が重複しています",
+                        definition.func_name, param.ident
+                    )
+                }
+                let idx = idents.entry(param.ident.clone()).or_insert(len as u8);
+                let offset = *idx * 4 + 4;
+                // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
+                // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
+                let negative_offset: i8 = -(offset as i8);
+                let tmp_buf = match i {
+                    0 => tmp_buf.join(rbpにoffsetを足した位置にediを代入(
+                        negative_offset,
+                    )),
+                    1 => tmp_buf.join(rbpにoffsetを足した位置にesiを代入(
+                        negative_offset,
+                    )),
+                    2 => tmp_buf.join(rbpにoffsetを足した位置にedxを代入(
+                        negative_offset,
+                    )),
+                    3 => tmp_buf.join(rbpにoffsetを足した位置にecxを代入(
+                        negative_offset,
+                    )),
+                    4 => tmp_buf.join(rbpにoffsetを足した位置にr8dを代入(
+                        negative_offset,
+                    )),
+                    5 => tmp_buf.join(rbpにoffsetを足した位置にr9dを代入(
+                        negative_offset,
+                    )),
+                    _ => panic!(
+                        "関数 `{}` に 7 つ以上の仮引数があります",
+                        definition.func_name
+                    ),
+                };
+                parameter_buf = tmp_buf;
+            }
+
+            let mut stack_size: u32 = 8;
+
+            statements
+                .iter()
+                .map(|stmt| {
+                    statementを評価(stmt, &mut idents, &*function_table, &mut stack_size)
+                })
+                .fold(parameter_buf, Buf::join)
+        }
     };
 
     let buf = buf.join(rspから即値を引く(

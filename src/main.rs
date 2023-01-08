@@ -65,8 +65,11 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
         let mut tokens = tokens.iter().peekable();
         parser::parse_toplevel_function_definition(&mut tokens, input)?
     };
-    let entry_pos =
-        codegen::関数をコード生成しメインバッファに挿入(&mut buf, &entry, &function_table);
+    let entry_pos = codegen::関数をコード生成しメインバッファに挿入(
+        &mut buf,
+        &entry,
+        &function_table,
+    );
 
     let mut buf = buf.to_vec();
     // エントリポイント書き換え

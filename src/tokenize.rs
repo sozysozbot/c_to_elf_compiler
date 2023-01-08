@@ -209,9 +209,12 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     pos,
                 });
             }
-            _ => {
+            c => {
                 return Err(AppError {
-                    message: "トークナイズできない不正な文字です".to_string(),
+                    message: format!(
+                        "{c} (U+{:04X}) はトークナイズできない不正な文字です",
+                        u32::from(c)
+                    ),
                     input: input.to_string(),
                     pos,
                 })

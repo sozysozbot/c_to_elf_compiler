@@ -1029,3 +1029,217 @@ hsjoihs「えーと、引数自体が rdi に入っているから、計算を�
 hsjoihs「もう直に mov [rbp-12], r9d とかの命令を使っちゃおう。さて実験だ」
 hsjoihs「とりあえずフィボナッチ」
 hsjoihs「はい～動かない」
+hsjoihs「あ、Buf::new() に対して fold しておるな。『初期値代入』コードが入るべき場所はここだろ」
+hsjoihs「んー動かない」
+hsjoihs「……あっ、なるほどエラーメッセージが出てるけど他の成功メッセージで流れてしまってるのか」
+hsjoihs「どれどれ」
+$source
+```
+thread 'main' panicked at '関数 fib が見つかりません', src/codegen.rs:579:36
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+hsjoihs「あ～～なるほど、関数 fib の中ではまだ関数 fib が定義されていないから、再帰関数を呼び出すことができないのか」
+hsjoihs「これはしょうがないので、テストケースを変えよう」
+$source
+```
+[FAIL] add(x, y, z) { return x + y + z; } main() { return add(1, 2, __builtin_three()); } => 6 expected, but got 139
+```
+hsjoihs「はいはいセグフォセグフォ」
+hsjoihs「えーと失敗したときにも rm -rf してしまってるから調査対象物がない。成功時にのみ消すようにしよう」
+$source
+```
+[FAIL] id(x) { return x; } main() { return id(6); } => 6 expected, but got 139
+```
+hsjoihs「これでダメということは、まあなんかが根本的にダメなんだろうな。もうちょいソースを眺めるか」
+hsjoihs「変数はスタック上にあるのではなくてベースポインタからの差分なのだから、stack_size には影響を与えないはず。だから stack_size は 8 のままにしなきゃいけないな」
+hsjoihs「ところで、変数を読むところで落ちてる？変数を書き込むところで落ちてる？確認しよう」
+$source
+```
+[FAIL] three(x) { return 3; } main() { return three(6); } => 3 expected, but got 139
+```
+hsjoihs「まあそうよね」
+hsjoihs「tkr の書いていたコードと重複があったことがわかり、リファクタリングをしていたところ、多分オフセットが -4 とかじゃなくて 0 になってるのがよくなさそうという気持ちになった。」
+hsjoihs「しかし、謎がある。なぜ既存のコードではオフセットが 0 になることがなかったのだろうか」
+hsjoihs「なってたけどバグってなかったのかもしれない。まあいいや、とりあえずオフセットは一律で idents.len() * 4 + 4、というか idx * 4 + 4、になるということに決めてしまおうか」
+hsjoihs「というか idents じゃなくて lvar_table みたいな名前にしたいな。functions も function_table にしたいわね」
+hsjoihs「はい無事動いた。とはいえ、再帰呼び出しができていないので、」
+$blockquote
+```
+このステップが終わるとフィボナッチ数列を再帰で計算しつつ表示したりできるようになるのでグッと面白くなるはずです。
+```
+hsjoihs「が達成できていないな。じゃあ、せっかくなので、今回の機能を使ってフィボナッチをループで計算しつつ表示するテストケースを追加するか」
+$source
+```
+check 0 "if_non0(n) { __builtin_putchar(n ? n + 48 : 32); return 0; } print(n) { if_non0(n / 100); if_non0((n / 10) % 10); __builtin_putchar((n % 10) + 48); return 0; } main() { a = 0; b = 1; for(;a<255;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } return 0; }" "  0,  1,  1,  2,  3,  5,  8, 13, 21, 34, 55, 89,144,233,"
+```
+hsjoihs「えーと % 演算子が実装されておらず、かつ % が bash の printf と衝突する。了解」
+hsjoihs「とりあえず bash の printf と衝突するというのを直して、ループへと展開して、」
+hsjoihs「はいはい、 % だけじゃなくて ? と ++ と -= もない。それもほぐしてやる。」
+hsjoihs「255 が書けない。じゃあ、フィボナッチ数列ではなくリュカ数列にすればよい。すると」
+$source
+```
+check 0 "if_non0(n) { if (n) { __builtin_putchar(n + 48); } else { __builtin_putchar(32); } return 0; } print(n) { for(h=0;n>=100;h=h+1){n=n-100;} if_non0(h); for(t=0;n>=10;t=t+1){n=n-10;} if_non0(t); __builtin_putchar(n + 48); return 0; } main() { a = 2; b = 1; for(;a<127;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } return 0; }" "  2,  1,  3,  4,  7, 11, 18, 29, 47, 76,123,"
+
+thread 'main' panicked at 'while 文の中でジャンプするためのバッファの長さが足りません: TryFromIntError(())', src/codegen.rs:326:65
+```
+hsjoihs「なるほどね」
+hsjoihs「バッファの中身を読んでみるか」
+$source
+```
+thread 'main' panicked at 'while 文の中でジャンプするためのバッファの長さが足りません。バッファの長さは 155、中身は 0x[55 5f 48 83 ef 04 48 8b 3f 57 bf 7f 00 00 00 57 5f 58 39 f8 0f 9c c0 0f b6 f8 83 ff 00 74 7e 48 83 ec 08 55 5f 48 83 ef 04 48 8b 3f 57 5f b8 0c 01 40 00 ff d0 89 c7 48 83 c4 08 48 83 ec 08 bf 2c 00 00 00 57 5f b8 87 00 40 00 ff d0 89 c7 48 83 c4 08 55 5f 48 83 ef 0c 57 55 5f 48 83 ef 04 48 8b 3f 57 55 5f 48 83 ef 08 48 8b 3f 57 58 5f 01 c7 58 89 38 55 5f 48 83 ef 04 57 55 5f 48 83 ef 08 48 8b 3f 58 89 38 55 5f 48 83 ef 08 57 55 5f 48 83 ef 0c 48 8b 3f 58 89 38] です', src/codegen.rs:327:21
+```
+hsjoihs「えーと disass して」
+$source
+```
+0:  55                      push   rbp
+1:  5f                      pop    rdi
+2:  48 83 ef 04             sub    rdi,0x4
+6:  48 8b 3f                mov    rdi,QWORD PTR [rdi]
+9:  57                      push   rdi
+a:  bf 7f 00 00 00          mov    edi,0x7f
+f:  57                      push   rdi
+10: 5f                      pop    rdi
+11: 58                      pop    rax
+12: 39 f8                   cmp    eax,edi
+14: 0f 9c c0                setl   al
+17: 0f b6 f8                movzx  edi,al
+1a: 83 ff 00                cmp    edi,0x0
+1d: 74 7e                   je     0x9d
+1f: 48 83 ec 08             sub    rsp,0x8
+23: 55                      push   rbp
+24: 5f                      pop    rdi
+25: 48 83 ef 04             sub    rdi,0x4
+29: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+2c: 57                      push   rdi
+2d: 5f                      pop    rdi
+2e: b8 0c 01 40 00          mov    eax,0x40010c
+33: ff d0                   call   rax
+35: 89 c7                   mov    edi,eax
+37: 48 83 c4 08             add    rsp,0x8
+3b: 48 83 ec 08             sub    rsp,0x8
+3f: bf 2c 00 00 00          mov    edi,0x2c
+44: 57                      push   rdi
+45: 5f                      pop    rdi
+46: b8 87 00 40 00          mov    eax,0x400087
+4b: ff d0                   call   rax
+4d: 89 c7                   mov    edi,eax
+4f: 48 83 c4 08             add    rsp,0x8
+53: 55                      push   rbp
+54: 5f                      pop    rdi
+55: 48 83 ef 0c             sub    rdi,0xc
+59: 57                      push   rdi
+5a: 55                      push   rbp
+5b: 5f                      pop    rdi
+5c: 48 83 ef 04             sub    rdi,0x4
+60: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+63: 57                      push   rdi
+64: 55                      push   rbp
+65: 5f                      pop    rdi
+66: 48 83 ef 08             sub    rdi,0x8
+6a: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+6d: 57                      push   rdi
+6e: 58                      pop    rax
+6f: 5f                      pop    rdi
+70: 01 c7                   add    edi,eax
+72: 58                      pop    rax
+73: 89 38                   mov    DWORD PTR [rax],edi
+75: 55                      push   rbp
+76: 5f                      pop    rdi
+77: 48 83 ef 04             sub    rdi,0x4
+7b: 57                      push   rdi
+7c: 55                      push   rbp
+7d: 5f                      pop    rdi
+7e: 48 83 ef 08             sub    rdi,0x8
+82: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+85: 58                      pop    rax
+86: 89 38                   mov    DWORD PTR [rax],edi
+88: 55                      push   rbp
+89: 5f                      pop    rdi
+8a: 48 83 ef 08             sub    rdi,0x8
+8e: 57                      push   rdi
+8f: 55                      push   rbp
+90: 5f                      pop    rdi
+91: 48 83 ef 0c             sub    rdi,0xc
+95: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+98: 58                      pop    rax
+99: 89 38                   mov    DWORD PTR [rax],edi
+```
+hsjoihs「はい、とりあえず for(;a<127;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } が書けないのね」
+hsjoihs「まあもうちょい削ったらいけるでしょ。削ります」
+hsjoihs「よし！！！！いけた！！！！！」
+hsjoihs「最終的なソースコードは以下の通り」
+$source
+```c
+if_non0(n)
+{
+	if (n) {
+		__builtin_putchar(n + 48);
+	}
+	else {
+		__builtin_putchar(32);
+	}
+	return 0;
+}
+
+print(n)
+{
+	for (h = 0; n >= 100; h = h + 1) {
+		n = n - 100;
+	}
+	if_non0(h);
+	for (t = 0; n >= 10; t = t + 1) {
+		n = n - 10;
+	}
+	if_non0(t);
+	__builtin_putchar(n + 48);
+	return 0;
+}
+
+printcomma(n)
+{
+	print(n);
+	__builtin_putchar(44);
+	return n;
+}
+main()
+{
+	a = 2;
+	b = 1;
+	while (a < 127) {
+		c = printcomma(a) + b;
+		a = b;
+		b = c;
+	}
+	return 0;
+}
+```
+hsjoihs「リュカ数列は知名度がないし、フィボナッチの例も足しておくか。上限を表すのに 255 とは書けないが、20*20などと書くことはできるので」
+$source
+```
+thread 'main' panicked at 'while 文の中でジャンプするためのバッファの長さが足りません。バッファの長さは 134、中身は 0x[55 5f 48 83 ef 04 48 8b 3f 57 bf 14 00 00 00 57 bf 14 00 00 00 57 58 5f 0f af f8 57 5f 58 39 f8 0f 9c c0 0f b6 f8 83 ff 00 74 5d 55 5f 48 83 ef 0c 57 48 83 ec 0c 55 5f 48 83 ef 04 48 8b 3f 57 5f b8 57 02 40 00 ff d0 89 c7 48 83 c4 0c 57 55 5f 48 83 ef 08 48 8b 3f 57 58 5f 01 c7 58 89 38 55 5f 48 83 ef 04 57 55 5f 48 83 ef 08 48 8b 3f 58 89 38 55 5f 48 83 ef 08 57 55 5f 48 83 ef 0c 48 8b 3f 58 89 38] です', src/codegen.rs:327:21
+```
+hsjoihs「そうでした～」
+hsjoihs「まあ 89 まででいいか。そうなるとコードももうちょいシンプルにできて、」
+$source
+```c
+printcomma(n) { 
+    for (t = 0; n >= 10; t = t + 1) { 
+        n = n - 10; 
+    } 
+    if (t) { 
+        __builtin_putchar(t + 48); 
+    } 
+    else { 
+        __builtin_putchar(32); 
+    } 
+    __builtin_putchar(n + 48); 
+    __builtin_putchar(44); 
+    return n; 
+} 
+main() { 
+    a = 0; b = 1; 
+    while (a < 100) { c = printcomma(a) + b; a = b; b = c; } 
+    return 0; 
+}
+```
+hsjoihs「とすればよい。」
