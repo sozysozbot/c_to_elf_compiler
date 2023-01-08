@@ -1284,3 +1284,8 @@ hsjoihs「まあとりあえず、最後に「フィボナッチ数列を再帰�
 hsjoihs「ジャンプ先を 127 以内に収めながらのコーディングをもう一回やってみるか」
 tkr「コードゴルフ」
 hsjoihs「ブロックの中をなるべく短くすることだけが必要なので、全体のコード長自体はむしろ増やす方向ですわね」
+hsjoihs「できた」
+$source
+```c
+if_non0(n) { if (n) { __builtin_putchar(n + 48); } else { __builtin_putchar(32); } return 0; } print(n) { for(h=0;n>=100;h=h+1){n=n-100;} if_non0(h); for(t=0;n>=10;t=t+1){n=n-10;} if_non0(t); __builtin_putchar(n + 48); return 0; } printcomma(n) { print(n); __builtin_putchar(44); return n; } fib(n) { if(n == 0){ return 0; } else if(n == 1) { return 1; } return fib(n-1) + fib(n-2); } main() { for(n=0;n<17;n=n+1) {printcomma(fib(n));} return 0; }
+```
