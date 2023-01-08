@@ -1007,3 +1007,5 @@ hsjoihs「コード部分の変更ができたので、今度はテストケー�
 hsjoihs「これにより、toplevel の概念が新たに生まれるようになるはず」
 hsjoihs「えーと、とりあえず Program 型を FunctionContent とかに改名するか」
 hsjoihs「変数名とかも適宜改名した。さて、残るは parse_program 関数だけであって、これが FunctionContent を返すのではなくて関数定義のリストを返すように変更すればよい」
+hsjoihs「対応すべきは `foo(x, y) { ... }` という構文なので、とりあえず関数呼び出しの構文を定義している parse_primary をコピペして、実引数ではなく仮引数なので identifier だけを受理して、」
+hsjoihs「よし、parse_toplevel_function_definition が実装できた」

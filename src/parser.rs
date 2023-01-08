@@ -693,7 +693,148 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
     }
 }
 
-fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<FunctionContent, AppError> {
+#[derive(Debug, Clone)]
+pub struct ParameterIdentifier {
+    ident: String,
+    pos: usize,
+}
+
+fn parse_parameter_identifier(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<ParameterIdentifier, AppError> {
+    match tokens.next().unwrap() {
+        Token {
+            payload: TokenPayload::Identifier(ident),
+            pos,
+        } => Ok(ParameterIdentifier {
+            ident: ident.clone(),
+            pos: *pos,
+        }),
+        Token { pos, .. } => Err(AppError {
+            message: "仮引数をパースできません".to_string(),
+            input: input.to_string(),
+            pos: *pos,
+        }),
+    }
+}
+
+struct FunctionDefinition {
+    ident: String,
+    params: Vec<ParameterIdentifier>,
+    pos: usize,
+    content: FunctionContent,
+}
+
+fn after_param_list(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+    params: Vec<ParameterIdentifier>,
+    pos: usize,
+    ident: &str,
+) -> Result<FunctionDefinition, AppError> {
+    match tokens.peek().unwrap() {
+        Token {
+            payload: TokenPayload::開き波括弧,
+            ..
+        } => {
+            let content = parse_statement(tokens, input)?;
+
+            let expr = FunctionDefinition {
+                ident: ident.to_string(),
+                params,
+                pos,
+                content: FunctionContent::Statements(vec![content]),
+            };
+            Ok(expr)
+        }
+        Token { pos, .. } => {
+            Err(AppError {
+                message: "仮引数リストの後に、開き波括弧以外のトークンが来ました".to_string(),
+                input: input.to_string(),
+                pos: *pos,
+            })
+        }
+    }
+}
+
+fn parse_toplevel_function_definition(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<FunctionDefinition, AppError> {
+    match tokens.next().unwrap() {
+        Token {
+            payload: TokenPayload::Identifier(ident),
+            pos,
+        } => match tokens.peek().unwrap() {
+            Token {
+                payload: TokenPayload::開き丸括弧,
+                pos: open_pos,
+            } => {
+                tokens.next();
+
+                let mut params = Vec::new();
+
+                match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::閉じ丸括弧,
+                        ..
+                    } => {
+                        tokens.next();
+                        return after_param_list(tokens, input, params, *pos, ident);
+                    }
+                    _ => {
+                        let param = parse_parameter_identifier(tokens, input)?;
+                        params.push(param);
+                    }
+                }
+
+                loop {
+                    match tokens.peek().unwrap() {
+                        Token {
+                            payload: TokenPayload::閉じ丸括弧,
+                            ..
+                        } => {
+                            tokens.next();
+                            return after_param_list(tokens, input, params, *pos, ident);
+                        }
+                        Token {
+                            payload: TokenPayload::Comma,
+                            ..
+                        } => {
+                            tokens.next();
+                            let param = parse_parameter_identifier(tokens, input)?;
+                            params.push(param);
+                        }
+                        _ => {
+                            break Err(AppError {
+                                message: "閉じ丸括弧かカンマが期待されていました".to_string(),
+                                input: input.to_string(),
+                                pos: *open_pos + 1,
+                            })
+                        }
+                    }
+                }
+            }
+            _ => Err(AppError {
+                message: "トップレベルに識別子がありますが、その後に関数引数の丸括弧がありません"
+                    .to_string(),
+                input: input.to_string(),
+                pos: *pos + 1,
+            }),
+        },
+        Token { pos, .. } => Err(AppError {
+            message: "トップレベルが識別子でないもので始まっています".to_string(),
+            input: input.to_string(),
+            pos: *pos + 1,
+        }),
+    }
+}
+
+fn parse_program(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<FunctionContent, AppError> {
     let mut statements = vec![];
     while !matches!(
         tokens.peek(),
