@@ -695,8 +695,8 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
 
 #[derive(Debug, Clone)]
 pub struct ParameterIdentifier {
-    ident: String,
-    pos: usize,
+    pub ident: String,
+    pub pos: usize,
 }
 
 fn parse_parameter_identifier(
@@ -720,7 +720,7 @@ fn parse_parameter_identifier(
 }
 
 pub struct FunctionDefinition {
-    pub ident: String,
+    pub func_name: String,
     pub params: Vec<ParameterIdentifier>,
     pub pos: usize,
     pub content: FunctionContent,
@@ -741,7 +741,7 @@ fn after_param_list(
             let content = parse_statement(tokens, input)?;
 
             let expr = FunctionDefinition {
-                ident: ident.to_string(),
+                func_name: ident.to_string(),
                 params,
                 pos,
                 content: FunctionContent::Statements(vec![content]),

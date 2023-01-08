@@ -56,7 +56,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
             &definition,
             &function_table,
         );
-        function_table.insert(definition.ident.clone(), u32::from(func_pos));
+        function_table.insert(definition.func_name.clone(), u32::from(func_pos));
     }
 
     let entry: FunctionDefinition = {

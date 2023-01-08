@@ -91,6 +91,7 @@ check 4 "main() { return 1+__builtin_three(); }"
 check 1 "main() { __builtin_putchar(65); return 1; }" "A"
 check 6 "one() { return 1; } two() { return one() + 1; } main() { return one() + two() + __builtin_three(); }"
 check 1 "five() { return 5; } eleven() { return five() * 2 + 1; } main() { __builtin_putchar(__builtin_three() * eleven()); return 1; }" "!"
+check 55 "fib(n) { if(n == 0){ return 0; } else if(n == 1) { return 1; } else { return fib(n-1) + fib(n-2); } } main() { return fib(10); }"
 for job in `jobs -p`
 do
     wait $job
