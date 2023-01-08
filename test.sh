@@ -25,6 +25,7 @@ check_inner() {
       printf "\033[31m[FAIL]\033[m $input => $stdout_expected expected, but got $stdout_actual\n"
       exit 1
     fi
+    printf "\033[32m[PASS]\033[m $input => \033[32mstdout:\033[m $stdout_actual\n"
   fi
   
 
