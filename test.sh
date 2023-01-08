@@ -94,7 +94,7 @@ check 3 "three(x) { return 3; } main() { return three(6); }"
 check 6 "id(x) { return x; } main() { return id(6); }"
 check 6 "add(x, y, z) { return x + y + z; } main() { return add(1, 2, __builtin_three()); }"
 check 0 "if_non0(n) { if (n) { __builtin_putchar(n + 48); } else { __builtin_putchar(32); } return 0; } print(n) { for(h=0;n>=100;h=h+1){n=n-100;} if_non0(h); for(t=0;n>=10;t=t+1){n=n-10;} if_non0(t); __builtin_putchar(n + 48); return 0; } printcomma(n) { print(n); __builtin_putchar(44); return n; } main() { a = 2; b = 1; while(a<127) { c = printcomma(a) + b; a = b; b = c; } return 0; }" "  2,  1,  3,  4,  7, 11, 18, 29, 47, 76,123,"
-check 0 "printcomma(n) { for(t=0;n>=10;t=t+1){n=n-10;} if (t) { __builtin_putchar(t + 48); } else { __builtin_putchar(32); } __builtin_putchar(n + 48); __builtin_putchar(44); return n; } main() { a = 0; b = 1; while(a<100) { c = printcomma(a) + b; a = b; b = c; } return 0; }" " 0, 1, 1, 2, 3, 5, 8,13,21,34,55,89,"
+check 0 "print(n) { for (t = 0; n >= 10; t = t + 1) { n = n - 10; } if (t) { __builtin_putchar(t + 48); } else { __builtin_putchar(32); } __builtin_putchar(n + 48); return 0; } printcomma(n) { print(n); __builtin_putchar(44); return n; } main() { a = 0; b = 1; while (a < 100) { c = printcomma(a) + b; a = b; b = c; } return 0; }" " 0, 1, 1, 2, 3, 5, 8,13,21,34,55,89,"
 
 # `%` と `?` と `++` と `-=` 演算子が未実装で、`255` も書けない
 # check 0 "if_non0(n) { __builtin_putchar(n ? n + 48 : 32); return 0; } print(n) { if_non0(n / 100); if_non0((n / 10) % 10); __builtin_putchar((n % 10) + 48); return 0; } main() { a = 0; b = 1; for(;a<255;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } return 0; }" "  0,  1,  1,  2,  3,  5,  8, 13, 21, 34, 55, 89,144,233,"

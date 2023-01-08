@@ -1222,7 +1222,7 @@ hsjoihs「そうでした～」
 hsjoihs「まあ 89 まででいいか。そうなるとコードももうちょいシンプルにできて、」
 $source
 ```c
-printcomma(n) { 
+print(n) { 
     for (t = 0; n >= 10; t = t + 1) { 
         n = n - 10; 
     } 
@@ -1233,6 +1233,10 @@ printcomma(n) {
         __builtin_putchar(32); 
     } 
     __builtin_putchar(n + 48); 
+    return 0;
+}
+printcomma(n) {
+    print(n);
     __builtin_putchar(44); 
     return n; 
 } 
