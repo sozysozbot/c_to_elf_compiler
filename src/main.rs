@@ -32,7 +32,7 @@ fn main() -> std::io::Result<()> {
 
 fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError> {
     let mut tokens = tokens.iter().peekable();
-    let program = parser::parse(&mut tokens, input)?;
+    let program_main = parser::parse(&mut tokens, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let buf = Buf::from(&tiny[0..0x78]);
@@ -48,7 +48,16 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     let buf = buf.join(codegen::builtin_putchar関数を生成());
     functions.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
 
-    let (buf, entry_pos) = generate_startup(buf, &program, &functions);
+    let (buf, main_pos) = generate_function(buf, &program_main, &functions);
+    functions.insert("main".to_string(), u32::from(main_pos));
+
+    let program_entry = {
+        // スタートアップ処理はここに C のソースコードとして実装
+        let tokens = tokenize::tokenize("__throw main();").unwrap();
+        let mut tokens = tokens.iter().peekable();
+        parser::parse(&mut tokens, input)?
+    };
+    let (buf, entry_pos) = generate_function(buf, &program_entry, &functions);
 
     let mut buf = buf.to_vec();
     // エントリポイント書き換え
@@ -59,8 +68,8 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     Ok(buf)
 }
 
-fn generate_startup(buf: Buf, program: &Program, functions: &HashMap<String, u32>) -> (Buf, u16) {
-    let entry_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
+fn generate_function(buf: Buf, program: &Program, functions: &HashMap<String, u32>) -> (Buf, u16) {
+    let function_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
     let buf = buf.join(codegen::rbpをプッシュ());
     let buf = buf.join(codegen::rspをrbpにコピー());
     let mut idents = HashMap::new();
@@ -72,5 +81,5 @@ fn generate_startup(buf: Buf, program: &Program, functions: &HashMap<String, u32
     ));
     let buf = buf.join(program_buf);
 
-    (buf, entry_pos)
+    (buf, function_pos)
 }

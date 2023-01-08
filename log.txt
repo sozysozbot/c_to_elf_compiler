@@ -993,3 +993,13 @@ hsjoihs「カッコを要求してないし、JavaScript に倣って __throw �
 hsjoihs「で、この __throw の実装を複製して return を作っていく」
 hsjoihs「非自明なのは codegen だけで、このときには edi の結果をコピーして leave; ret すればいいのかな」
 hsjoihs「よし、これで return が復活したはず。まだ試せないけど」
+hsjoihs「そうしたら、次に目指すべきは、テストケースの __throw を return に戻して、」
+$source
+```c
+__start() { __throw main(); }
+main() { ここにテストケースを貼る }
+```
+hsjoihs「といった感じへと改めていくことだな」
+hsjoihs「えーっと、__throw main(); をトークナイズして、さっき切り出した関数に渡せば、これでよさそう？やってみよう」
+hsjoihs「前述のとおり、テストケースの __throw を return に戻して、」
+hsjoihs「よし動いた！」
