@@ -10,8 +10,8 @@ fn parse_test() {
     let tokens = tokenize(input).unwrap();
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
-        parse(&mut tokens, input).unwrap(),
-        FunctionContent::Statements(vec![Statement::Expr {
+        parse_statement(&mut tokens, input).unwrap(),
+        Statement::Expr {
             expr: Box::new(Expr::BinaryExpr {
                 op: BinaryOp::Sub,
                 op_pos: 2,
@@ -19,7 +19,7 @@ fn parse_test() {
                 右辺: Box::new(Expr::Numeric { val: 3, pos: 4 })
             }),
             semicolon_pos: 5
-        }])
+        }
     );
 }
 
@@ -719,11 +719,11 @@ fn parse_parameter_identifier(
     }
 }
 
-struct FunctionDefinition {
-    ident: String,
-    params: Vec<ParameterIdentifier>,
-    pos: usize,
-    content: FunctionContent,
+pub struct FunctionDefinition {
+    pub ident: String,
+    pub params: Vec<ParameterIdentifier>,
+    pub pos: usize,
+    pub content: FunctionContent,
 }
 
 fn after_param_list(
@@ -748,17 +748,15 @@ fn after_param_list(
             };
             Ok(expr)
         }
-        Token { pos, .. } => {
-            Err(AppError {
-                message: "仮引数リストの後に、開き波括弧以外のトークンが来ました".to_string(),
-                input: input.to_string(),
-                pos: *pos,
-            })
-        }
+        Token { pos, .. } => Err(AppError {
+            message: "仮引数リストの後に、開き波括弧以外のトークンが来ました".to_string(),
+            input: input.to_string(),
+            pos: *pos,
+        }),
     }
 }
 
-fn parse_toplevel_function_definition(
+pub fn parse_toplevel_function_definition(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<FunctionDefinition, AppError> {
@@ -834,8 +832,8 @@ fn parse_toplevel_function_definition(
 fn parse_program(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-) -> Result<FunctionContent, AppError> {
-    let mut statements = vec![];
+) -> Result<Vec<FunctionDefinition>, AppError> {
+    let mut function_definitions = vec![];
     while !matches!(
         tokens.peek(),
         Some(Token {
@@ -843,12 +841,15 @@ fn parse_program(
             pos: _,
         }),
     ) {
-        statements.push(parse_statement(tokens, input)?);
+        function_definitions.push(parse_toplevel_function_definition(tokens, input)?);
     }
-    Ok(FunctionContent::Statements(statements))
+    Ok(function_definitions)
 }
 
-pub fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<FunctionContent, AppError> {
+pub fn parse(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<Vec<FunctionDefinition>, AppError> {
     let program = parse_program(tokens, input)?;
     let tok = tokens.peek().unwrap();
     if tok.payload == TokenPayload::Eof {

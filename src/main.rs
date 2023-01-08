@@ -6,6 +6,7 @@ use c_to_elf_compiler::apperror::AppError;
 use c_to_elf_compiler::ast::FunctionContent;
 use c_to_elf_compiler::codegen;
 use c_to_elf_compiler::parser;
+use c_to_elf_compiler::parser::FunctionDefinition;
 use c_to_elf_compiler::token::Token;
 use c_to_elf_compiler::tokenize;
 use c_to_elf_compiler::Buf;
@@ -32,7 +33,7 @@ fn main() -> std::io::Result<()> {
 
 fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError> {
     let mut tokens = tokens.iter().peekable();
-    let content_main = parser::parse(&mut tokens, input)?;
+    let function_definitions = parser::parse(&mut tokens, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let buf = Buf::from(&tiny[0..0x78]);
@@ -48,16 +49,21 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     let buf = buf.join(codegen::builtin_putchar関数を生成());
     functions.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
 
-    let (buf, main_pos) = generate_function(buf, &content_main, &functions);
-    functions.insert("main".to_string(), u32::from(main_pos));
+    let mut buf = buf;
 
-    let content_entry = {
+    for definition in function_definitions {
+        let (buf_, main_pos) = generate_function(buf, &definition.content, &functions);
+        buf = buf_;
+        functions.insert(definition.ident, u32::from(main_pos));
+    }
+
+    let entry: FunctionDefinition = {
         // スタートアップ処理はここに C のソースコードとして実装
-        let tokens = tokenize::tokenize("__throw main();").unwrap();
+        let tokens = tokenize::tokenize("__start() { __throw main(); }").unwrap();
         let mut tokens = tokens.iter().peekable();
-        parser::parse(&mut tokens, input)?
+        parser::parse_toplevel_function_definition(&mut tokens, input)?
     };
-    let (buf, entry_pos) = generate_function(buf, &content_entry, &functions);
+    let (buf, entry_pos) = generate_function(buf, &entry.content, &functions);
 
     let mut buf = buf.to_vec();
     // エントリポイント書き換え
@@ -68,13 +74,18 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     Ok(buf)
 }
 
-fn generate_function(buf: Buf, content: &FunctionContent, functions: &HashMap<String, u32>) -> (Buf, u16) {
+fn generate_function(
+    buf: Buf,
+    content: &FunctionContent,
+    functions: &HashMap<String, u32>,
+) -> (Buf, u16) {
     let function_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
     let buf = buf.join(codegen::rbpをプッシュ());
     let buf = buf.join(codegen::rspをrbpにコピー());
     let mut idents = HashMap::new();
     let mut stack_size = 8;
-    let content_buf = codegen::関数の中身を評価(content, &mut idents, functions, &mut stack_size);
+    let content_buf =
+        codegen::関数の中身を評価(content, &mut idents, functions, &mut stack_size);
 
     let buf = buf.join(codegen::rspから即値を引く(
         u8::try_from(idents.len()).expect("識別子の個数が u8 に収まりません") * 4,

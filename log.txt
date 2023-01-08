@@ -1009,3 +1009,11 @@ hsjoihs「えーと、とりあえず Program 型を FunctionContent とかに�
 hsjoihs「変数名とかも適宜改名した。さて、残るは parse_program 関数だけであって、これが FunctionContent を返すのではなくて関数定義のリストを返すように変更すればよい」
 hsjoihs「対応すべきは `foo(x, y) { ... }` という構文なので、とりあえず関数呼び出しの構文を定義している parse_primary をコピペして、実引数ではなく仮引数なので identifier だけを受理して、」
 hsjoihs「よし、parse_toplevel_function_definition が実装できた」
+hsjoihs「あとは、そうして読み込まれた関数定義ごとに、コード生成をしてやれば完成かな。まだ仮引数をレジスタから読みだすところを作ってないけど、とりあえずテストケースを main() { ... } で包んで実験しよう」
+hsjoihs「よし、単に main() で包んだだけのやつは動いた。じゃあ関数定義を複数にすると？」
+$source
+```c
+one() { return 1; } two() { return one() + 1; } main() { return one() + two() + __builtin_three(); }
+```
+hsjoihs「動きますね。やったぁ」
+hsjoihs「あとは仮引数をレジスタから読み出す処理を実装すれば、再帰でフィボナッチが呼べるはず」
