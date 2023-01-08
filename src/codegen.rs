@@ -180,6 +180,14 @@ fn eaxをediにmov() -> [u8; 2] {
     [0x89, 0xc7]
 }
 
+fn ediをeaxにmov() -> [u8; 2] {
+    [0x89, 0xf8]
+}
+
+fn leave_ret() -> [u8; 2] {
+    [0xc9, 0xc3]
+}
+
 pub fn builtin_three関数を生成() -> Buf {
     プロローグ(0).join(eaxに即値をセット(3)).join(エピローグ())
 }
@@ -245,6 +253,16 @@ pub fn statementを評価(
             exprを評価してediレジスタへ(&mut writer, expr, idents, functions, stack_size);
             writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
             writer.write_all(&[0x0f, 0x05]).unwrap();
+            Buf::from(writer)
+        }
+        Statement::Return {
+            expr,
+            semicolon_pos: _,
+        } => {
+            let mut writer = Vec::new();
+            exprを評価してediレジスタへ(&mut writer, expr, idents, functions, stack_size);
+            writer.write_all( &ediをeaxにmov()).unwrap();
+            writer.write_all( &leave_ret()).unwrap();
             Buf::from(writer)
         }
         Statement::If {

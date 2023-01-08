@@ -52,6 +52,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
 
                 let payload = match ident.as_str() {
                     "__throw" => TokenPayload::Throw,
+                    "return" => TokenPayload::Return,
                     "if" => TokenPayload::If,
                     "else" => TokenPayload::Else,
                     "while" => TokenPayload::While,

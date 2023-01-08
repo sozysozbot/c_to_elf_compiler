@@ -399,6 +399,34 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             })
         }
         Token {
+            payload: TokenPayload::Return,
+            ..
+        } => {
+            tokens.next();
+            let expr = Box::new(parse_expr(tokens, input)?);
+            let tok = tokens.peek().unwrap();
+            let semicolon_pos = match tok {
+                Token {
+                    payload: TokenPayload::Semicolon,
+                    pos,
+                } => {
+                    tokens.next();
+                    *pos
+                }
+                _ => {
+                    return Err(AppError {
+                        message: "期待されたセミコロンが来ませんでした".to_string(),
+                        input: input.to_string(),
+                        pos: tok.pos,
+                    })
+                }
+            };
+            Ok(Statement::Return {
+                semicolon_pos,
+                expr,
+            })
+        }
+        Token {
             payload: TokenPayload::If,
             pos,
         } => {

@@ -18,6 +18,7 @@ pub enum TokenPayload {
     Semicolon,
     Identifier(String),
     Throw,
+    Return,
     If,
     Else,
     While,

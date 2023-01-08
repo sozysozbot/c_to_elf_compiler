@@ -45,6 +45,10 @@ pub enum Statement {
         expr: Box<Expr>,
         semicolon_pos: usize,
     },
+    Return {
+        expr: Box<Expr>,
+        semicolon_pos: usize,
+    },
     If {
         cond: Box<Expr>,
         then: Box<Statement>,
