@@ -1003,3 +1003,7 @@ hsjoihs「といった感じへと改めていくことだな」
 hsjoihs「えーっと、__throw main(); をトークナイズして、さっき切り出した関数に渡せば、これでよさそう？やってみよう」
 hsjoihs「前述のとおり、テストケースの __throw を return に戻して、」
 hsjoihs「よし動いた！」
+hsjoihs「コード部分の変更ができたので、今度はテストケース自体を main() {} で囲うようにしよう」
+hsjoihs「これにより、toplevel の概念が新たに生まれるようになるはず」
+hsjoihs「えーと、とりあえず Program 型を FunctionContent とかに改名するか」
+hsjoihs「変数名とかも適宜改名した。さて、残るは parse_program 関数だけであって、これが FunctionContent を返すのではなくて関数定義のリストを返すように変更すればよい」

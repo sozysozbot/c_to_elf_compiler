@@ -354,14 +354,14 @@ pub fn statementを評価(
     }
 }
 
-pub fn programを評価(
-    program: &Program,
+pub fn 関数の中身を評価(
+    content: &FunctionContent,
     idents: &mut HashMap<String, u8>,
     functions: &HashMap<String, u32>,
     stack_size: &mut u32,
 ) -> Buf {
-    match program {
-        Program::Statements(statements) => statements
+    match content {
+        FunctionContent::Statements(statements) => statements
             .iter()
             .map(|stmt| statementを評価(stmt, idents, &*functions, stack_size))
             .fold(Buf::new(), Buf::join),

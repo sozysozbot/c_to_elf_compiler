@@ -11,7 +11,7 @@ fn parse_test() {
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
         parse(&mut tokens, input).unwrap(),
-        Program::Statements(vec![Statement::Expr {
+        FunctionContent::Statements(vec![Statement::Expr {
             expr: Box::new(Expr::BinaryExpr {
                 op: BinaryOp::Sub,
                 op_pos: 2,
@@ -693,7 +693,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
     }
 }
 
-fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Program, AppError> {
+fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<FunctionContent, AppError> {
     let mut statements = vec![];
     while !matches!(
         tokens.peek(),
@@ -704,10 +704,10 @@ fn parse_program(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Prog
     ) {
         statements.push(parse_statement(tokens, input)?);
     }
-    Ok(Program::Statements(statements))
+    Ok(FunctionContent::Statements(statements))
 }
 
-pub fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Program, AppError> {
+pub fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<FunctionContent, AppError> {
     let program = parse_program(tokens, input)?;
     let tok = tokens.peek().unwrap();
     if tok.payload == TokenPayload::Eof {

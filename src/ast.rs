@@ -74,6 +74,6 @@ pub enum Statement {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Program {
+pub enum FunctionContent {
     Statements(Vec<Statement>),
 }
