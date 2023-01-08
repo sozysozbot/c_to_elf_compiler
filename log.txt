@@ -989,3 +989,4 @@ hsjoihs「とりあえず、現状のテストケースを全て暗黙に main �
 hsjoihs「先にコード生成部分をそう変更してから、その後にテストケース自体に main() { ... } を追加して、それをパースするようにと変更すればよさそうだな」
 hsjoihs「ちょっとリファクタリング。u16 とか u8 幅を超えていたら明示的にエラーメッセージを出して落とすようにし、現状の codegen は関数テーブルを変更しないので mutable で渡しているところを immutable にし、generate_startup 関数として切り出す」
 hsjoihs「ところで、エントリーポイントの実装は main(); じゃなくて return main(); にすべきだな。というか、現状の return は実は return ではなく exit を呼ぶ偽物なので、__builtin_exit みたいな名前に変更しちゃおうかな」
+hsjoihs「カッコを要求してないし、JavaScript に倣って __throw でいいや」

@@ -237,7 +237,7 @@ pub fn statementを評価(
             exprを評価してediレジスタへ(&mut writer, expr, idents, functions, stack_size);
             Buf::from(writer)
         }
-        Statement::Return {
+        Statement::Throw {
             expr,
             semicolon_pos: _,
         } => {

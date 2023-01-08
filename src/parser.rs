@@ -371,7 +371,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
     let tok = tokens.peek().unwrap();
     match tok {
         Token {
-            payload: TokenPayload::Return,
+            payload: TokenPayload::Throw,
             ..
         } => {
             tokens.next();
@@ -393,7 +393,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                     })
                 }
             };
-            Ok(Statement::Return {
+            Ok(Statement::Throw {
                 semicolon_pos,
                 expr,
             })

@@ -41,7 +41,7 @@ pub enum Statement {
         expr: Box<Expr>,
         semicolon_pos: usize,
     },
-    Return {
+    Throw {
         expr: Box<Expr>,
         semicolon_pos: usize,
     },
