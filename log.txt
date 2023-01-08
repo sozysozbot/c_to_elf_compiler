@@ -1247,3 +1247,16 @@ main() {
 }
 ```
 hsjoihs「とすればよい。」
+
+hsjoihs「終わらせたので、その旨をツイート」
+$URL「https://twitter.com/hsjoihs/status/1612090819871387648」
+tkr「はや」
+tkr「今再帰使えないっけ」
+tkr「あー関数のオフセットがいるのか」
+hsjoihs「再帰できるようにしてからマージします？」
+hsjoihs「そういえば、手元の非 M1 な Mac で試したら mktemp が illegal option で落ちましたね」
+
+$DATE「2023年1月9日」
+tkr「再帰大変そうーー」
+tkr「-dだめですっけ？」
+tkr「なんかオプション違ったようなー…」
