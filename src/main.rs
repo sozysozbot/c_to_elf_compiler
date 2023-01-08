@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::io::Write;
 
 use c_to_elf_compiler::apperror::AppError;
+use c_to_elf_compiler::ast::Program;
 use c_to_elf_compiler::codegen;
 use c_to_elf_compiler::parser;
 use c_to_elf_compiler::token::Token;
@@ -38,24 +39,16 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
 
     let mut functions = HashMap::new();
 
-    let builtin_three_pos = buf.len() as u32;
+    let builtin_three_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     let buf = buf.join(codegen::builtin_three関数を生成());
     functions.insert("__builtin_three".to_string(), builtin_three_pos);
 
-    let builtin_putchar_pos = buf.len() as u32;
+    let builtin_putchar_pos =
+        u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     let buf = buf.join(codegen::builtin_putchar関数を生成());
     functions.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
 
-    let entry_pos = buf.len() as u16;
-    let buf = buf.join(codegen::rbpをプッシュ());
-    let buf = buf.join(codegen::rspをrbpにコピー());
-    let mut idents = HashMap::new();
-    let mut stack_size = 8;
-    let program_buf =
-        codegen::programを評価(&program, &mut idents, &mut functions, &mut stack_size);
-
-    let buf = buf.join(codegen::rspから即値を引く(idents.len() as u8 * 4));
-    let buf = buf.join(program_buf);
+    let (buf, entry_pos) = generate_startup(buf, &program, &functions);
 
     let mut buf = buf.to_vec();
     // エントリポイント書き換え
@@ -64,4 +57,20 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     buf[0x19] = entry_pos_buf[1];
 
     Ok(buf)
+}
+
+fn generate_startup(buf: Buf, program: &Program, functions: &HashMap<String, u32>) -> (Buf, u16) {
+    let entry_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
+    let buf = buf.join(codegen::rbpをプッシュ());
+    let buf = buf.join(codegen::rspをrbpにコピー());
+    let mut idents = HashMap::new();
+    let mut stack_size = 8;
+    let program_buf = codegen::programを評価(program, &mut idents, functions, &mut stack_size);
+
+    let buf = buf.join(codegen::rspから即値を引く(
+        u8::try_from(idents.len()).expect("識別子の個数が u8 に収まりません") * 4,
+    ));
+    let buf = buf.join(program_buf);
+
+    (buf, entry_pos)
 }

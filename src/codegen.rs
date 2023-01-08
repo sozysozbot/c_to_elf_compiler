@@ -339,7 +339,7 @@ pub fn statementを評価(
 pub fn programを評価(
     program: &Program,
     idents: &mut HashMap<String, u8>,
-    functions: &mut HashMap<String, u32>,
+    functions: &HashMap<String, u32>,
     stack_size: &mut u32,
 ) -> Buf {
     match program {
