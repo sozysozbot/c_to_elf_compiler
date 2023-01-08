@@ -1816,10 +1816,174 @@ _start:
 <h3 class="date">2022年1月3日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_b057e3035584fdc849e8ddf0b86ea50b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_b057e3035584fdc849e8ddf0b86ea50b').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_b057e3035584fdc849e8ddf0b86ea50b" href="#permalink_b057e3035584fdc849e8ddf0b86ea50b" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_37fa0be8eb9b535d9297f9e16db116ab').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_37fa0be8eb9b535d9297f9e16db116ab').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_37fa0be8eb9b535d9297f9e16db116ab" href="#permalink_37fa0be8eb9b535d9297f9e16db116ab" class="permalink">¶</a>
+		<div class="content">__builtin_putchar を書いたが動かない</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_94e8bab3c379e971d02e6a63cc0d5c89').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_94e8bab3c379e971d02e6a63cc0d5c89').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_94e8bab3c379e971d02e6a63cc0d5c89" href="#permalink_94e8bab3c379e971d02e6a63cc0d5c89" class="permalink">¶</a>
+		<div class="content">int 0x80 は 32 bit 用の ABI であって、64 bit のポインタを渡しても上位 32 bit は無視されるそうです</div>
+		<div class="content">exit システムコールはポインタを用いなかったのでこの問題が露呈しなかったが、write システムコールはポインタを要求するので int 0x80 ではダメで syscall を使う必要があるとのこと</div>
+		<div class="content"><a href="https://stackoverflow.com/questions/22503944/using-interrupt-0x80-on-64-bit-linux" target="_blank" rel="noopener noreferrer">https://stackoverflow.com/questions/22503944/using-interrupt-0x80-on-64-bit-linux</a></div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_5cc744f03cfed83fefdda8fbcf33e963').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_5cc744f03cfed83fefdda8fbcf33e963').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_5cc744f03cfed83fefdda8fbcf33e963" href="#permalink_5cc744f03cfed83fefdda8fbcf33e963" class="permalink">¶</a>
+		<div class="content">そもそもこれって32bitバイナリを吐き出すプロジェクトですか？64bitバイナリを吐き出すプロジェクトですか？</div>
+		<div class="content">今のところコンパイラは32bitバイナリを吐き出しているのにexperimentのtiny以外は64bitバイナリ(ただし64bitでは使えなさそうな int 0x80 を使っている)を吐き出しているように見えます</div>
+		<div class="content">qemuでセグフォが起きるのでどっちかに統一したいです</div>
+		<div class="content">と思ったけどバイナリ自体は64bitなのでintをsyscallに書き換えればよさそう？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4a8f2647078f1bf76342e6178adbda0b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4a8f2647078f1bf76342e6178adbda0b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_4a8f2647078f1bf76342e6178adbda0b" href="#permalink_4a8f2647078f1bf76342e6178adbda0b" class="permalink">¶</a>
+		<div class="content">64 bit でも int 0x80 は使えるんですよね。exit は引数にポインタがないので int 0x80 をそのまま使って問題ないけど、write は引数にポインタがあるせいで困る</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_c63059fc015507ddb8ffc885a6665267').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_c63059fc015507ddb8ffc885a6665267').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_c63059fc015507ddb8ffc885a6665267" href="#permalink_c63059fc015507ddb8ffc885a6665267" class="permalink">¶</a>
+		<div class="content">qemuの制限なんですかね？(qemuでエミュレーションしているm1 mac上のdockerだと死にました)</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_951e6e8397f7a5cb0e3e34d2b95f0326').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_951e6e8397f7a5cb0e3e34d2b95f0326').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_951e6e8397f7a5cb0e3e34d2b95f0326" href="#permalink_951e6e8397f7a5cb0e3e34d2b95f0326" class="permalink">¶</a>
+		<div class="content">qemu はいろんなものが動かなかったりするという噂を聞いています</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_2a50f921acddec94d0bfc3f1a1698ec7').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_2a50f921acddec94d0bfc3f1a1698ec7').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_2a50f921acddec94d0bfc3f1a1698ec7" href="#permalink_2a50f921acddec94d0bfc3f1a1698ec7" class="permalink">¶</a>
+		<div class="content">コンパイラが出力するバイナリはsyscallを使っているのでexperimentの方も書き換えておきます</div>
 		<div class="content">qemuだと int 0x80 が動かないので syscall に書き換えた</div>
 		<div class="content">putcharをアセンブリで書けた。writeに渡すbufはポインタじゃないといけないからスタックに引数をpushしてrspを渡せばいいかな</div>
+		<div class="content">スタック領域を16の倍数にアライメントとかを考えるとpush/popでネストした式の途中結果を保存するより全部ローカル変数に入れた方が楽なのでは 🤔</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/_lem0n_" target="_blank" rel="noopener noreferrer"><img alt="れもん" class="icon" src="icons/れもん.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_bb54a4ef215950db3d2ce4d362abb5a9').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_bb54a4ef215950db3d2ce4d362abb5a9').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/_lem0n_" target="_blank" rel="noopener noreferrer">れもん</a></span><a id="permalink_bb54a4ef215950db3d2ce4d362abb5a9" href="#permalink_bb54a4ef215950db3d2ce4d362abb5a9" class="permalink">¶</a>
+		<div class="content">その概念を拡張したのがregister allocation</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_bd07b8acef40c73a33c49c30be7b1d67').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_bd07b8acef40c73a33c49c30be7b1d67').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_bd07b8acef40c73a33c49c30be7b1d67" href="#permalink_bd07b8acef40c73a33c49c30be7b1d67" class="permalink">¶</a>
+		<div class="content">実装したことがない😿</div>
+	</div>
+</div>
+<h3 class="date">2022年1月4日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_aacd6c41b6b1c6c02580b43b489ead30').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_aacd6c41b6b1c6c02580b43b489ead30').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_aacd6c41b6b1c6c02580b43b489ead30" href="#permalink_aacd6c41b6b1c6c02580b43b489ead30" class="permalink">¶</a>
+		<div class="content">アセンブリ→バイナリの変換規則眺めてもなんもわからんって思ってたけど、hexじゃなくて2進数列にしたらなんとなく分かったわ。そういうこと？？？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/_lem0n_" target="_blank" rel="noopener noreferrer"><img alt="れもん" class="icon" src="icons/れもん.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_000cf9c28842dbf4845c67fc2f58e830').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_000cf9c28842dbf4845c67fc2f58e830').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/_lem0n_" target="_blank" rel="noopener noreferrer">れもん</a></span><a id="permalink_000cf9c28842dbf4845c67fc2f58e830" href="#permalink_000cf9c28842dbf4845c67fc2f58e830" class="permalink">¶</a>
+		<div class="content">x86は3bitでレジスタを表していたりする。64bit拡張命令(0x4_)とかも調べてみると面白いよ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_d505b1cf52365994eed301ccffb89c82').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_d505b1cf52365994eed301ccffb89c82').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_d505b1cf52365994eed301ccffb89c82" href="#permalink_d505b1cf52365994eed301ccffb89c82" class="permalink">¶</a>
+		<div class="content">やっぱ認識あってた。むずい</div>
+		<div class="content">そういえば、標準出力のテストなんてものはいま無いので、追加するかどうか迷っています</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_314f2d5396e1c76913c9da71fa9c2490').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_314f2d5396e1c76913c9da71fa9c2490').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_314f2d5396e1c76913c9da71fa9c2490" href="#permalink_314f2d5396e1c76913c9da71fa9c2490" class="permalink">¶</a>
+		<div class="content">まあほしいですよねテスト</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_33ae39385c8231e5cf6c7ac95d7e1d86').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_33ae39385c8231e5cf6c7ac95d7e1d86').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_33ae39385c8231e5cf6c7ac95d7e1d86" href="#permalink_33ae39385c8231e5cf6c7ac95d7e1d86" class="permalink">¶</a>
+		<div class="content">わかる〜。作らなくては</div>
+	</div>
+</div>
+<h3 class="date">2022年1月7日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_83c41c9bed37505dcfaf34ca0ce047c1').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_83c41c9bed37505dcfaf34ca0ce047c1').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_83c41c9bed37505dcfaf34ca0ce047c1" href="#permalink_83c41c9bed37505dcfaf34ca0ce047c1" class="permalink">¶</a>
+		<div class="content">標準出力のテストどうするかね</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_09a838f0a4aed46b95638970d0915fb5').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_09a838f0a4aed46b95638970d0915fb5').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_09a838f0a4aed46b95638970d0915fb5" href="#permalink_09a838f0a4aed46b95638970d0915fb5" class="permalink">¶</a>
+		<div class="content">あーそういやこれドラフトのままだった。完全に終わってた気になってた。今のインターフェース的に標準出力のテストめんどいよな</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_3d2af614cb216a2ce56a090664d53dc2').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_3d2af614cb216a2ce56a090664d53dc2').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_3d2af614cb216a2ce56a090664d53dc2" href="#permalink_3d2af614cb216a2ce56a090664d53dc2" class="permalink">¶</a>
+		<div class="content">リダイレクトするのではいかんの？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_3573388cd4e5fabedc643aaa729fb20a').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_3573388cd4e5fabedc643aaa729fb20a').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_3573388cd4e5fabedc643aaa729fb20a" href="#permalink_3573388cd4e5fabedc643aaa729fb20a" class="permalink">¶</a>
+		<div class="content">現状のシェルスクリプトが check って関数の形じゃないですか。あと、複数行コードが出てきたときに今のままだとつらい</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_b1038b5c320781ce402a67881557b198').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_b1038b5c320781ce402a67881557b198').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_b1038b5c320781ce402a67881557b198" href="#permalink_b1038b5c320781ce402a67881557b198" class="permalink">¶</a>
+		<div class="content">もっとも簡単な形で解決すればいいので、check_stdout を新造するという形でいいのでは</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_391f754f9e79ce8b3f6fa4ab47aad313').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_391f754f9e79ce8b3f6fa4ab47aad313').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_391f754f9e79ce8b3f6fa4ab47aad313" href="#permalink_391f754f9e79ce8b3f6fa4ab47aad313" class="permalink">¶</a>
+		<div class="content">それか環境変数で</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_896676fd66b5dc75887fb068cbb74bf7').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_896676fd66b5dc75887fb068cbb74bf7').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_896676fd66b5dc75887fb068cbb74bf7" href="#permalink_896676fd66b5dc75887fb068cbb74bf7" class="permalink">¶</a>
+		<div class="content">関数分ければよくな〜い？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_fbe25643f9e0c1f299d745237127aef5').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_fbe25643f9e0c1f299d745237127aef5').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_fbe25643f9e0c1f299d745237127aef5" href="#permalink_fbe25643f9e0c1f299d745237127aef5" class="permalink">¶</a>
+		<div class="content">とりあえず、check の第三引数にオプショナルで与えるということで</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_413e4db88292ae933e4ca590b9bebd36').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_413e4db88292ae933e4ca590b9bebd36').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_413e4db88292ae933e4ca590b9bebd36" href="#permalink_413e4db88292ae933e4ca590b9bebd36" class="permalink">¶</a>
+		<div class="content">よさそう</div>
 	</div>
 </div>
 
