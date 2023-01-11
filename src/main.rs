@@ -5,6 +5,7 @@ use std::io::Write;
 use c_to_elf_compiler::apperror::AppError;
 use c_to_elf_compiler::codegen;
 use c_to_elf_compiler::parser;
+use c_to_elf_compiler::parser::FunctionDefinition;
 use c_to_elf_compiler::token::Token;
 use c_to_elf_compiler::tokenize;
 use c_to_elf_compiler::Buf;
@@ -31,31 +32,43 @@ fn main() -> std::io::Result<()> {
 
 fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError> {
     let mut tokens = tokens.iter().peekable();
-    let program = parser::parse(&mut tokens, input)?;
+    let function_definitions = parser::parse(&mut tokens, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let buf = Buf::from(&tiny[0..0x78]);
 
-    let mut functions = HashMap::new();
+    let mut function_table = HashMap::new();
 
-    let builtin_three_pos = buf.len() as u32;
+    let builtin_three_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     let buf = buf.join(codegen::builtin_three関数を生成());
-    functions.insert("__builtin_three".to_string(), builtin_three_pos);
+    function_table.insert("__builtin_three".to_string(), builtin_three_pos);
 
-    let builtin_putchar_pos = buf.len() as u32;
+    let builtin_putchar_pos =
+        u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     let buf = buf.join(codegen::builtin_putchar関数を生成());
-    functions.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
+    function_table.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
 
-    let entry_pos = buf.len() as u16;
-    let buf = buf.join(codegen::rbpをプッシュ());
-    let buf = buf.join(codegen::rspをrbpにコピー());
-    let mut idents = HashMap::new();
-    let mut stack_size = 8;
-    let program_buf =
-        codegen::programを評価(&program, &mut idents, &mut functions, &mut stack_size);
+    let mut buf = buf;
 
-    let buf = buf.join(codegen::rspから即値を引く(idents.len() as u8 * 4));
-    let buf = buf.join(program_buf);
+    for definition in function_definitions {
+        codegen::関数をコード生成しメインバッファに挿入(
+            &mut buf,
+            &definition,
+            &mut function_table,
+        );
+    }
+
+    let entry: FunctionDefinition = {
+        // スタートアップ処理はここに C のソースコードとして実装
+        let tokens = tokenize::tokenize("__start() { __throw main(); }").unwrap();
+        let mut tokens = tokens.iter().peekable();
+        parser::parse_toplevel_function_definition(&mut tokens, input)?
+    };
+    let entry_pos = codegen::関数をコード生成しメインバッファに挿入(
+        &mut buf,
+        &entry,
+        &mut function_table,
+    );
 
     let mut buf = buf.to_vec();
     // エントリポイント書き換え

@@ -1,4 +1,4 @@
-use crate::{ast::*, Buf};
+use crate::{ast::*, parser::FunctionDefinition, Buf};
 use std::{collections::HashMap, io::Write};
 
 /*
@@ -180,24 +180,52 @@ fn eaxをediにmov() -> [u8; 2] {
     [0x89, 0xc7]
 }
 
+fn ediをeaxにmov() -> [u8; 2] {
+    [0x89, 0xf8]
+}
+
+fn leave_ret() -> [u8; 2] {
+    [0xc9, 0xc3]
+}
+
+fn rbpにoffsetを足した位置にediを代入(offset: i8) -> [u8; 3] {
+    [0x89, 0x7d, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にesiを代入(offset: i8) -> [u8; 3] {
+    [0x89, 0x75, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にedxを代入(offset: i8) -> [u8; 3] {
+    [0x89, 0x55, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にecxを代入(offset: i8) -> [u8; 3] {
+    [0x89, 0x4d, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にr8dを代入(offset: i8) -> [u8; 4] {
+    [0x44, 0x89, 0x45, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にr9dを代入(offset: i8) -> [u8; 4] {
+    [0x44, 0x89, 0x4d, offset.to_le_bytes()[0]]
+}
+
 pub fn builtin_three関数を生成() -> Buf {
     プロローグ(0).join(eaxに即値をセット(3)).join(エピローグ())
 }
 
-fn ediをrbpにoffsetを足した位置に代入(offset: i8) -> [u8; 3] {
-    [0x89, 0x7d, offset.to_le_bytes()[0]]
-}
-
-fn rsiにrbpにoffsetを足したアドレスを代入(offset: i8) -> [u8; 4] {
+fn rbpにoffsetを足したアドレスをrsiに代入(offset: i8) -> [u8; 4] {
     [0x48, 0x8d, 0x75, offset.to_le_bytes()[0]]
 }
 
 pub fn builtin_putchar関数を生成() -> Buf {
     プロローグ(4)
-        .join(ediをrbpにoffsetを足した位置に代入(-4))
+        .join(rbpにoffsetを足した位置にediを代入(-4))
         .join(eaxに即値をセット(1)) // write
         .join(ediに代入(1)) // fd
-        .join(rsiにrbpにoffsetを足したアドレスを代入(-4)) // buf
+        .join(rbpにoffsetを足したアドレスをrsiに代入(-4)) // buf
         .join(edxに即値をセット(1)) // count
         .join(syscall())
         .join(エピローグ())
@@ -213,7 +241,7 @@ pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
         Expr::Identifier { ident, pos: _ } => {
             let len = idents.len();
             let idx = idents.entry(ident.clone()).or_insert(len as u8);
-            let offset = *idx * 4;
+            let offset = *idx * 4 + 4;
             writer.write_all(&rbpをプッシュ()).unwrap();
             writer.write_all(&ediへとポップ()).unwrap();
             writer.write_all(&rdiから即値を引く(offset)).unwrap();
@@ -237,7 +265,7 @@ pub fn statementを評価(
             exprを評価してediレジスタへ(&mut writer, expr, idents, functions, stack_size);
             Buf::from(writer)
         }
-        Statement::Return {
+        Statement::Throw {
             expr,
             semicolon_pos: _,
         } => {
@@ -245,6 +273,16 @@ pub fn statementを評価(
             exprを評価してediレジスタへ(&mut writer, expr, idents, functions, stack_size);
             writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
             writer.write_all(&[0x0f, 0x05]).unwrap();
+            Buf::from(writer)
+        }
+        Statement::Return {
+            expr,
+            semicolon_pos: _,
+        } => {
+            let mut writer = Vec::new();
+            exprを評価してediレジスタへ(&mut writer, expr, idents, functions, stack_size);
+            writer.write_all(&ediをeaxにmov()).unwrap();
+            writer.write_all(&leave_ret()).unwrap();
             Buf::from(writer)
         }
         Statement::If {
@@ -257,7 +295,19 @@ pub fn statementを評価(
             let then_buf = statementを評価(then.as_ref(), idents, functions, stack_size).join(
                 else_buf
                     .as_ref()
-                    .map(|else_buf| Buf::from(jmp(i8::try_from(else_buf.len()).unwrap())))
+                    .map(|else_buf| {
+                        Buf::from(
+                            jmp(
+                                i8::try_from(else_buf.len())
+                                .unwrap_or_else(
+                                    |_| panic!(
+                                        "else でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です",
+                                        else_buf.len(), else_buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" ")
+                                    )
+                                )
+                            )
+                        )
+                    })
                     .unwrap_or_else(Buf::new),
             );
 
@@ -285,7 +335,9 @@ pub fn statementを評価(
                 Buf::from(v)
             };
             let buf = cond_buf.join(body_buf);
-            let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap();
+            let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap_or_else(
+                |_| panic!("while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" "))
+            );
             buf.join(Buf::from(jmp(buf_len)))
         }
         Statement::For {
@@ -333,20 +385,6 @@ pub fn statementを評価(
         Statement::Block { statements, .. } => statements.iter().fold(Buf::new(), |acc, stmt| {
             acc.join(statementを評価(stmt, idents, functions, stack_size))
         }),
-    }
-}
-
-pub fn programを評価(
-    program: &Program,
-    idents: &mut HashMap<String, u8>,
-    functions: &mut HashMap<String, u32>,
-    stack_size: &mut u32,
-) -> Buf {
-    match program {
-        Program::Statements(statements) => statements
-            .iter()
-            .map(|stmt| statementを評価(stmt, idents, &*functions, stack_size))
-            .fold(Buf::new(), Buf::join),
     }
 }
 
@@ -565,6 +603,7 @@ pub fn exprを評価してediレジスタへ(
                 *stack_size += 4;
             }
 
+            #[allow(clippy::len_zero)]
             if args.len() >= 1 {
                 writer.write_all(&ediへとポップ()).unwrap();
                 *stack_size -= 4;
@@ -636,4 +675,82 @@ fn 比較演算を評価してediレジスタへ(
     writer.write_all(フラグをalに移す).unwrap();
 
     writer.write_all(&alをゼロ拡張してediにセット()).unwrap();
+}
+
+pub fn 関数をコード生成しメインバッファに挿入(
+    main_buf: &mut Buf,
+    definition: &FunctionDefinition,
+    function_table: &mut HashMap<String, u32>,
+) -> u16 {
+    let buf = std::mem::take(main_buf);
+    let func_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
+    function_table.insert(definition.func_name.clone(), u32::from(func_pos));
+
+    let buf = buf.join(rbpをプッシュ());
+    let buf = buf.join(rspをrbpにコピー());
+    let mut idents = HashMap::new();
+
+    let content_buf = match &definition.content {
+        FunctionContent::Statements(statements) => {
+            let mut parameter_buf = Buf::new();
+            for (i, param) in definition.params.iter().enumerate() {
+                let tmp_buf = std::mem::take(&mut parameter_buf);
+
+                let len = idents.len();
+                if idents.contains_key(&param.ident) {
+                    panic!(
+                        "関数 `{}` の仮引数 {} が重複しています",
+                        definition.func_name, param.ident
+                    )
+                }
+                let idx = idents.entry(param.ident.clone()).or_insert(len as u8);
+                let offset = *idx * 4 + 4;
+                // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
+                // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
+                let negative_offset: i8 = -(offset as i8);
+                let tmp_buf = match i {
+                    0 => tmp_buf.join(rbpにoffsetを足した位置にediを代入(
+                        negative_offset,
+                    )),
+                    1 => tmp_buf.join(rbpにoffsetを足した位置にesiを代入(
+                        negative_offset,
+                    )),
+                    2 => tmp_buf.join(rbpにoffsetを足した位置にedxを代入(
+                        negative_offset,
+                    )),
+                    3 => tmp_buf.join(rbpにoffsetを足した位置にecxを代入(
+                        negative_offset,
+                    )),
+                    4 => tmp_buf.join(rbpにoffsetを足した位置にr8dを代入(
+                        negative_offset,
+                    )),
+                    5 => tmp_buf.join(rbpにoffsetを足した位置にr9dを代入(
+                        negative_offset,
+                    )),
+                    _ => panic!(
+                        "関数 `{}` に 7 つ以上の仮引数があります",
+                        definition.func_name
+                    ),
+                };
+                parameter_buf = tmp_buf;
+            }
+
+            let mut stack_size: u32 = 8;
+
+            statements
+                .iter()
+                .map(|stmt| {
+                    statementを評価(stmt, &mut idents, &*function_table, &mut stack_size)
+                })
+                .fold(parameter_buf, Buf::join)
+        }
+    };
+
+    let buf = buf.join(rspから即値を引く(
+        u8::try_from(idents.len()).expect("識別子の個数が u8 に収まりません") * 4,
+    ));
+    let buf = buf.join(content_buf);
+
+    *main_buf = buf;
+    func_pos
 }

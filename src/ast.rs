@@ -41,6 +41,10 @@ pub enum Statement {
         expr: Box<Expr>,
         semicolon_pos: usize,
     },
+    Throw {
+        expr: Box<Expr>,
+        semicolon_pos: usize,
+    },
     Return {
         expr: Box<Expr>,
         semicolon_pos: usize,
@@ -70,6 +74,6 @@ pub enum Statement {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Program {
+pub enum FunctionContent {
     Statements(Vec<Statement>),
 }
