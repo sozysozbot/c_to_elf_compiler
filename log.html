@@ -1974,6 +1974,368 @@ _start:
 		<div class="content">よさそう</div>
 	</div>
 </div>
+<h3 class="date">2023年1月8日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_0e808c83604b2a5fdd710506085e7bdd').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_0e808c83604b2a5fdd710506085e7bdd').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_0e808c83604b2a5fdd710506085e7bdd" href="#permalink_0e808c83604b2a5fdd710506085e7bdd" class="permalink">¶</a>
+		<div class="content">さて step 15 は『関数の定義に対応する』だった。関数を用意する方法自体は前のステップとかで整備されているはずなので、それに乗っかればまあ実装できるでしょう</div>
+		<div class="content">とはいえ、ここからは main 関数が出てくるようになるという話もある。これをどうするか。</div>
+		<div class="content">まあ、普通に、main 関数を定義して、それを暗黙にスタートアップルーチンから call するようにすればいいか</div>
+		<div class="content">main を call するコードを出力するには、main(); というソースコードをそのまま解釈させればよかろう</div>
+		<div class="content">とりあえず、現状のテストケースを全て暗黙に main 関数の中に突っ込み、エントリーポイントの中では暗黙に main(); を呼び出す実装へと変更しよう</div>
+		<div class="content">先にコード生成部分をそう変更してから、その後にテストケース自体に main() { ... } を追加して、それをパースするようにと変更すればよさそうだな</div>
+		<div class="content">ちょっとリファクタリング。u16 とか u8 幅を超えていたら明示的にエラーメッセージを出して落とすようにし、現状の codegen は関数テーブルを変更しないので mutable で渡しているところを immutable にし、generate_startup 関数として切り出す</div>
+		<div class="content">ところで、エントリーポイントの実装は main(); じゃなくて return main(); にすべきだな。というか、現状の return は実は return ではなく exit を呼ぶ偽物なので、__builtin_exit みたいな名前に変更しちゃおうかな</div>
+		<div class="content">カッコを要求してないし、JavaScript に倣って __throw でいいや</div>
+		<div class="content">で、この __throw の実装を複製して return を作っていく</div>
+		<div class="content">非自明なのは codegen だけで、このときには edi の結果をコピーして leave; ret すればいいのかな</div>
+		<div class="content">よし、これで return が復活したはず。まだ試せないけど</div>
+		<div class="content">そうしたら、次に目指すべきは、テストケースの __throw を return に戻して、</div>
+		<pre><code class="language-c">__start() { __throw main(); }
+main() { ここにテストケースを貼る }
+</code></pre>
+		<div class="content">といった感じへと改めていくことだな</div>
+		<div class="content">えーっと、__throw main(); をトークナイズして、さっき切り出した関数に渡せば、これでよさそう？やってみよう</div>
+		<div class="content">前述のとおり、テストケースの __throw を return に戻して、</div>
+		<div class="content">よし動いた！</div>
+		<div class="content">コード部分の変更ができたので、今度はテストケース自体を main() {} で囲うようにしよう</div>
+		<div class="content">これにより、toplevel の概念が新たに生まれるようになるはず</div>
+		<div class="content">えーと、とりあえず Program 型を FunctionContent とかに改名するか</div>
+		<div class="content">変数名とかも適宜改名した。さて、残るは parse_program 関数だけであって、これが FunctionContent を返すのではなくて関数定義のリストを返すように変更すればよい</div>
+		<div class="content">対応すべきは &#x60;foo(x, y) { ... }&#x60; という構文なので、とりあえず関数呼び出しの構文を定義している parse_primary をコピペして、実引数ではなく仮引数なので identifier だけを受理して、</div>
+		<div class="content">よし、parse_toplevel_function_definition が実装できた</div>
+		<div class="content">あとは、そうして読み込まれた関数定義ごとに、コード生成をしてやれば完成かな。まだ仮引数をレジスタから読みだすところを作ってないけど、とりあえずテストケースを main() { ... } で包んで実験しよう</div>
+		<div class="content">よし、単に main() で包んだだけのやつは動いた。じゃあ関数定義を複数にすると？</div>
+		<pre><code class="language-c">one() { return 1; } two() { return one() + 1; } main() { return one() + two() + __builtin_three(); }
+</code></pre>
+		<div class="content">動きますね。やったぁ</div>
+		<div class="content">あとは仮引数をレジスタから読み出す処理を実装すれば、再帰でフィボナッチが呼べるはず</div>
+		<div class="content">その前に、ちょっとコードをきれいにして、codegen に住んでいてもよさそうな感じのコードにしておこう</div>
+		<div class="content">あー、std::mem::take ってこういうときに便利なのね。なるほどなぁ</div>
+		<div class="content">さて、本題の実装。 <a href="https://www.sigbus.info/compilerbook#%E3%82%B9%E3%83%86%E3%83%83%E3%83%9715-%E9%96%A2%E6%95%B0%E3%81%AE%E5%AE%9A%E7%BE%A9%E3%81%AB%E5%AF%BE%E5%BF%9C%E3%81%99%E3%82%8B" target="_blank" rel="noopener noreferrer">https://www.sigbus.info/compilerbook#%E3%82%B9%E3%83%86%E3%83%83%E3%83%9715-%E9%96%A2%E6%95%B0%E3%81%AE%E5%AE%9A%E7%BE%A9%E3%81%AB%E5%AF%BE%E5%BF%9C%E3%81%99%E3%82%8B</a> には</div>
+		<blockquote>xやyといったローカル変数が存在するものとしてコンパイルして、関数のプロローグの中で、レジスタの値をそのローカル変数のためのスタック上の領域に書き出してください。
+</blockquote>
+		<div class="content">とあるのだから、その通りにすればよい</div>
+		<div class="content">えーと、引数自体が rdi に入っているから、計算をするのに rdi を使うことができなくて</div>
+		<div class="content">もう直に mov [rbp-12], r9d とかの命令を使っちゃおう。さて実験だ</div>
+		<div class="content">とりあえずフィボナッチ</div>
+		<div class="content">はい～動かない</div>
+		<div class="content">あ、Buf::new() に対して fold しておるな。『初期値代入』コードが入るべき場所はここだろ</div>
+		<div class="content">んー動かない</div>
+		<div class="content">……あっ、なるほどエラーメッセージが出てるけど他の成功メッセージで流れてしまってるのか</div>
+		<div class="content">どれどれ</div>
+		<pre><code class="language-">thread &#x27;main&#x27; panicked at &#x27;関数 fib が見つかりません&#x27;, src/codegen.rs:579:36
+note: run with &#x60;RUST_BACKTRACE=1&#x60; environment variable to display a backtrace
+</code></pre>
+		<div class="content">あ～～なるほど、関数 fib の中ではまだ関数 fib が定義されていないから、再帰関数を呼び出すことができないのか</div>
+		<div class="content">これはしょうがないので、テストケースを変えよう</div>
+		<pre><code class="language-">[FAIL] add(x, y, z) { return x + y + z; } main() { return add(1, 2, __builtin_three()); } =&gt; 6 expected, but got 139
+</code></pre>
+		<div class="content">はいはいセグフォセグフォ</div>
+		<div class="content">えーと失敗したときにも rm -rf してしまってるから調査対象物がない。成功時にのみ消すようにしよう</div>
+		<pre><code class="language-">[FAIL] id(x) { return x; } main() { return id(6); } =&gt; 6 expected, but got 139
+</code></pre>
+		<div class="content">これでダメということは、まあなんかが根本的にダメなんだろうな。もうちょいソースを眺めるか</div>
+		<div class="content">変数はスタック上にあるのではなくてベースポインタからの差分なのだから、stack_size には影響を与えないはず。だから stack_size は 8 のままにしなきゃいけないな</div>
+		<div class="content">ところで、変数を読むところで落ちてる？変数を書き込むところで落ちてる？確認しよう</div>
+		<pre><code class="language-">[FAIL] three(x) { return 3; } main() { return three(6); } =&gt; 3 expected, but got 139
+</code></pre>
+		<div class="content">まあそうよね</div>
+		<div class="content">tkr の書いていたコードと重複があったことがわかり、リファクタリングをしていたところ、多分オフセットが -4 とかじゃなくて 0 になってるのがよくなさそうという気持ちになった。</div>
+		<div class="content">しかし、謎がある。なぜ既存のコードではオフセットが 0 になることがなかったのだろうか</div>
+		<div class="content">なってたけどバグってなかったのかもしれない。まあいいや、とりあえずオフセットは一律で idents.len() * 4 + 4、というか idx * 4 + 4、になるということに決めてしまおうか</div>
+		<div class="content">というか idents じゃなくて lvar_table みたいな名前にしたいな。functions も function_table にしたいわね</div>
+		<div class="content">はい無事動いた。とはいえ、再帰呼び出しができていないので、</div>
+		<blockquote>このステップが終わるとフィボナッチ数列を再帰で計算しつつ表示したりできるようになるのでグッと面白くなるはずです。
+</blockquote>
+		<div class="content">が達成できていないな。じゃあ、せっかくなので、今回の機能を使ってフィボナッチをループで計算しつつ表示するテストケースを追加するか</div>
+		<pre><code class="language-">check 0 &quot;if_non0(n) { __builtin_putchar(n ? n + 48 : 32); return 0; } print(n) { if_non0(n / 100); if_non0((n / 10) % 10); __builtin_putchar((n % 10) + 48); return 0; } main() { a = 0; b = 1; for(;a&lt;255;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } return 0; }&quot; &quot;  0,  1,  1,  2,  3,  5,  8, 13, 21, 34, 55, 89,144,233,&quot;
+</code></pre>
+		<div class="content">えーと % 演算子が実装されておらず、かつ % が bash の printf と衝突する。了解</div>
+		<div class="content">とりあえず bash の printf と衝突するというのを直して、ループへと展開して、</div>
+		<div class="content">はいはい、 % だけじゃなくて ? と ++ と -= もない。それもほぐしてやる。</div>
+		<div class="content">255 が書けない。じゃあ、フィボナッチ数列ではなくリュカ数列にすればよい。すると</div>
+		<pre><code class="language-">check 0 &quot;if_non0(n) { if (n) { __builtin_putchar(n + 48); } else { __builtin_putchar(32); } return 0; } print(n) { for(h=0;n&gt;=100;h=h+1){n=n-100;} if_non0(h); for(t=0;n&gt;=10;t=t+1){n=n-10;} if_non0(t); __builtin_putchar(n + 48); return 0; } main() { a = 2; b = 1; for(;a&lt;127;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } return 0; }&quot; &quot;  2,  1,  3,  4,  7, 11, 18, 29, 47, 76,123,&quot;
+
+thread &#x27;main&#x27; panicked at &#x27;while 文の中でジャンプするためのバッファの長さが i8 に収まりません: TryFromIntError(())&#x27;, src/codegen.rs:326:65
+</code></pre>
+		<div class="content">なるほどね</div>
+		<div class="content">バッファの中身を読んでみるか</div>
+		<pre><code class="language-">thread &#x27;main&#x27; panicked at &#x27;while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは 155、中身は 0x[55 5f 48 83 ef 04 48 8b 3f 57 bf 7f 00 00 00 57 5f 58 39 f8 0f 9c c0 0f b6 f8 83 ff 00 74 7e 48 83 ec 08 55 5f 48 83 ef 04 48 8b 3f 57 5f b8 0c 01 40 00 ff d0 89 c7 48 83 c4 08 48 83 ec 08 bf 2c 00 00 00 57 5f b8 87 00 40 00 ff d0 89 c7 48 83 c4 08 55 5f 48 83 ef 0c 57 55 5f 48 83 ef 04 48 8b 3f 57 55 5f 48 83 ef 08 48 8b 3f 57 58 5f 01 c7 58 89 38 55 5f 48 83 ef 04 57 55 5f 48 83 ef 08 48 8b 3f 58 89 38 55 5f 48 83 ef 08 57 55 5f 48 83 ef 0c 48 8b 3f 58 89 38] です&#x27;, src/codegen.rs:327:21
+</code></pre>
+		<div class="content">えーと disass して</div>
+		<pre><code class="language-">0:  55                      push   rbp
+1:  5f                      pop    rdi
+2:  48 83 ef 04             sub    rdi,0x4
+6:  48 8b 3f                mov    rdi,QWORD PTR [rdi]
+9:  57                      push   rdi
+a:  bf 7f 00 00 00          mov    edi,0x7f
+f:  57                      push   rdi
+10: 5f                      pop    rdi
+11: 58                      pop    rax
+12: 39 f8                   cmp    eax,edi
+14: 0f 9c c0                setl   al
+17: 0f b6 f8                movzx  edi,al
+1a: 83 ff 00                cmp    edi,0x0
+1d: 74 7e                   je     0x9d
+1f: 48 83 ec 08             sub    rsp,0x8
+23: 55                      push   rbp
+24: 5f                      pop    rdi
+25: 48 83 ef 04             sub    rdi,0x4
+29: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+2c: 57                      push   rdi
+2d: 5f                      pop    rdi
+2e: b8 0c 01 40 00          mov    eax,0x40010c
+33: ff d0                   call   rax
+35: 89 c7                   mov    edi,eax
+37: 48 83 c4 08             add    rsp,0x8
+3b: 48 83 ec 08             sub    rsp,0x8
+3f: bf 2c 00 00 00          mov    edi,0x2c
+44: 57                      push   rdi
+45: 5f                      pop    rdi
+46: b8 87 00 40 00          mov    eax,0x400087
+4b: ff d0                   call   rax
+4d: 89 c7                   mov    edi,eax
+4f: 48 83 c4 08             add    rsp,0x8
+53: 55                      push   rbp
+54: 5f                      pop    rdi
+55: 48 83 ef 0c             sub    rdi,0xc
+59: 57                      push   rdi
+5a: 55                      push   rbp
+5b: 5f                      pop    rdi
+5c: 48 83 ef 04             sub    rdi,0x4
+60: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+63: 57                      push   rdi
+64: 55                      push   rbp
+65: 5f                      pop    rdi
+66: 48 83 ef 08             sub    rdi,0x8
+6a: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+6d: 57                      push   rdi
+6e: 58                      pop    rax
+6f: 5f                      pop    rdi
+70: 01 c7                   add    edi,eax
+72: 58                      pop    rax
+73: 89 38                   mov    DWORD PTR [rax],edi
+75: 55                      push   rbp
+76: 5f                      pop    rdi
+77: 48 83 ef 04             sub    rdi,0x4
+7b: 57                      push   rdi
+7c: 55                      push   rbp
+7d: 5f                      pop    rdi
+7e: 48 83 ef 08             sub    rdi,0x8
+82: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+85: 58                      pop    rax
+86: 89 38                   mov    DWORD PTR [rax],edi
+88: 55                      push   rbp
+89: 5f                      pop    rdi
+8a: 48 83 ef 08             sub    rdi,0x8
+8e: 57                      push   rdi
+8f: 55                      push   rbp
+90: 5f                      pop    rdi
+91: 48 83 ef 0c             sub    rdi,0xc
+95: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+98: 58                      pop    rax
+99: 89 38                   mov    DWORD PTR [rax],edi
+</code></pre>
+		<div class="content">はい、とりあえず for(;a&lt;127;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } が書けないのね</div>
+		<div class="content">まあもうちょい削ったらいけるでしょ。削ります</div>
+		<div class="content">よし！！！！いけた！！！！！</div>
+		<div class="content">最終的なソースコードは以下の通り</div>
+		<pre><code class="language-c">if_non0(n)
+{
+	if (n) {
+		__builtin_putchar(n + 48);
+	}
+	else {
+		__builtin_putchar(32);
+	}
+	return 0;
+}
+
+print(n)
+{
+	for (h = 0; n &gt;= 100; h = h + 1) {
+		n = n - 100;
+	}
+	if_non0(h);
+	for (t = 0; n &gt;= 10; t = t + 1) {
+		n = n - 10;
+	}
+	if_non0(t);
+	__builtin_putchar(n + 48);
+	return 0;
+}
+
+printcomma(n)
+{
+	print(n);
+	__builtin_putchar(44);
+	return n;
+}
+main()
+{
+	a = 2;
+	b = 1;
+	while (a &lt; 127) {
+		c = printcomma(a) + b;
+		a = b;
+		b = c;
+	}
+	return 0;
+}
+</code></pre>
+		<div class="content">リュカ数列は知名度がないし、フィボナッチの例も足しておくか。上限を表すのに 255 とは書けないが、20*20などと書くことはできるので</div>
+		<pre><code class="language-">thread &#x27;main&#x27; panicked at &#x27;while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは 134、中身は 0x[55 5f 48 83 ef 04 48 8b 3f 57 bf 14 00 00 00 57 bf 14 00 00 00 57 58 5f 0f af f8 57 5f 58 39 f8 0f 9c c0 0f b6 f8 83 ff 00 74 5d 55 5f 48 83 ef 0c 57 48 83 ec 0c 55 5f 48 83 ef 04 48 8b 3f 57 5f b8 57 02 40 00 ff d0 89 c7 48 83 c4 0c 57 55 5f 48 83 ef 08 48 8b 3f 57 58 5f 01 c7 58 89 38 55 5f 48 83 ef 04 57 55 5f 48 83 ef 08 48 8b 3f 58 89 38 55 5f 48 83 ef 08 57 55 5f 48 83 ef 0c 48 8b 3f 58 89 38] です&#x27;, src/codegen.rs:327:21
+</code></pre>
+		<div class="content">そうでした～</div>
+		<div class="content">まあ 89 まででいいか。そうなるとコードももうちょいシンプルにできて、</div>
+		<pre><code class="language-c">print(n) { 
+    for (t = 0; n &gt;= 10; t = t + 1) { 
+        n = n - 10; 
+    } 
+    if (t) { 
+        __builtin_putchar(t + 48); 
+    } 
+    else { 
+        __builtin_putchar(32); 
+    } 
+    __builtin_putchar(n + 48); 
+    return 0;
+}
+printcomma(n) {
+    print(n);
+    __builtin_putchar(44); 
+    return n; 
+} 
+main() { 
+    a = 0; b = 1; 
+    while (a &lt; 100) { c = printcomma(a) + b; a = b; b = c; } 
+    return 0; 
+}
+</code></pre>
+		<div class="content">とすればよい。</div>
+		<div class="content">終わらせたので、その旨をツイート</div>
+		<div class="content"><a href="https://twitter.com/hsjoihs/status/1612090819871387648" target="_blank" rel="noopener noreferrer">https://twitter.com/hsjoihs/status/1612090819871387648</a></div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_5371a23e1f567a57671ffbc0cbb9cc2f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_5371a23e1f567a57671ffbc0cbb9cc2f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_5371a23e1f567a57671ffbc0cbb9cc2f" href="#permalink_5371a23e1f567a57671ffbc0cbb9cc2f" class="permalink">¶</a>
+		<div class="content">はや</div>
+		<div class="content">今再帰使えないっけ</div>
+		<div class="content">あー関数のオフセットがいるのか</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_798b92b855a4df3d7920091fe1db1597').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_798b92b855a4df3d7920091fe1db1597').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_798b92b855a4df3d7920091fe1db1597" href="#permalink_798b92b855a4df3d7920091fe1db1597" class="permalink">¶</a>
+		<div class="content">再帰できるようにしてからマージします？</div>
+		<div class="content">そういえば、手元の非 M1 な Mac で試したら mktemp が illegal option で落ちましたね</div>
+	</div>
+</div>
+<h3 class="date">2023年1月9日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_bd8b07a1003b0e274f62c9986557f3cc').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_bd8b07a1003b0e274f62c9986557f3cc').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_bd8b07a1003b0e274f62c9986557f3cc" href="#permalink_bd8b07a1003b0e274f62c9986557f3cc" class="permalink">¶</a>
+		<div class="content">再帰大変そうーー</div>
+		<div class="content">-dだめですっけ？</div>
+		<div class="content">なんかオプション違ったようなー…</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_2115427ca241d4c862c36ab469ad7f97').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_2115427ca241d4c862c36ab469ad7f97').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_2115427ca241d4c862c36ab469ad7f97" href="#permalink_2115427ca241d4c862c36ab469ad7f97" class="permalink">¶</a>
+		<div class="content">再帰わりとできそうな気がしたのでやってみるか</div>
+		<div class="content">関数のオフセット自体は関数をコンパイルし始める直前に定まるので、その時点で関数テーブルに登録しておけば問題なく動くはずなんだよな</div>
+		<pre><code class="language-">&#x27;else でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは 130、中身は 0x[55 5f 48 83 ef 04 48 8b 3f 57 bf 01 00 00 00 57 5f 58 39 f8 0f 94 c0 0f b6 f8 83 ff 00 74 0b bf 01 00 00 00 89 f8 c9 c3 eb 58 48 83 ec 08 55 5f 48 83 ef 04 48 8b 3f 57 bf 01 00 00 00 57 58 5f 29 c7 57 5f b8 a9 00 40 00 ff d0 89 c7 48 83 c4 08 57 48 83 ec 0c 55 5f 48 83 ef 04 48 8b 3f 57 bf 02 00 00 00 57 58 5f 29 c7 57 5f b8 a9 00 40 00 ff d0 89 c7 48 83 c4 0c 57 58 5f 01 c7 89 f8 c9 c3] です&#x27;, src/codegen.rs:303:41
+</code></pre>
+		<div class="content">ギリ足らんか。とはいえ else { return fib(n-1) + fib(n-2); } がコンパイルできないのは厳しいな。</div>
+		<div class="content">まあ else の外に出してやればよく、はい普通に動いた</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_d63f3e4b7b16a3eebd5dd608c256073c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_d63f3e4b7b16a3eebd5dd608c256073c').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_d63f3e4b7b16a3eebd5dd608c256073c" href="#permalink_d63f3e4b7b16a3eebd5dd608c256073c" class="permalink">¶</a>
+		<div class="content">すご</div>
+		<div class="content">定義時点のバイナリサイズをHashMapに突っ込めばいいのか</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f0684c7919a40c46903328ad3327ae32').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f0684c7919a40c46903328ad3327ae32').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_f0684c7919a40c46903328ad3327ae32" href="#permalink_f0684c7919a40c46903328ad3327ae32" class="permalink">¶</a>
+		<div class="content">そういうことです</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_0e0070b63b7b00f589b59bae5db516aa').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_0e0070b63b7b00f589b59bae5db516aa').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_0e0070b63b7b00f589b59bae5db516aa" href="#permalink_0e0070b63b7b00f589b59bae5db516aa" class="permalink">¶</a>
+		<div class="content">確かに、宣言+後ろで定義してある関数に飛ぶのはめんどくさそう…</div>
+		<div class="content">少なくともワンパスじゃ多分無理😢</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4eed10a677f82fe47df78c69e235a865').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4eed10a677f82fe47df78c69e235a865').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_4eed10a677f82fe47df78c69e235a865" href="#permalink_4eed10a677f82fe47df78c69e235a865" class="permalink">¶</a>
+		<div class="content">現状の Buf を改造して、「名前付き穴」みたいなものを書けるようにし、.to_vec() で最終的に書き込むときにその「名前付き穴」を解決する、といった実装が一番シンプルなのかな</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1554de221ead0d6a299d5d2254d0290d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1554de221ead0d6a299d5d2254d0290d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_1554de221ead0d6a299d5d2254d0290d" href="#permalink_1554de221ead0d6a299d5d2254d0290d" class="permalink">¶</a>
+		<div class="content">そうなんよなあ</div>
+		<div class="content">ジャンプ先って可変長整数だっけ、そうだとしんでしまう</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_5cdb38a6cf6ca88c30d3560b8ceee5be').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_5cdb38a6cf6ca88c30d3560b8ceee5be').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_5cdb38a6cf6ca88c30d3560b8ceee5be" href="#permalink_5cdb38a6cf6ca88c30d3560b8ceee5be" class="permalink">¶</a>
+		<div class="content">実はね～（ログを見てもらうと分かる通り、ジャンプ先が現在 8 bit 固定なのでかなりのショートコーディングを強いられています）</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_ed0ce9ec86d97509fcba3b5d91e565d2').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_ed0ce9ec86d97509fcba3b5d91e565d2').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_ed0ce9ec86d97509fcba3b5d91e565d2" href="#permalink_ed0ce9ec86d97509fcba3b5d91e565d2" class="permalink">¶</a>
+		<div class="content">わかる…</div>
+		<div class="content">多分jmp命令って7bitで収まるなら1byte、14bitで収まるなら2byteみたいな感じな気がする😇😇</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_302b7612f27e464c2a0ea3c2f094bda1').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_302b7612f27e464c2a0ea3c2f094bda1').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_302b7612f27e464c2a0ea3c2f094bda1" href="#permalink_302b7612f27e464c2a0ea3c2f094bda1" class="permalink">¶</a>
+		<div class="content">まあとりあえず、最後に「フィボナッチ数列を再帰で計算しつつ表示」を達成してからマージしてもらう、としようかな</div>
+		<div class="content">ジャンプ先を 127 以内に収めながらのコーディングをもう一回やってみるか</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_85783e02b69bb9e2450e9bbb55d920c5').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_85783e02b69bb9e2450e9bbb55d920c5').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_85783e02b69bb9e2450e9bbb55d920c5" href="#permalink_85783e02b69bb9e2450e9bbb55d920c5" class="permalink">¶</a>
+		<div class="content">コードゴルフ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_c4e98871f15e9ffc9b84c0a1b6dd5ed6').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_c4e98871f15e9ffc9b84c0a1b6dd5ed6').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_c4e98871f15e9ffc9b84c0a1b6dd5ed6" href="#permalink_c4e98871f15e9ffc9b84c0a1b6dd5ed6" class="permalink">¶</a>
+		<div class="content">ブロックの中をなるべく短くすることだけが必要なので、全体のコード長自体はむしろ増やす方向ですわね</div>
+		<div class="content">できた</div>
+		<pre><code class="language-c">if_non0(n) { if (n) { __builtin_putchar(n + 48); } else { __builtin_putchar(32); } return 0; } print(n) { for(h=0;n&gt;=100;h=h+1){n=n-100;} if_non0(h); for(t=0;n&gt;=10;t=t+1){n=n-10;} if_non0(t); __builtin_putchar(n + 48); return 0; } printcomma(n) { print(n); __builtin_putchar(44); return n; } fib(n) { if(n == 0){ return 0; } else if(n == 1) { return 1; } return fib(n-1) + fib(n-2); } main() { for(n=0;n&lt;17;n=n+1) {printcomma(fib(n));} return 0; }
+</code></pre>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>
