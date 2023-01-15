@@ -142,8 +142,8 @@ fn rdiを間接参照() -> [u8; 3] {
     [0x48, 0x8b, 0x3f]
 }
 
-fn raxが指す位置にediを代入() -> [u8; 2] {
-    [0x89, 0x38]
+fn raxが指す位置にrdiを代入() -> [u8; 3] {
+    [0x48, 0x89, 0x38]
 }
 
 fn ediが0かを確認() -> [u8; 3] {
@@ -416,7 +416,7 @@ impl Codegen {
 
                 writer.write_all(&raxへとポップ()).unwrap(); // 左辺のアドレス
                 self.stack_size -= U32_WORD_SIZE;
-                writer.write_all(&raxが指す位置にediを代入()).unwrap();
+                writer.write_all(&raxが指す位置にrdiを代入()).unwrap();
             }
             Expr::Identifier { .. } => {
                 self.exprを左辺値として評価してアドレスをrdiレジスタへ(
