@@ -644,6 +644,23 @@ pub fn exprを評価してediレジスタへ(
                 .unwrap();
             *stack_size -= addrsp;
         }
+        Expr::UnaryExpr {
+            op: UnaryOp::Addr,
+            op_pos: _,
+            expr,
+        } => {
+            exprを左辺値として評価してアドレスをrdiレジスタへ(
+                writer, expr, idents, stack_size,
+            );
+        }
+        Expr::UnaryExpr {
+            op: UnaryOp::Deref,
+            op_pos: _,
+            expr,
+        } => {
+            exprを評価してediレジスタへ(writer, expr, idents, functions, stack_size);
+            writer.write_all(&rdiを間接参照()).unwrap();
+        }
     }
 }
 

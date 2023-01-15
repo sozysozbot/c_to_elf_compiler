@@ -153,6 +153,30 @@ fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, 
                 右辺: Box::new(expr),
             })
         }
+        Some(Token {
+            payload: TokenPayload::Mul,
+            pos,
+        }) => {
+            tokens.next();
+            let expr = parse_unary(tokens, input)?;
+            Ok(Expr::UnaryExpr {
+                op: UnaryOp::Deref,
+                op_pos: *pos,
+                expr: Box::new(expr),
+            })
+        }
+        Some(Token {
+            payload: TokenPayload::Ampersand,
+            pos,
+        }) => {
+            tokens.next();
+            let expr = parse_unary(tokens, input)?;
+            Ok(Expr::UnaryExpr {
+                op: UnaryOp::Addr,
+                op_pos: *pos,
+                expr: Box::new(expr),
+            })
+        }
         _ => parse_primary(tokens, input),
     }
 }

@@ -26,6 +26,7 @@ pub enum TokenPayload {
     開き波括弧,
     閉じ波括弧,
     Comma,
+    Ampersand,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

@@ -209,6 +209,13 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     pos,
                 });
             }
+            '&' => {
+                iter.next();
+                ans.push(Token {
+                    payload: TokenPayload::Ampersand,
+                    pos,
+                });
+            }
             c => {
                 return Err(AppError {
                     message: format!(
