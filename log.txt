@@ -1306,3 +1306,4 @@ tkr「とりあえずcodegen系関数に引き回すstate多くなってきた�
 tkr「word sizeを64bitにしたけどセグフォがなおらん〜〜〜」
 tkr「*&x はいけるけど y=&x の時 *y はセグフォになる、変数の値の読み書き死んでるなこれ」
 tkr「mov [rax], edi -> mov [rax], rdi にしたらなおった」
+tkr「add命令を64bit化したらテスト2も通るようになった。ついでにsub/mulも64bit化」
