@@ -231,68 +231,77 @@ pub fn builtin_putchar関数を生成() -> Buf {
         .join(エピローグ())
 }
 
-pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
-    writer: &mut impl Write,
-    expr: &Expr,
-    idents: &mut HashMap<String, u8>,
-    _stack_size: &mut u32,
-) {
-    match expr {
-        Expr::Identifier { ident, pos: _ } => {
-            let len = idents.len();
-            let idx = idents.entry(ident.clone()).or_insert(len as u8);
-            let offset = *idx * 4 + 4;
-            writer.write_all(&rbpをプッシュ()).unwrap();
-            writer.write_all(&ediへとポップ()).unwrap();
-            writer.write_all(&rdiから即値を引く(offset)).unwrap();
-        }
-        _ => panic!("代入式の左辺に左辺値以外が来ています"),
-    }
+pub struct Codegen {
+    idents: HashMap<String, u8>,
+    stack_size: u32,
+    pub functions: HashMap<String, u32>,
 }
 
-pub fn statementを評価(
-    stmt: &Statement,
-    idents: &mut HashMap<String, u8>,
-    functions: &HashMap<String, u32>,
-    stack_size: &mut u32,
-) -> Buf {
-    match stmt {
-        Statement::Expr {
-            expr,
-            semicolon_pos: _,
-        } => {
-            let mut writer = Vec::new();
-            exprを評価してediレジスタへ(&mut writer, expr, idents, functions, stack_size);
-            Buf::from(writer)
+impl Codegen {
+    pub fn new() -> Self {
+        Self {
+            idents: HashMap::new(),
+            stack_size: 0,
+            functions: HashMap::new(),
         }
-        Statement::Throw {
-            expr,
-            semicolon_pos: _,
-        } => {
-            let mut writer = Vec::new();
-            exprを評価してediレジスタへ(&mut writer, expr, idents, functions, stack_size);
-            writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
-            writer.write_all(&[0x0f, 0x05]).unwrap();
-            Buf::from(writer)
-        }
-        Statement::Return {
-            expr,
-            semicolon_pos: _,
-        } => {
-            let mut writer = Vec::new();
-            exprを評価してediレジスタへ(&mut writer, expr, idents, functions, stack_size);
-            writer.write_all(&ediをeaxにmov()).unwrap();
-            writer.write_all(&leave_ret()).unwrap();
-            Buf::from(writer)
-        }
-        Statement::If {
-            cond, then, else_, ..
-        } => {
-            let else_buf = else_
-                .as_ref()
-                .map(|else_| statementを評価(else_.as_ref(), idents, functions, stack_size));
+    }
 
-            let then_buf = statementを評価(then.as_ref(), idents, functions, stack_size).join(
+    pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
+        &mut self,
+        writer: &mut impl Write,
+        expr: &Expr,
+    ) {
+        match expr {
+            Expr::Identifier { ident, pos: _ } => {
+                let len = self.idents.len();
+                let idx = self.idents.entry(ident.clone()).or_insert(len as u8);
+                let offset = *idx * 4 + 4;
+                writer.write_all(&rbpをプッシュ()).unwrap();
+                writer.write_all(&ediへとポップ()).unwrap();
+                writer.write_all(&rdiから即値を引く(offset)).unwrap();
+            }
+            _ => panic!("代入式の左辺に左辺値以外が来ています"),
+        }
+    }
+
+    pub fn statementを評価(&mut self, stmt: &Statement) -> Buf {
+        match stmt {
+            Statement::Expr {
+                expr,
+                semicolon_pos: _,
+            } => {
+                let mut writer = Vec::new();
+                self.exprを評価してediレジスタへ(&mut writer, expr);
+                Buf::from(writer)
+            }
+            Statement::Throw {
+                expr,
+                semicolon_pos: _,
+            } => {
+                let mut writer = Vec::new();
+                self.exprを評価してediレジスタへ(&mut writer, expr);
+                writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
+                writer.write_all(&[0x0f, 0x05]).unwrap();
+                Buf::from(writer)
+            }
+            Statement::Return {
+                expr,
+                semicolon_pos: _,
+            } => {
+                let mut writer = Vec::new();
+                self.exprを評価してediレジスタへ(&mut writer, expr);
+                writer.write_all(&ediをeaxにmov()).unwrap();
+                writer.write_all(&leave_ret()).unwrap();
+                Buf::from(writer)
+            }
+            Statement::If {
+                cond, then, else_, ..
+            } => {
+                let else_buf = else_
+                    .as_ref()
+                    .map(|else_| self.statementを評価(else_.as_ref()));
+
+                let then_buf =  self.statementを評価(then.as_ref()).join(
                 else_buf
                     .as_ref()
                     .map(|else_buf| {
@@ -311,43 +320,42 @@ pub fn statementを評価(
                     .unwrap_or_else(Buf::new),
             );
 
-            let cond_buf = {
-                let mut v = Vec::new();
-                exprを評価してediレジスタへ(&mut v, cond, idents, functions, stack_size);
-                v.write_all(&ediが0かを確認()).unwrap();
-                v.write_all(&je(i8::try_from(then_buf.len()).unwrap()))
-                    .unwrap();
-                Buf::from(v)
-            };
+                let cond_buf = {
+                    let mut v = Vec::new();
+                    self.exprを評価してediレジスタへ(&mut v, cond);
+                    v.write_all(&ediが0かを確認()).unwrap();
+                    v.write_all(&je(i8::try_from(then_buf.len()).unwrap()))
+                        .unwrap();
+                    Buf::from(v)
+                };
 
-            cond_buf
-                .join(then_buf)
-                .join(else_buf.unwrap_or_else(Buf::new))
-        }
-        Statement::While { cond, body, .. } => {
-            let body_buf = statementを評価(body.as_ref(), idents, functions, stack_size);
-            let cond_buf = {
-                let mut v = Vec::new();
-                exprを評価してediレジスタへ(&mut v, cond, idents, functions, stack_size);
-                v.write_all(&ediが0かを確認()).unwrap();
-                v.write_all(&je(i8::try_from(body_buf.len() + 2).unwrap()))
-                    .unwrap();
-                Buf::from(v)
-            };
-            let buf = cond_buf.join(body_buf);
-            let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap_or_else(
+                cond_buf
+                    .join(then_buf)
+                    .join(else_buf.unwrap_or_else(Buf::new))
+            }
+            Statement::While { cond, body, .. } => {
+                let body_buf = self.statementを評価(body.as_ref());
+                let cond_buf = {
+                    let mut v = Vec::new();
+                    self.exprを評価してediレジスタへ(&mut v, cond);
+                    v.write_all(&ediが0かを確認()).unwrap();
+                    v.write_all(&je(i8::try_from(body_buf.len() + 2).unwrap()))
+                        .unwrap();
+                    Buf::from(v)
+                };
+                let buf = cond_buf.join(body_buf);
+                let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap_or_else(
                 |_| panic!("while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" "))
             );
-            buf.join(Buf::from(jmp(buf_len)))
-        }
-        Statement::For {
-            init,
-            cond,
-            update,
-            body,
-            pos,
-        } => statementを評価(
-            &Statement::Block {
+                buf.join(Buf::from(jmp(buf_len)))
+            }
+            Statement::For {
+                init,
+                cond,
+                update,
+                body,
+                pos,
+            } => self.statementを評価(&Statement::Block {
                 statements: vec![
                     init.clone().map(|init| Statement::Expr {
                         expr: init,
@@ -377,397 +385,376 @@ pub fn statementを評価(
                 .flatten()
                 .collect::<Vec<_>>(),
                 pos: *pos,
-            },
-            idents,
-            functions,
-            stack_size,
-        ),
-        Statement::Block { statements, .. } => statements.iter().fold(Buf::new(), |acc, stmt| {
-            acc.join(statementを評価(stmt, idents, functions, stack_size))
-        }),
-    }
-}
-
-#[allow(clippy::too_many_lines)]
-pub fn exprを評価してediレジスタへ(
-    writer: &mut impl Write,
-    expr: &Expr,
-    idents: &mut HashMap<String, u8>,
-    functions: &HashMap<String, u32>,
-    stack_size: &mut u32,
-) {
-    match expr {
-        Expr::BinaryExpr {
-            op: BinaryOp::Assign,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            exprを左辺値として評価してアドレスをrdiレジスタへ(
-                writer, 左辺, idents, stack_size,
-            );
-            writer.write_all(&ediをプッシュ()).unwrap();
-            *stack_size += 4;
-            exprを評価してediレジスタへ(writer, 右辺, idents, functions, stack_size);
-
-            writer.write_all(&eaxへとポップ()).unwrap(); // 左辺のアドレス
-            *stack_size -= 4;
-            writer.write_all(&raxが指す位置にediを代入()).unwrap();
-        }
-        Expr::Identifier { .. } => {
-            exprを左辺値として評価してアドレスをrdiレジスタへ(
-                writer, expr, idents, stack_size,
-            );
-            writer.write_all(&rdiを間接参照()).unwrap();
-        }
-        Expr::BinaryExpr {
-            op: BinaryOp::AndThen,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            exprを評価してediレジスタへ(writer, 左辺, idents, functions, stack_size); // 左辺は push せずに捨てる
-            exprを評価してediレジスタへ(writer, 右辺, idents, functions, stack_size);
-        }
-        Expr::BinaryExpr {
-            op: BinaryOp::Add,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            exprを評価してediレジスタへ(writer, 左辺, idents, functions, stack_size);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            *stack_size += 4;
-            exprを評価してediレジスタへ(writer, 右辺, idents, functions, stack_size);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            *stack_size += 4;
-            writer.write_all(&eaxへとポップ()).unwrap();
-            *stack_size -= 4;
-            writer.write_all(&ediへとポップ()).unwrap();
-            *stack_size -= 4;
-            writer.write_all(&ediにeaxを足し合わせる()).unwrap();
-        }
-        Expr::BinaryExpr {
-            op: BinaryOp::Sub,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            exprを評価してediレジスタへ(writer, 左辺, idents, functions, stack_size);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            *stack_size += 4;
-            exprを評価してediレジスタへ(writer, 右辺, idents, functions, stack_size);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            *stack_size += 4;
-            writer.write_all(&eaxへとポップ()).unwrap();
-            *stack_size -= 4;
-            writer.write_all(&ediへとポップ()).unwrap();
-            *stack_size -= 4;
-            writer.write_all(&ediからeaxを減じる()).unwrap();
-        }
-        Expr::BinaryExpr {
-            op: BinaryOp::Mul,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            exprを評価してediレジスタへ(writer, 左辺, idents, functions, stack_size);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            *stack_size += 4;
-            exprを評価してediレジスタへ(writer, 右辺, idents, functions, stack_size);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            *stack_size += 4;
-            writer.write_all(&eaxへとポップ()).unwrap();
-            *stack_size -= 4;
-            writer.write_all(&ediへとポップ()).unwrap();
-            *stack_size -= 4;
-            writer.write_all(&ediをeax倍にする()).unwrap();
-        }
-
-        Expr::BinaryExpr {
-            op: BinaryOp::Div,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            exprを評価してediレジスタへ(writer, 左辺, idents, functions, stack_size);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            *stack_size += 4;
-            exprを評価してediレジスタへ(writer, 右辺, idents, functions, stack_size);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            *stack_size += 4;
-
-            // 右辺を edi に、左辺を eax に入れる必要がある
-            writer.write_all(&ediへとポップ()).unwrap();
-            *stack_size -= 4;
-            writer.write_all(&eaxへとポップ()).unwrap();
-            *stack_size -= 4;
-
-            writer.write_all(&eaxの符号ビットをedxへ拡張()).unwrap();
-            writer
-                .write_all(&edx_eaxをediで割る_商はeaxに_余りはedxに())
-                .unwrap();
-
-            // 結果は eax レジスタに入るので、ediに移し替える
-            writer.write_all(&eaxをプッシュ()).unwrap();
-            writer.write_all(&ediへとポップ()).unwrap();
-        }
-        Expr::BinaryExpr {
-            op: BinaryOp::Equal,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            比較演算を評価してediレジスタへ(
-                writer,
-                左辺,
-                右辺,
-                &フラグを読んで等しいかどうかをalにセット(),
-                idents,
-                functions,
-                stack_size,
-            );
-        }
-        Expr::BinaryExpr {
-            op: BinaryOp::NotEqual,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            比較演算を評価してediレジスタへ(
-                writer,
-                左辺,
-                右辺,
-                &フラグを読んで異なっているかどうかをalにセット(),
-                idents,
-                functions,
-                stack_size,
-            );
-        }
-        Expr::BinaryExpr {
-            op: BinaryOp::LessThan,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            比較演算を評価してediレジスタへ(
-                writer,
-                左辺,
-                右辺,
-                &フラグを読んで未満であるかどうかをalにセット(),
-                idents,
-                functions,
-                stack_size,
-            );
-        }
-        Expr::BinaryExpr {
-            op: BinaryOp::LessThanOrEqual,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            比較演算を評価してediレジスタへ(
-                writer,
-                左辺,
-                右辺,
-                &フラグを読んで以下であるかどうかをalにセット(),
-                idents,
-                functions,
-                stack_size,
-            );
-        }
-        Expr::Numeric { val, pos: _ } => {
-            writer.write_all(&ediに代入(*val)).unwrap();
-        }
-        Expr::Call {
-            ident,
-            args,
-            pos: _,
-        } => {
-            let function = functions
-                .get(ident)
-                .unwrap_or_else(|| panic!("関数 {} が見つかりません", ident));
-
-            let stack_args_len = if args.len() > 6 { args.len() - 6 } else { 0 };
-
-            let addrsp = *stack_size + 4 * stack_args_len as u32 % 16;
-            writer
-                .write_all(&rspから即値を引く(addrsp as u8).to_vec())
-                .unwrap();
-            *stack_size += addrsp;
-
-            // 引数の評価順序変わるけど未規定のはずなのでよし
-            for arg in args.iter().rev() {
-                exprを評価してediレジスタへ(writer, arg, idents, functions, stack_size);
-                writer.write_all(&ediをプッシュ()).unwrap();
-                *stack_size += 4;
-            }
-
-            #[allow(clippy::len_zero)]
-            if args.len() >= 1 {
-                writer.write_all(&ediへとポップ()).unwrap();
-                *stack_size -= 4;
-            }
-
-            if args.len() >= 2 {
-                writer.write_all(&esiへとポップ()).unwrap();
-                *stack_size -= 4;
-            }
-
-            if args.len() >= 3 {
-                writer.write_all(&edxへとポップ()).unwrap();
-                *stack_size -= 4;
-            }
-
-            if args.len() >= 4 {
-                writer.write_all(&ecxへとポップ()).unwrap();
-                *stack_size -= 4;
-            }
-
-            if args.len() >= 5 {
-                writer.write_all(&r8dへとポップ()).unwrap();
-                *stack_size -= 4;
-            }
-
-            if args.len() >= 6 {
-                writer.write_all(&r9dへとポップ()).unwrap();
-                *stack_size -= 4;
-            }
-
-            writer
-                .write_all(&eaxに即値をセット(*function + 0x00400000))
-                .unwrap();
-            writer.write_all(&call_rax()).unwrap();
-            writer.write_all(&eaxをediにmov()).unwrap();
-            writer
-                .write_all(&rspに即値を足す(addrsp as u8).to_vec())
-                .unwrap();
-            *stack_size -= addrsp;
-        }
-        Expr::UnaryExpr {
-            op: UnaryOp::Addr,
-            op_pos: _,
-            expr,
-        } => {
-            exprを左辺値として評価してアドレスをrdiレジスタへ(
-                writer, expr, idents, stack_size,
-            );
-        }
-        Expr::UnaryExpr {
-            op: UnaryOp::Deref,
-            op_pos: _,
-            expr,
-        } => {
-            exprを評価してediレジスタへ(writer, expr, idents, functions, stack_size);
-            writer.write_all(&rdiを間接参照()).unwrap();
-        }
-    }
-}
-
-fn 比較演算を評価してediレジスタへ(
-    writer: &mut impl Write,
-    左辺: &Expr,
-    右辺: &Expr,
-    フラグをalに移す: &[u8],
-    idents: &mut HashMap<String, u8>,
-    functions: &HashMap<String, u32>,
-    stack_size: &mut u32,
-) {
-    exprを評価してediレジスタへ(writer, 左辺, idents, functions, stack_size);
-    writer.write_all(&ediをプッシュ()).unwrap();
-    *stack_size += 4;
-    exprを評価してediレジスタへ(writer, 右辺, idents, functions, stack_size);
-    writer.write_all(&ediをプッシュ()).unwrap();
-    *stack_size += 4;
-
-    writer.write_all(&ediへとポップ()).unwrap();
-    *stack_size -= 4;
-    writer.write_all(&eaxへとポップ()).unwrap();
-    *stack_size -= 4;
-
-    writer
-        .write_all(&eaxとediを比較してフラグをセット())
-        .unwrap();
-
-    writer.write_all(フラグをalに移す).unwrap();
-
-    writer.write_all(&alをゼロ拡張してediにセット()).unwrap();
-}
-
-pub fn 関数をコード生成しメインバッファに挿入(
-    main_buf: &mut Buf,
-    definition: &FunctionDefinition,
-    function_table: &mut HashMap<String, u32>,
-) -> u16 {
-    let buf = std::mem::take(main_buf);
-    let func_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
-    function_table.insert(definition.func_name.clone(), u32::from(func_pos));
-
-    let buf = buf.join(rbpをプッシュ());
-    let buf = buf.join(rspをrbpにコピー());
-    let mut idents = HashMap::new();
-
-    let content_buf = match &definition.content {
-        FunctionContent::Statements(statements) => {
-            let mut parameter_buf = Buf::new();
-            for (i, param) in definition.params.iter().enumerate() {
-                let tmp_buf = std::mem::take(&mut parameter_buf);
-
-                let len = idents.len();
-                if idents.contains_key(&param.ident) {
-                    panic!(
-                        "関数 `{}` の仮引数 {} が重複しています",
-                        definition.func_name, param.ident
-                    )
-                }
-                let idx = idents.entry(param.ident.clone()).or_insert(len as u8);
-                let offset = *idx * 4 + 4;
-                // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
-                // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
-                let negative_offset: i8 = -(offset as i8);
-                let tmp_buf = match i {
-                    0 => tmp_buf.join(rbpにoffsetを足した位置にediを代入(
-                        negative_offset,
-                    )),
-                    1 => tmp_buf.join(rbpにoffsetを足した位置にesiを代入(
-                        negative_offset,
-                    )),
-                    2 => tmp_buf.join(rbpにoffsetを足した位置にedxを代入(
-                        negative_offset,
-                    )),
-                    3 => tmp_buf.join(rbpにoffsetを足した位置にecxを代入(
-                        negative_offset,
-                    )),
-                    4 => tmp_buf.join(rbpにoffsetを足した位置にr8dを代入(
-                        negative_offset,
-                    )),
-                    5 => tmp_buf.join(rbpにoffsetを足した位置にr9dを代入(
-                        negative_offset,
-                    )),
-                    _ => panic!(
-                        "関数 `{}` に 7 つ以上の仮引数があります",
-                        definition.func_name
-                    ),
-                };
-                parameter_buf = tmp_buf;
-            }
-
-            let mut stack_size: u32 = 8;
-
-            statements
+            }),
+            Statement::Block { statements, .. } => statements
                 .iter()
-                .map(|stmt| {
-                    statementを評価(stmt, &mut idents, &*function_table, &mut stack_size)
-                })
-                .fold(parameter_buf, Buf::join)
+                .fold(Buf::new(), |acc, stmt| acc.join(self.statementを評価(stmt))),
         }
-    };
+    }
 
-    let buf = buf.join(rspから即値を引く(
-        u8::try_from(idents.len()).expect("識別子の個数が u8 に収まりません") * 4,
-    ));
-    let buf = buf.join(content_buf);
+    #[allow(clippy::too_many_lines)]
+    pub fn exprを評価してediレジスタへ(&mut self, writer: &mut impl Write, expr: &Expr) {
+        match expr {
+            Expr::BinaryExpr {
+                op: BinaryOp::Assign,
+                op_pos: _,
+                左辺,
+                右辺,
+            } => {
+                self.exprを左辺値として評価してアドレスをrdiレジスタへ(
+                    writer, 左辺,
+                );
+                writer.write_all(&ediをプッシュ()).unwrap();
+                self.stack_size += 4;
+                self.exprを評価してediレジスタへ(writer, 右辺);
 
-    *main_buf = buf;
-    func_pos
+                writer.write_all(&eaxへとポップ()).unwrap(); // 左辺のアドレス
+                self.stack_size -= 4;
+                writer.write_all(&raxが指す位置にediを代入()).unwrap();
+            }
+            Expr::Identifier { .. } => {
+                self.exprを左辺値として評価してアドレスをrdiレジスタへ(
+                    writer, expr,
+                );
+                writer.write_all(&rdiを間接参照()).unwrap();
+            }
+            Expr::BinaryExpr {
+                op: BinaryOp::AndThen,
+                op_pos: _,
+                左辺,
+                右辺,
+            } => {
+                self.exprを評価してediレジスタへ(writer, 左辺); // 左辺は push せずに捨てる
+                self.exprを評価してediレジスタへ(writer, 右辺);
+            }
+            Expr::BinaryExpr {
+                op: BinaryOp::Add,
+                op_pos: _,
+                左辺,
+                右辺,
+            } => {
+                self.exprを評価してediレジスタへ(writer, 左辺);
+                writer.write_all(&ediをプッシュ()).unwrap();
+                self.stack_size += 4;
+                self.exprを評価してediレジスタへ(writer, 右辺);
+                writer.write_all(&ediをプッシュ()).unwrap();
+                self.stack_size += 4;
+                writer.write_all(&eaxへとポップ()).unwrap();
+                self.stack_size -= 4;
+                writer.write_all(&ediへとポップ()).unwrap();
+                self.stack_size -= 4;
+                writer.write_all(&ediにeaxを足し合わせる()).unwrap();
+            }
+            Expr::BinaryExpr {
+                op: BinaryOp::Sub,
+                op_pos: _,
+                左辺,
+                右辺,
+            } => {
+                self.exprを評価してediレジスタへ(writer, 左辺);
+                writer.write_all(&ediをプッシュ()).unwrap();
+                self.stack_size += 4;
+                self.exprを評価してediレジスタへ(writer, 右辺);
+                writer.write_all(&ediをプッシュ()).unwrap();
+                self.stack_size += 4;
+                writer.write_all(&eaxへとポップ()).unwrap();
+                self.stack_size -= 4;
+                writer.write_all(&ediへとポップ()).unwrap();
+                self.stack_size -= 4;
+                writer.write_all(&ediからeaxを減じる()).unwrap();
+            }
+            Expr::BinaryExpr {
+                op: BinaryOp::Mul,
+                op_pos: _,
+                左辺,
+                右辺,
+            } => {
+                self.exprを評価してediレジスタへ(writer, 左辺);
+                writer.write_all(&ediをプッシュ()).unwrap();
+                self.stack_size += 4;
+                self.exprを評価してediレジスタへ(writer, 右辺);
+                writer.write_all(&ediをプッシュ()).unwrap();
+                self.stack_size += 4;
+                writer.write_all(&eaxへとポップ()).unwrap();
+                self.stack_size -= 4;
+                writer.write_all(&ediへとポップ()).unwrap();
+                self.stack_size -= 4;
+                writer.write_all(&ediをeax倍にする()).unwrap();
+            }
+
+            Expr::BinaryExpr {
+                op: BinaryOp::Div,
+                op_pos: _,
+                左辺,
+                右辺,
+            } => {
+                self.exprを評価してediレジスタへ(writer, 左辺);
+                writer.write_all(&ediをプッシュ()).unwrap();
+                self.stack_size += 4;
+                self.exprを評価してediレジスタへ(writer, 右辺);
+                writer.write_all(&ediをプッシュ()).unwrap();
+                self.stack_size += 4;
+
+                // 右辺を edi に、左辺を eax に入れる必要がある
+                writer.write_all(&ediへとポップ()).unwrap();
+                self.stack_size -= 4;
+                writer.write_all(&eaxへとポップ()).unwrap();
+                self.stack_size -= 4;
+
+                writer.write_all(&eaxの符号ビットをedxへ拡張()).unwrap();
+                writer
+                    .write_all(&edx_eaxをediで割る_商はeaxに_余りはedxに())
+                    .unwrap();
+
+                // 結果は eax レジスタに入るので、ediに移し替える
+                writer.write_all(&eaxをプッシュ()).unwrap();
+                writer.write_all(&ediへとポップ()).unwrap();
+            }
+            Expr::BinaryExpr {
+                op: BinaryOp::Equal,
+                op_pos: _,
+                左辺,
+                右辺,
+            } => {
+                self.比較演算を評価してediレジスタへ(
+                    writer,
+                    左辺,
+                    右辺,
+                    &フラグを読んで等しいかどうかをalにセット(),
+                );
+            }
+            Expr::BinaryExpr {
+                op: BinaryOp::NotEqual,
+                op_pos: _,
+                左辺,
+                右辺,
+            } => {
+                self.比較演算を評価してediレジスタへ(
+                    writer,
+                    左辺,
+                    右辺,
+                    &フラグを読んで異なっているかどうかをalにセット(),
+                );
+            }
+            Expr::BinaryExpr {
+                op: BinaryOp::LessThan,
+                op_pos: _,
+                左辺,
+                右辺,
+            } => {
+                self.比較演算を評価してediレジスタへ(
+                    writer,
+                    左辺,
+                    右辺,
+                    &フラグを読んで未満であるかどうかをalにセット(),
+                );
+            }
+            Expr::BinaryExpr {
+                op: BinaryOp::LessThanOrEqual,
+                op_pos: _,
+                左辺,
+                右辺,
+            } => {
+                self.比較演算を評価してediレジスタへ(
+                    writer,
+                    左辺,
+                    右辺,
+                    &フラグを読んで以下であるかどうかをalにセット(),
+                );
+            }
+            Expr::Numeric { val, pos: _ } => {
+                writer.write_all(&ediに代入(*val)).unwrap();
+            }
+            Expr::Call {
+                ident,
+                args,
+                pos: _,
+            } => {
+                let function = *self
+                    .functions
+                    .get(ident)
+                    .unwrap_or_else(|| panic!("関数 {} が見つかりません", ident));
+
+                let stack_args_len = if args.len() > 6 { args.len() - 6 } else { 0 };
+
+                let addrsp = self.stack_size + 4 * stack_args_len as u32 % 16;
+                writer
+                    .write_all(&rspから即値を引く(addrsp as u8).to_vec())
+                    .unwrap();
+                self.stack_size += addrsp;
+
+                // 引数の評価順序変わるけど未規定のはずなのでよし
+                for arg in args.iter().rev() {
+                    self.exprを評価してediレジスタへ(writer, arg);
+                    writer.write_all(&ediをプッシュ()).unwrap();
+                    self.stack_size += 4;
+                }
+
+                #[allow(clippy::len_zero)]
+                if args.len() >= 1 {
+                    writer.write_all(&ediへとポップ()).unwrap();
+                    self.stack_size -= 4;
+                }
+
+                if args.len() >= 2 {
+                    writer.write_all(&esiへとポップ()).unwrap();
+                    self.stack_size -= 4;
+                }
+
+                if args.len() >= 3 {
+                    writer.write_all(&edxへとポップ()).unwrap();
+                    self.stack_size -= 4;
+                }
+
+                if args.len() >= 4 {
+                    writer.write_all(&ecxへとポップ()).unwrap();
+                    self.stack_size -= 4;
+                }
+
+                if args.len() >= 5 {
+                    writer.write_all(&r8dへとポップ()).unwrap();
+                    self.stack_size -= 4;
+                }
+
+                if args.len() >= 6 {
+                    writer.write_all(&r9dへとポップ()).unwrap();
+                    self.stack_size -= 4;
+                }
+
+                writer
+                    .write_all(&eaxに即値をセット(function + 0x00400000))
+                    .unwrap();
+                writer.write_all(&call_rax()).unwrap();
+                writer.write_all(&eaxをediにmov()).unwrap();
+                writer
+                    .write_all(&rspに即値を足す(addrsp as u8).to_vec())
+                    .unwrap();
+                self.stack_size -= addrsp;
+            }
+            Expr::UnaryExpr {
+                op: UnaryOp::Addr,
+                op_pos: _,
+                expr,
+            } => {
+                self.exprを左辺値として評価してアドレスをrdiレジスタへ(
+                    writer, expr,
+                );
+            }
+            Expr::UnaryExpr {
+                op: UnaryOp::Deref,
+                op_pos: _,
+                expr,
+            } => {
+                self.exprを評価してediレジスタへ(writer, expr);
+                writer.write_all(&rdiを間接参照()).unwrap();
+            }
+        }
+    }
+
+    fn 比較演算を評価してediレジスタへ(
+        &mut self,
+        writer: &mut impl Write,
+        左辺: &Expr,
+        右辺: &Expr,
+        フラグをalに移す: &[u8],
+    ) {
+        self.exprを評価してediレジスタへ(writer, 左辺);
+        writer.write_all(&ediをプッシュ()).unwrap();
+        self.stack_size += 4;
+        self.exprを評価してediレジスタへ(writer, 右辺);
+        writer.write_all(&ediをプッシュ()).unwrap();
+        self.stack_size += 4;
+
+        writer.write_all(&ediへとポップ()).unwrap();
+        self.stack_size -= 4;
+        writer.write_all(&eaxへとポップ()).unwrap();
+        self.stack_size -= 4;
+
+        writer
+            .write_all(&eaxとediを比較してフラグをセット())
+            .unwrap();
+
+        writer.write_all(フラグをalに移す).unwrap();
+
+        writer.write_all(&alをゼロ拡張してediにセット()).unwrap();
+    }
+
+    pub fn 関数をコード生成しメインバッファに挿入(
+        &mut self,
+        main_buf: &mut Buf,
+        definition: &FunctionDefinition,
+    ) -> u16 {
+        let buf = std::mem::take(main_buf);
+        let func_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
+        self.functions
+            .insert(definition.func_name.clone(), u32::from(func_pos));
+
+        let buf = buf.join(rbpをプッシュ());
+        let buf = buf.join(rspをrbpにコピー());
+        // TODO: FunctionGenみたいなのに分けたい
+        self.idents = HashMap::new();
+
+        let content_buf = match &definition.content {
+            FunctionContent::Statements(statements) => {
+                let mut parameter_buf = Buf::new();
+                for (i, param) in definition.params.iter().enumerate() {
+                    let tmp_buf = std::mem::take(&mut parameter_buf);
+
+                    let len = self.idents.len();
+                    if self.idents.contains_key(&param.ident) {
+                        panic!(
+                            "関数 `{}` の仮引数 {} が重複しています",
+                            definition.func_name, param.ident
+                        )
+                    }
+                    let idx = self.idents.entry(param.ident.clone()).or_insert(len as u8);
+                    let offset = *idx * 4 + 4;
+                    // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
+                    // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
+                    let negative_offset: i8 = -(offset as i8);
+                    let tmp_buf = match i {
+                        0 => tmp_buf.join(rbpにoffsetを足した位置にediを代入(
+                            negative_offset,
+                        )),
+                        1 => tmp_buf.join(rbpにoffsetを足した位置にesiを代入(
+                            negative_offset,
+                        )),
+                        2 => tmp_buf.join(rbpにoffsetを足した位置にedxを代入(
+                            negative_offset,
+                        )),
+                        3 => tmp_buf.join(rbpにoffsetを足した位置にecxを代入(
+                            negative_offset,
+                        )),
+                        4 => tmp_buf.join(rbpにoffsetを足した位置にr8dを代入(
+                            negative_offset,
+                        )),
+                        5 => tmp_buf.join(rbpにoffsetを足した位置にr9dを代入(
+                            negative_offset,
+                        )),
+                        _ => panic!(
+                            "関数 `{}` に 7 つ以上の仮引数があります",
+                            definition.func_name
+                        ),
+                    };
+                    parameter_buf = tmp_buf;
+                }
+
+                // TODO: FunctionGenみたいなのに分けたい
+                self.stack_size = 8;
+
+                statements
+                    .iter()
+                    .map(|stmt| self.statementを評価(stmt))
+                    .fold(parameter_buf, Buf::join)
+            }
+        };
+
+        let buf = buf.join(rspから即値を引く(
+            u8::try_from(self.idents.len()).expect("識別子の個数が u8 に収まりません") * 4,
+        ));
+        let buf = buf.join(content_buf);
+
+        *main_buf = buf;
+        func_pos
+    }
 }
