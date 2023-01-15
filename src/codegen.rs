@@ -689,10 +689,12 @@ impl Codegen {
         self.functions
             .insert(definition.func_name.clone(), u32::from(func_pos));
 
-        let buf = buf.join(rbpをプッシュ());
-        let buf = buf.join(rspをrbpにコピー());
         // TODO: FunctionGenみたいなのに分けたい
         self.idents = HashMap::new();
+        self.stack_size = 0;
+        let buf = buf.join(rbpをプッシュ());
+        self.stack_size += 8;
+        let buf = buf.join(rspをrbpにコピー());
 
         let content_buf = match &definition.content {
             FunctionContent::Statements(statements) => {
@@ -739,9 +741,6 @@ impl Codegen {
                     parameter_buf = tmp_buf;
                 }
 
-                // TODO: FunctionGenみたいなのに分けたい
-                self.stack_size = 8;
-
                 statements
                     .iter()
                     .map(|stmt| self.statementを評価(stmt))
@@ -750,7 +749,7 @@ impl Codegen {
         };
 
         let buf = buf.join(rspから即値を引く(
-            u8::try_from(self.idents.len()).expect("識別子の個数が u8 に収まりません") * 4,
+            u8::try_from(self.idents.len() * 4).expect("識別子の個数が u8 に収まりません"),
         ));
         let buf = buf.join(content_buf);
 
