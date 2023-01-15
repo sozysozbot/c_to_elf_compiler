@@ -15,7 +15,7 @@ fn 即値をプッシュ(n: u8) -> [u8; 2] {
 }
 */
 
-const WORD_SIZE: u8 = 4;
+const WORD_SIZE: u8 = 8;
 const S_WORD_SIZE: i8 = WORD_SIZE as i8;
 const U32_WORD_SIZE: u32 = WORD_SIZE as u32;
 
@@ -62,23 +62,23 @@ pub fn エピローグ() -> Buf {
     leave().join(ret())
 }
 
-fn ediへとポップ() -> [u8; 1] {
+fn rdiへとポップ() -> [u8; 1] {
     [0x5f]
 }
 
-fn esiへとポップ() -> [u8; 1] {
+fn rsiへとポップ() -> [u8; 1] {
     [0x5e]
 }
 
-fn eaxへとポップ() -> [u8; 1] {
+fn raxへとポップ() -> [u8; 1] {
     [0x58]
 }
 
-fn edxへとポップ() -> [u8; 1] {
+fn rdxへとポップ() -> [u8; 1] {
     [0x5a]
 }
 
-fn ecxへとポップ() -> [u8; 1] {
+fn rcxへとポップ() -> [u8; 1] {
     [0x59]
 }
 
@@ -110,7 +110,7 @@ fn edx_eaxをediで割る_商はeaxに_余りはedxに() -> [u8; 2] {
     [0xf7, 0xff]
 }
 
-fn eaxをプッシュ() -> [u8; 1] {
+fn raxをプッシュ() -> [u8; 1] {
     [0x50]
 }
 
@@ -263,7 +263,7 @@ impl Codegen {
                 let idx = self.idents.entry(ident.clone()).or_insert(len as u8);
                 let offset = *idx * WORD_SIZE + WORD_SIZE;
                 writer.write_all(&rbpをプッシュ()).unwrap();
-                writer.write_all(&ediへとポップ()).unwrap();
+                writer.write_all(&rdiへとポップ()).unwrap();
                 writer.write_all(&rdiから即値を引く(offset)).unwrap();
             }
             _ => panic!("代入式の左辺に左辺値以外が来ています"),
@@ -414,7 +414,7 @@ impl Codegen {
                 self.stack_size += U32_WORD_SIZE;
                 self.exprを評価してediレジスタへ(writer, 右辺);
 
-                writer.write_all(&eaxへとポップ()).unwrap(); // 左辺のアドレス
+                writer.write_all(&raxへとポップ()).unwrap(); // 左辺のアドレス
                 self.stack_size -= U32_WORD_SIZE;
                 writer.write_all(&raxが指す位置にediを代入()).unwrap();
             }
@@ -445,9 +445,9 @@ impl Codegen {
                 self.exprを評価してediレジスタへ(writer, 右辺);
                 writer.write_all(&ediをプッシュ()).unwrap();
                 self.stack_size += U32_WORD_SIZE;
-                writer.write_all(&eaxへとポップ()).unwrap();
+                writer.write_all(&raxへとポップ()).unwrap();
                 self.stack_size -= U32_WORD_SIZE;
-                writer.write_all(&ediへとポップ()).unwrap();
+                writer.write_all(&rdiへとポップ()).unwrap();
                 self.stack_size -= U32_WORD_SIZE;
                 writer.write_all(&ediにeaxを足し合わせる()).unwrap();
             }
@@ -463,9 +463,9 @@ impl Codegen {
                 self.exprを評価してediレジスタへ(writer, 右辺);
                 writer.write_all(&ediをプッシュ()).unwrap();
                 self.stack_size += U32_WORD_SIZE;
-                writer.write_all(&eaxへとポップ()).unwrap();
+                writer.write_all(&raxへとポップ()).unwrap();
                 self.stack_size -= U32_WORD_SIZE;
-                writer.write_all(&ediへとポップ()).unwrap();
+                writer.write_all(&rdiへとポップ()).unwrap();
                 self.stack_size -= U32_WORD_SIZE;
                 writer.write_all(&ediからeaxを減じる()).unwrap();
             }
@@ -481,9 +481,9 @@ impl Codegen {
                 self.exprを評価してediレジスタへ(writer, 右辺);
                 writer.write_all(&ediをプッシュ()).unwrap();
                 self.stack_size += U32_WORD_SIZE;
-                writer.write_all(&eaxへとポップ()).unwrap();
+                writer.write_all(&raxへとポップ()).unwrap();
                 self.stack_size -= U32_WORD_SIZE;
-                writer.write_all(&ediへとポップ()).unwrap();
+                writer.write_all(&rdiへとポップ()).unwrap();
                 self.stack_size -= U32_WORD_SIZE;
                 writer.write_all(&ediをeax倍にする()).unwrap();
             }
@@ -502,9 +502,9 @@ impl Codegen {
                 self.stack_size += U32_WORD_SIZE;
 
                 // 右辺を edi に、左辺を eax に入れる必要がある
-                writer.write_all(&ediへとポップ()).unwrap();
+                writer.write_all(&rdiへとポップ()).unwrap();
                 self.stack_size -= U32_WORD_SIZE;
-                writer.write_all(&eaxへとポップ()).unwrap();
+                writer.write_all(&raxへとポップ()).unwrap();
                 self.stack_size -= U32_WORD_SIZE;
 
                 writer.write_all(&eaxの符号ビットをedxへ拡張()).unwrap();
@@ -513,8 +513,8 @@ impl Codegen {
                     .unwrap();
 
                 // 結果は eax レジスタに入るので、ediに移し替える
-                writer.write_all(&eaxをプッシュ()).unwrap();
-                writer.write_all(&ediへとポップ()).unwrap();
+                writer.write_all(&raxをプッシュ()).unwrap();
+                writer.write_all(&rdiへとポップ()).unwrap();
             }
             Expr::BinaryExpr {
                 op: BinaryOp::Equal,
@@ -598,22 +598,22 @@ impl Codegen {
 
                 #[allow(clippy::len_zero)]
                 if args.len() >= 1 {
-                    writer.write_all(&ediへとポップ()).unwrap();
+                    writer.write_all(&rdiへとポップ()).unwrap();
                     self.stack_size -= U32_WORD_SIZE;
                 }
 
                 if args.len() >= 2 {
-                    writer.write_all(&esiへとポップ()).unwrap();
+                    writer.write_all(&rsiへとポップ()).unwrap();
                     self.stack_size -= U32_WORD_SIZE;
                 }
 
                 if args.len() >= 3 {
-                    writer.write_all(&edxへとポップ()).unwrap();
+                    writer.write_all(&rdxへとポップ()).unwrap();
                     self.stack_size -= U32_WORD_SIZE;
                 }
 
                 if args.len() >= 4 {
-                    writer.write_all(&ecxへとポップ()).unwrap();
+                    writer.write_all(&rcxへとポップ()).unwrap();
                     self.stack_size -= U32_WORD_SIZE;
                 }
 
@@ -671,9 +671,9 @@ impl Codegen {
         writer.write_all(&ediをプッシュ()).unwrap();
         self.stack_size += U32_WORD_SIZE;
 
-        writer.write_all(&ediへとポップ()).unwrap();
+        writer.write_all(&rdiへとポップ()).unwrap();
         self.stack_size -= U32_WORD_SIZE;
-        writer.write_all(&eaxへとポップ()).unwrap();
+        writer.write_all(&raxへとポップ()).unwrap();
         self.stack_size -= U32_WORD_SIZE;
 
         writer
