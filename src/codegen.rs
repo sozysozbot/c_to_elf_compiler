@@ -240,9 +240,9 @@ pub fn builtin_putchar関数を生成() -> Buf {
 }
 
 pub struct Codegen {
-    idents: HashMap<String, u8>,
+    local_var_table: HashMap<String, u8>,
     stack_size: u32,
-    pub functions: HashMap<String, u32>,
+    pub function_table: HashMap<String, u32>,
 }
 
 impl Default for Codegen {
@@ -254,9 +254,9 @@ impl Default for Codegen {
 impl Codegen {
     pub fn new() -> Self {
         Self {
-            idents: HashMap::new(),
+            local_var_table: HashMap::new(),
             stack_size: 0,
-            functions: HashMap::new(),
+            function_table: HashMap::new(),
         }
     }
 
@@ -267,8 +267,8 @@ impl Codegen {
     ) {
         match expr {
             Expr::Identifier { ident, pos: _ } => {
-                let len = self.idents.len();
-                let idx = self.idents.entry(ident.clone()).or_insert(len as u8);
+                let len = self.local_var_table.len();
+                let idx = self.local_var_table.entry(ident.clone()).or_insert(len as u8);
                 let offset = *idx * WORD_SIZE + WORD_SIZE;
                 writer.write_all(&rbpをプッシュ()).unwrap();
                 writer.write_all(&rdiへとポップ()).unwrap();
@@ -585,7 +585,7 @@ impl Codegen {
                 pos: _,
             } => {
                 let function = *self
-                    .functions
+                    .function_table
                     .get(ident)
                     .unwrap_or_else(|| panic!("関数 {} が見つかりません", ident));
 
@@ -700,11 +700,11 @@ impl Codegen {
     ) -> u16 {
         let buf = std::mem::take(main_buf);
         let func_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
-        self.functions
+        self.function_table
             .insert(definition.func_name.clone(), u32::from(func_pos));
 
         // TODO: FunctionGenみたいなのに分けたい
-        self.idents = HashMap::new();
+        self.local_var_table = HashMap::new();
         self.stack_size = 0;
         let buf = buf.join(rbpをプッシュ());
         self.stack_size += 8;
@@ -717,14 +717,14 @@ impl Codegen {
                 for (i, (_param_type, param)) in definition.params.iter().enumerate() {
                     let tmp_buf = std::mem::take(&mut parameter_buf);
 
-                    let len = self.idents.len();
-                    if self.idents.contains_key(&param.ident) {
+                    let len = self.local_var_table.len();
+                    if self.local_var_table.contains_key(&param.ident) {
                         panic!(
                             "関数 `{}` の仮引数 {} が重複しています",
                             definition.func_name, param.ident
                         )
                     }
-                    let idx = self.idents.entry(param.ident.clone()).or_insert(len as u8);
+                    let idx = self.local_var_table.entry(param.ident.clone()).or_insert(len as u8);
                     let offset = *idx * WORD_SIZE + WORD_SIZE;
                     // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
                     // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
@@ -764,7 +764,7 @@ impl Codegen {
         };
 
         let buf = buf.join(rspから即値を引く(
-            u8::try_from(self.idents.len() * WORD_SIZE as usize)
+            u8::try_from(self.local_var_table.len() * WORD_SIZE as usize)
                 .expect("識別子の個数が u8 に収まりません"),
         ));
         let buf = buf.join(content_buf);

@@ -1329,3 +1329,5 @@ hsjoihs「関数定義のパースに int をねじ込んだので、今度は�
 hsjoihs「足したはずなのに「トップレベルが型名でないもので始まっています」で落ちる。なぜだろう」
 hsjoihs「あー理解。`Identifier("__start")` で始まってると言われている。つまり、__start を C で書いてるからそこも直さなきゃいけない」
 hsjoihs「直した。テストが全部通ったのでコミット」
+hsjoihs「あとは、「変数定義文」「未定義変数をエラー」の二つだな」
+hsjoihs「こうなると、idents って HashMap を local_var_table に、functions って HashMap を function_table にしたくなる。しておこう」
