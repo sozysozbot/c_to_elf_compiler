@@ -243,17 +243,10 @@ pub struct FunctionGen<'a> {
     local_var_table: HashMap<String, u8>,
     stack_size: u32,
     global_function_table: &'a HashMap<String, u32>,
+    function_name: &'a str,
 }
 
 impl<'a> FunctionGen<'a> {
-    pub fn new(function_table: &'a HashMap<String, u32>) -> Self {
-        Self {
-            local_var_table: HashMap::new(),
-            stack_size: 0,
-            global_function_table: function_table,
-        }
-    }
-
     pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
         &mut self,
         writer: &mut impl Write,
@@ -261,6 +254,12 @@ impl<'a> FunctionGen<'a> {
     ) {
         match expr {
             Expr::Identifier { ident, pos: _ } => {
+                if !self.local_var_table.contains_key(ident) {
+                    panic!(
+                        "変数 {ident} は関数 {} 内で宣言されていません",
+                        self.function_name
+                    )
+                }
                 let len = self.local_var_table.len();
                 let idx = self
                     .local_var_table
@@ -704,6 +703,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         local_var_table: HashMap::new(),
         stack_size: 0,
         global_function_table,
+        function_name: &definition.func_name,
     };
     let buf = buf.join(rbpをプッシュ());
     function_gen.stack_size += 8;
@@ -756,6 +756,20 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
                     ),
                 };
                 parameter_buf = tmp_buf;
+            }
+
+            for (local_var_name, _local_var_type) in definition.local_var_declarations.iter() {
+                let len = function_gen.local_var_table.len();
+                if function_gen.local_var_table.contains_key(local_var_name) {
+                    panic!(
+                        "関数 `{}` 先頭で定義されているローカル変数 {} が仮引数またはローカル変数と重複しています",
+                        definition.func_name, local_var_name
+                    )
+                }
+                function_gen
+                    .local_var_table
+                    .entry(local_var_name.clone())
+                    .or_insert(len as u8);
             }
 
             statements
