@@ -2380,6 +2380,20 @@ main() {
 		<div class="content">忘れてた。来週の予定までにそこまでは終わらせておこう</div>
 	</div>
 </div>
+<h3 class="date">2023年1月15日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_22947e1595d5eceaecea02afbb480165').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_22947e1595d5eceaecea02afbb480165').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_22947e1595d5eceaecea02afbb480165" href="#permalink_22947e1595d5eceaecea02afbb480165" class="permalink">¶</a>
+		<div class="content">とりあえず雑に実装</div>
+		<div class="content">*がセグフォする</div>
+		<div class="content">とりあえずcodegen系関数に引き回すstate多くなってきたので構造体にまとめた</div>
+		<div class="content">word sizeを64bitにしたけどセグフォがなおらん〜〜〜</div>
+		<div class="content">*&amp;x はいけるけど y=&amp;x の時 *y はセグフォになる、変数の値の読み書き死んでるなこれ</div>
+		<div class="content">mov [rax], edi -&gt; mov [rax], rdi にしたらなおった</div>
+		<div class="content">add命令を64bit化したらテスト2も通るようになった。ついでにsub/mulも64bit化</div>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>
