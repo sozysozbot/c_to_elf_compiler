@@ -1331,3 +1331,11 @@ hsjoihs「あー理解。`Identifier("__start")` で始まってると言われ�
 hsjoihs「直した。テストが全部通ったのでコミット」
 hsjoihs「あとは、「変数定義文」「未定義変数をエラー」の二つだな」
 hsjoihs「こうなると、idents って HashMap を local_var_table に、functions って HashMap を function_table にしたくなる。しておこう」
+hsjoihs「次に、パーサーに変数定義文を足す。「真にいにしえの C」と同様に、関数の頭でだけ変数定義ができるようにしておこう」
+hsjoihs「after_param_list で関数の中身を読んでるので、そこの冒頭で変数宣言を読めるようにしよう」
+hsjoihs「とりあえず local_var_definitions という HashMap に読み込んでおくか」
+hsjoihs「で、それを FunctionDefinition に仕込んでおいて、」
+hsjoihs「えーと未定義変数は Codegen で怒るか。えーっと local_var_table が Codegen にあるのは間違いで」
+hsjoihs「あー、ちゃんと tkr もその問題に気づいていて「TODO: FunctionGenみたいなのに分けたい」というコメントが書いてあるな」
+hsjoihs「まあとりあえず、先に変数宣言をちゃんと読めているかをテストしよう」
+hsjoihs「読めているのでコミット」

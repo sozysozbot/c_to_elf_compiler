@@ -1,6 +1,7 @@
 use crate::apperror::*;
 use crate::ast::*;
 use crate::token::*;
+use std::collections::HashMap;
 use std::{iter::Peekable, slice::Iter};
 
 #[test]
@@ -759,6 +760,7 @@ fn parse_parameter_type_and_identifier(
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub enum Type {
     Int,
 }
@@ -769,6 +771,7 @@ pub struct FunctionDefinition {
     pub pos: usize,
     pub content: FunctionContent,
     pub return_type: Type,
+    pub local_var_declarations: HashMap<String, Type>
 }
 
 fn after_param_list(
@@ -784,14 +787,91 @@ fn after_param_list(
             payload: TokenPayload::開き波括弧,
             ..
         } => {
-            let content = parse_statement(tokens, input)?;
+            tokens.next();
+            let mut local_var_declarations = HashMap::new();
+            #[allow(clippy::while_let_loop)]
+            loop {
+                let local_var_type = match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::Int,
+                        ..
+                    } => {
+                        tokens.next();
+                        Type::Int
+                    }
+                    Token { .. } => {
+                        // 変数定義は終わり
+                        break;
+                    }
+                };
+                let local_var_name = match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::Identifier(ident),
+                        ..
+                    } => {
+                        tokens.next();
+                        ident.clone()
+                    }
+                    Token { pos, .. } => {
+                        return Err(AppError {
+                            message: "関数内の変数宣言で、型名の後に識別子以外が来ました"
+                                .to_string(),
+                            input: input.to_string(),
+                            pos: *pos,
+                        })
+                    }
+                };
+                match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::Semicolon,
+                        ..
+                    } => {
+                        tokens.next();
+                    }
+                    Token { pos, .. } => {
+                        return Err(AppError {
+                            message:
+                                "関数内の変数宣言で、型名と識別子の後にセミコロン以外が来ました"
+                                    .to_string(),
+                            input: input.to_string(),
+                            pos: *pos,
+                        })
+                    }
+                }
+                local_var_declarations.insert(local_var_name, local_var_type);
+            }
+            let mut statements = vec![];
+            loop {
+                match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::Eof,
+                        pos,
+                    } => {
+                        return Err(AppError {
+                            message: "期待された閉じ波括弧が来ませんでした".to_string(),
+                            input: input.to_string(),
+                            pos: *pos,
+                        })
+                    }
+                    Token {
+                        payload: TokenPayload::閉じ波括弧,
+                        ..
+                    } => {
+                        tokens.next();
+
+                        break;
+                    }
+                    _ => statements.push(parse_statement(tokens, input)?),
+                }
+            }
 
             let expr = FunctionDefinition {
                 func_name: ident.to_string(),
                 params,
                 pos,
-                content: FunctionContent::Statements(vec![content]),
+                content: FunctionContent::Statements(statements),
                 return_type,
+                local_var_declarations,
             };
             Ok(expr)
         }
@@ -814,7 +894,10 @@ pub fn parse_toplevel_function_definition(
         } => Type::Int,
         Token { pos, payload } => {
             return Err(AppError {
-                message: format!("トップレベルが型名でないもので始まっています: {:?}", payload),
+                message: format!(
+                    "トップレベルが型名でないもので始まっています: {:?}",
+                    payload
+                ),
                 input: input.to_string(),
                 pos: *pos,
             })
