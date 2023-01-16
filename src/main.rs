@@ -1,5 +1,4 @@
 #![warn(clippy::pedantic)]
-use std::collections::HashMap;
 use std::io::Write;
 
 use c_to_elf_compiler::apperror::AppError;
@@ -37,25 +36,25 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     let tiny = include_bytes!("../experiment/tiny");
     let buf = Buf::from(&tiny[0..0x78]);
 
-    let mut function_table = HashMap::new();
+    let mut codegen = codegen::Codegen::new();
 
     let builtin_three_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     let buf = buf.join(codegen::builtin_three関数を生成());
-    function_table.insert("__builtin_three".to_string(), builtin_three_pos);
+    codegen
+        .functions
+        .insert("__builtin_three".to_string(), builtin_three_pos);
 
     let builtin_putchar_pos =
         u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     let buf = buf.join(codegen::builtin_putchar関数を生成());
-    function_table.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
+    codegen
+        .functions
+        .insert("__builtin_putchar".to_string(), builtin_putchar_pos);
 
     let mut buf = buf;
 
     for definition in function_definitions {
-        codegen::関数をコード生成しメインバッファに挿入(
-            &mut buf,
-            &definition,
-            &mut function_table,
-        );
+        codegen.関数をコード生成しメインバッファに挿入(&mut buf, &definition);
     }
 
     let entry: FunctionDefinition = {
@@ -64,11 +63,8 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
         let mut tokens = tokens.iter().peekable();
         parser::parse_toplevel_function_definition(&mut tokens, input)?
     };
-    let entry_pos = codegen::関数をコード生成しメインバッファに挿入(
-        &mut buf,
-        &entry,
-        &mut function_table,
-    );
+    let entry_pos =
+        codegen.関数をコード生成しメインバッファに挿入(&mut buf, &entry);
 
     let mut buf = buf.to_vec();
     // エントリポイント書き換え

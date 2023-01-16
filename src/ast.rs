@@ -13,6 +13,12 @@ pub enum BinaryOp {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+pub enum UnaryOp {
+    Addr,
+    Deref,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Expr {
     BinaryExpr {
         op: BinaryOp,
@@ -32,6 +38,11 @@ pub enum Expr {
         ident: String,
         pos: usize,
         args: Vec<Expr>,
+    },
+    UnaryExpr {
+        op: UnaryOp,
+        op_pos: usize,
+        expr: Box<Expr>,
     },
 }
 
