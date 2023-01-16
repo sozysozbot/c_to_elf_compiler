@@ -104,7 +104,8 @@ check 0 "int if_non0(int n) { if (n) { __builtin_putchar(n + 48); } else { __bui
 check 3 "int main() { int x; int y; x = 3; y = &x; return *y; }"
 # TODO: 未定義動作なのでそのうち消す
 # この y, z は本来 int* であるべき
-check 3 "int main() { int x; int y; int z; x = 3; y = 5; z = &y + 8; return *z; }"
+# hsjoihs の WSL では通ったが、CI に通らない（なぜか 40 が返ってくる）ので一旦コメントアウト
+# check 3 "int main() { int x; int y; int z; x = 3; y = 5; z = &y + 8; return *z; }"
 for job in `jobs -p`
 do
     wait $job
