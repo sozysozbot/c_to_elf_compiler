@@ -3,7 +3,7 @@ pub enum TokenPayload {
     Num(u8),
     Add,
     Sub,
-    Mul,
+    Asterisk,
     Div,
     開き丸括弧,
     閉じ丸括弧,

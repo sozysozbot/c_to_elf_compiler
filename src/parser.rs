@@ -154,7 +154,7 @@ fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, 
             })
         }
         Some(Token {
-            payload: TokenPayload::Mul,
+            payload: TokenPayload::Asterisk,
             pos,
         }) => {
             tokens.next();
@@ -186,7 +186,7 @@ fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Resu
     loop {
         match tokens.peek() {
             Some(Token {
-                payload: TokenPayload::Mul,
+                payload: TokenPayload::Asterisk,
                 pos: op_pos,
             }) => {
                 tokens.next();

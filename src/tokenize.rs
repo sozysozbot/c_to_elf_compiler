@@ -100,7 +100,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
             '*' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::Mul,
+                    payload: TokenPayload::Asterisk,
                     pos,
                 });
             }
