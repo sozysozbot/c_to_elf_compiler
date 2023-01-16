@@ -1307,3 +1307,25 @@ tkr「word sizeを64bitにしたけどセグフォがなおらん〜〜〜」
 tkr「*&x はいけるけど y=&x の時 *y はセグフォになる、変数の値の読み書き死んでるなこれ」
 tkr「mov [rax], edi -> mov [rax], rdi にしたらなおった」
 tkr「add命令を64bit化したらテスト2も通るようになった。ついでにsub/mulも64bit化」
+
+$DATE「2023年1月17日」
+hsjoihs「step 17 さっさとやっちゃうか」
+hsjoihs「とりあえず、「関数はいままでfoo(x, y)といった形で書いていましたが、これをint foo(int x, int y)といった形になるように改造します。」が一番ラクなので、これをまずやる」
+hsjoihs「えーと FunctionDefinition を生成しているところをいじればいいんだから」
+hsjoihs「FunctionDefinition 型の定義を変更」
+$source
+```rust
+pub struct FunctionDefinition {
+    pub func_name: String,
+    pub params: Vec<(Type, ParameterIdentifier)>,
+    pub pos: usize,
+    pub content: FunctionContent,
+    pub return_type: Type
+}
+```
+hsjoihs「として型の情報を足せばよく、」
+hsjoihs「トークナイザに予約語 int を足す必要もある」
+hsjoihs「関数定義のパースに int をねじ込んだので、今度はテストケースに int を入れていく必要がある」
+hsjoihs「足したはずなのに「トップレベルが型名でないもので始まっています」で落ちる。なぜだろう」
+hsjoihs「あー理解。`Identifier("__start")` で始まってると言われている。つまり、__start を C で書いてるからそこも直さなきゃいけない」
+hsjoihs「直した。テストが全部通ったのでコミット」

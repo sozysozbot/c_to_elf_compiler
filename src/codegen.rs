@@ -245,6 +245,12 @@ pub struct Codegen {
     pub functions: HashMap<String, u32>,
 }
 
+impl Default for Codegen {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Codegen {
     pub fn new() -> Self {
         Self {
@@ -707,7 +713,8 @@ impl Codegen {
         let content_buf = match &definition.content {
             FunctionContent::Statements(statements) => {
                 let mut parameter_buf = Buf::new();
-                for (i, param) in definition.params.iter().enumerate() {
+                let _return_type = &definition.return_type;
+                for (i, (_param_type, param)) in definition.params.iter().enumerate() {
                     let tmp_buf = std::mem::take(&mut parameter_buf);
 
                     let len = self.idents.len();

@@ -723,18 +723,34 @@ pub struct ParameterIdentifier {
     pub pos: usize,
 }
 
-fn parse_parameter_identifier(
+fn parse_parameter_type_and_identifier(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-) -> Result<ParameterIdentifier, AppError> {
+) -> Result<(Type, ParameterIdentifier), AppError> {
+    let parameter_type = match tokens.next().unwrap() {
+        Token {
+            payload: TokenPayload::Int,
+            ..
+        } => Type::Int,
+        Token { pos, .. } => {
+            return Err(AppError {
+                message: "仮引数に型名がありません".to_string(),
+                input: input.to_string(),
+                pos: *pos,
+            })
+        }
+    };
     match tokens.next().unwrap() {
         Token {
             payload: TokenPayload::Identifier(ident),
             pos,
-        } => Ok(ParameterIdentifier {
-            ident: ident.clone(),
-            pos: *pos,
-        }),
+        } => Ok((
+            parameter_type,
+            ParameterIdentifier {
+                ident: ident.clone(),
+                pos: *pos,
+            },
+        )),
         Token { pos, .. } => Err(AppError {
             message: "仮引数をパースできません".to_string(),
             input: input.to_string(),
@@ -743,18 +759,24 @@ fn parse_parameter_identifier(
     }
 }
 
+pub enum Type {
+    Int,
+}
+
 pub struct FunctionDefinition {
     pub func_name: String,
-    pub params: Vec<ParameterIdentifier>,
+    pub params: Vec<(Type, ParameterIdentifier)>,
     pub pos: usize,
     pub content: FunctionContent,
+    pub return_type: Type,
 }
 
 fn after_param_list(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-    params: Vec<ParameterIdentifier>,
+    params: Vec<(Type, ParameterIdentifier)>,
     pos: usize,
+    return_type: Type,
     ident: &str,
 ) -> Result<FunctionDefinition, AppError> {
     match tokens.peek().unwrap() {
@@ -769,6 +791,7 @@ fn after_param_list(
                 params,
                 pos,
                 content: FunctionContent::Statements(vec![content]),
+                return_type,
             };
             Ok(expr)
         }
@@ -784,6 +807,19 @@ pub fn parse_toplevel_function_definition(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<FunctionDefinition, AppError> {
+    let return_type = match tokens.next().unwrap() {
+        Token {
+            payload: TokenPayload::Int,
+            ..
+        } => Type::Int,
+        Token { pos, payload } => {
+            return Err(AppError {
+                message: format!("トップレベルが型名でないもので始まっています: {:?}", payload),
+                input: input.to_string(),
+                pos: *pos,
+            })
+        }
+    };
     match tokens.next().unwrap() {
         Token {
             payload: TokenPayload::Identifier(ident),
@@ -803,10 +839,10 @@ pub fn parse_toplevel_function_definition(
                         ..
                     } => {
                         tokens.next();
-                        return after_param_list(tokens, input, params, *pos, ident);
+                        return after_param_list(tokens, input, params, *pos, return_type, ident);
                     }
                     _ => {
-                        let param = parse_parameter_identifier(tokens, input)?;
+                        let param = parse_parameter_type_and_identifier(tokens, input)?;
                         params.push(param);
                     }
                 }
@@ -818,14 +854,21 @@ pub fn parse_toplevel_function_definition(
                             ..
                         } => {
                             tokens.next();
-                            return after_param_list(tokens, input, params, *pos, ident);
+                            return after_param_list(
+                                tokens,
+                                input,
+                                params,
+                                *pos,
+                                return_type,
+                                ident,
+                            );
                         }
                         Token {
                             payload: TokenPayload::Comma,
                             ..
                         } => {
                             tokens.next();
-                            let param = parse_parameter_identifier(tokens, input)?;
+                            let param = parse_parameter_type_and_identifier(tokens, input)?;
                             params.push(param);
                         }
                         _ => {

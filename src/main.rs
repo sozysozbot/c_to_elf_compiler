@@ -59,7 +59,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
 
     let entry: FunctionDefinition = {
         // スタートアップ処理はここに C のソースコードとして実装
-        let tokens = tokenize::tokenize("__start() { __throw main(); }").unwrap();
+        let tokens = tokenize::tokenize("int __start() { __throw main(); }").unwrap();
         let mut tokens = tokens.iter().peekable();
         parser::parse_toplevel_function_definition(&mut tokens, input)?
     };
