@@ -1339,3 +1339,5 @@ hsjoihs「えーと未定義変数は Codegen で怒るか。えーっと local_
 hsjoihs「あー、ちゃんと tkr もその問題に気づいていて「TODO: FunctionGenみたいなのに分けたい」というコメントが書いてあるな」
 hsjoihs「まあとりあえず、先に変数宣言をちゃんと読めているかをテストしよう」
 hsjoihs「読めているのでコミット」
+hsjoihs「さてリファクタリングしたい。とりあえず、CodeGen 自体を FunctionGen へと改名し、必要に応じて FunctionGen から追い出していこう」
+hsjoihs「リファクタリングした。『関数をコード生成しメインバッファとグローバル関数テーブルに挿入』だけを FunctionGen から追い出すだけで済んだ」
