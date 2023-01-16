@@ -771,7 +771,7 @@ pub struct FunctionDefinition {
     pub pos: usize,
     pub content: FunctionContent,
     pub return_type: Type,
-    pub local_var_declarations: HashMap<String, Type>
+    pub local_var_declarations: HashMap<String, Type>,
 }
 
 fn after_param_list(
