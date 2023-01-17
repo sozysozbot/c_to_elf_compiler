@@ -1,4 +1,4 @@
-use crate::{ast::*, parser::FunctionDefinition, Buf};
+use crate::{ast::*, parse::toplevel::FunctionDefinition, Buf};
 use std::{collections::HashMap, io::Write};
 
 /*
