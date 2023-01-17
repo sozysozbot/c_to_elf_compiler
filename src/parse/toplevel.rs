@@ -26,7 +26,6 @@ fn parse_test() {
     );
 }
 
-
 fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Statement, AppError> {
     let tok = tokens.peek().unwrap();
     match tok {

@@ -713,7 +713,6 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
             let mut parameter_buf = Buf::new();
             let _return_type = &definition.return_type;
             for (i, (_param_type, param)) in definition.params.iter().enumerate() {
-
                 let len = function_gen.local_var_table.len();
                 if function_gen.local_var_table.contains_key(&param.ident) {
                     panic!(
