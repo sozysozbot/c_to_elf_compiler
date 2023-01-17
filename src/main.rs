@@ -35,17 +35,17 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     let function_definitions = toplevel::parse(&mut tokens, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
-    let buf = Buf::from(&tiny[0..0x78]);
+    let mut buf = Buf::from(&tiny[0..0x78]);
 
     let mut global_function_table: HashMap<String, u32> = HashMap::new();
 
     let builtin_three_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
-    let buf = buf.join(codegen::builtin_three関数を生成());
+    buf.append(codegen::builtin_three関数を生成());
     global_function_table.insert("__builtin_three".to_string(), builtin_three_pos);
 
     let builtin_putchar_pos =
         u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
-    let buf = buf.join(codegen::builtin_putchar関数を生成());
+    buf.append(codegen::builtin_putchar関数を生成());
     global_function_table.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
 
     let mut buf = buf;

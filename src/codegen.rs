@@ -695,8 +695,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
     main_buf: &mut Buf,
     definition: &FunctionDefinition,
 ) -> u16 {
-    let buf = std::mem::take(main_buf);
-    let func_pos = u16::try_from(buf.len()).expect("バッファの長さが u16 に収まりません");
+    let func_pos = u16::try_from(main_buf.len()).expect("バッファの長さが u16 に収まりません");
     global_function_table.insert(definition.func_name.clone(), u32::from(func_pos));
 
     let mut function_gen = FunctionGen {
@@ -705,16 +704,15 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         global_function_table,
         function_name: &definition.func_name,
     };
-    let buf = buf.join(rbpをプッシュ());
+    main_buf.append(rbpをプッシュ());
     function_gen.stack_size += 8;
-    let buf = buf.join(rspをrbpにコピー());
+    main_buf.append(rspをrbpにコピー());
 
     let content_buf = match &definition.content {
         FunctionContent::Statements(statements) => {
             let mut parameter_buf = Buf::new();
             let _return_type = &definition.return_type;
             for (i, (_param_type, param)) in definition.params.iter().enumerate() {
-                let tmp_buf = std::mem::take(&mut parameter_buf);
 
                 let len = function_gen.local_var_table.len();
                 if function_gen.local_var_table.contains_key(&param.ident) {
@@ -731,23 +729,23 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
                 // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
                 // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
                 let negative_offset: i8 = -(offset as i8);
-                let tmp_buf = match i {
-                    0 => tmp_buf.join(rbpにoffsetを足した位置にediを代入(
+                match i {
+                    0 => parameter_buf.append(rbpにoffsetを足した位置にediを代入(
                         negative_offset,
                     )),
-                    1 => tmp_buf.join(rbpにoffsetを足した位置にesiを代入(
+                    1 => parameter_buf.append(rbpにoffsetを足した位置にesiを代入(
                         negative_offset,
                     )),
-                    2 => tmp_buf.join(rbpにoffsetを足した位置にedxを代入(
+                    2 => parameter_buf.append(rbpにoffsetを足した位置にedxを代入(
                         negative_offset,
                     )),
-                    3 => tmp_buf.join(rbpにoffsetを足した位置にecxを代入(
+                    3 => parameter_buf.append(rbpにoffsetを足した位置にecxを代入(
                         negative_offset,
                     )),
-                    4 => tmp_buf.join(rbpにoffsetを足した位置にr8dを代入(
+                    4 => parameter_buf.append(rbpにoffsetを足した位置にr8dを代入(
                         negative_offset,
                     )),
-                    5 => tmp_buf.join(rbpにoffsetを足した位置にr9dを代入(
+                    5 => parameter_buf.append(rbpにoffsetを足した位置にr9dを代入(
                         negative_offset,
                     )),
                     _ => panic!(
@@ -755,7 +753,6 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
                         definition.func_name
                     ),
                 };
-                parameter_buf = tmp_buf;
             }
 
             for (local_var_name, _local_var_type) in definition.local_var_declarations.iter() {
@@ -779,12 +776,11 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         }
     };
 
-    let buf = buf.join(rspから即値を引く(
+    main_buf.append(rspから即値を引く(
         u8::try_from(function_gen.local_var_table.len() * WORD_SIZE as usize)
             .expect("識別子の個数が u8 に収まりません"),
     ));
-    let buf = buf.join(content_buf);
+    main_buf.append(content_buf);
 
-    *main_buf = buf;
     func_pos
 }
