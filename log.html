@@ -2394,6 +2394,48 @@ main() {
 		<div class="content">add命令を64bit化したらテスト2も通るようになった。ついでにsub/mulも64bit化</div>
 	</div>
 </div>
+<h3 class="date">2023年1月17日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_8610a519df99634382db90415ddd37dd').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8610a519df99634382db90415ddd37dd').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_8610a519df99634382db90415ddd37dd" href="#permalink_8610a519df99634382db90415ddd37dd" class="permalink">¶</a>
+		<div class="content">step 17 さっさとやっちゃうか</div>
+		<div class="content">とりあえず、「関数はいままでfoo(x, y)といった形で書いていましたが、これをint foo(int x, int y)といった形になるように改造します。」が一番ラクなので、これをまずやる</div>
+		<div class="content">えーと FunctionDefinition を生成しているところをいじればいいんだから</div>
+		<div class="content">FunctionDefinition 型の定義を変更</div>
+		<pre><code class="language-rust">pub struct FunctionDefinition {
+    pub func_name: String,
+    pub params: Vec&lt;(Type, ParameterIdentifier)&gt;,
+    pub pos: usize,
+    pub content: FunctionContent,
+    pub return_type: Type
+}
+</code></pre>
+		<div class="content">として型の情報を足せばよく、</div>
+		<div class="content">トークナイザに予約語 int を足す必要もある</div>
+		<div class="content">関数定義のパースに int をねじ込んだので、今度はテストケースに int を入れていく必要がある</div>
+		<div class="content">足したはずなのに「トップレベルが型名でないもので始まっています」で落ちる。なぜだろう</div>
+		<div class="content">あー理解。&#x60;Identifier(&quot;__start&quot;)&#x60; で始まってると言われている。つまり、__start を C で書いてるからそこも直さなきゃいけない</div>
+		<div class="content">直した。テストが全部通ったのでコミット</div>
+		<div class="content">あとは、「変数定義文」「未定義変数をエラー」の二つだな</div>
+		<div class="content">こうなると、idents って HashMap を local_var_table に、functions って HashMap を function_table にしたくなる。しておこう</div>
+		<div class="content">次に、パーサーに変数定義文を足す。「真にいにしえの C」と同様に、関数の頭でだけ変数定義ができるようにしておこう</div>
+		<div class="content">after_param_list で関数の中身を読んでるので、そこの冒頭で変数宣言を読めるようにしよう</div>
+		<div class="content">とりあえず local_var_definitions という HashMap に読み込んでおくか</div>
+		<div class="content">で、それを FunctionDefinition に仕込んでおいて、</div>
+		<div class="content">えーと未定義変数は Codegen で怒るか。えーっと local_var_table が Codegen にあるのは間違いで</div>
+		<div class="content">あー、ちゃんと tkr もその問題に気づいていて「TODO: FunctionGenみたいなのに分けたい」というコメントが書いてあるな</div>
+		<div class="content">まあとりあえず、先に変数宣言をちゃんと読めているかをテストしよう</div>
+		<div class="content">読めているのでコミット</div>
+		<div class="content">さてリファクタリングしたい。とりあえず、CodeGen 自体を FunctionGen へと改名し、必要に応じて FunctionGen から追い出していこう</div>
+		<div class="content">リファクタリングした。『関数をコード生成しメインバッファとグローバル関数テーブルに挿入』だけを FunctionGen から追い出すだけで済んだ</div>
+		<div class="content">そうしたら、今度は FunctionGen に『関数先頭で宣言されている変数の一覧』を渡して、それと照合してエラーを出せばよい</div>
+		<div class="content">走らせてみると……関数の仮引数についても『知らん』と言われる。それはそう。なのでそいつらも合わせてやろう</div>
+		<div class="content">ちなみに、関数の先頭で宣言された変数は、関数の仮引数と同じスコープを持ち、名前がかぶってはいけない、というのが C の仕様なので、本当に等価に扱えばよい</div>
+		<div class="content">よし、実装できた</div>
+		<div class="content">おや～未定義動作を含む x = 3; y = 5; z = &amp;y + 8; return *z; が CI でだけ落ちる。もういいや、未定義動作だしこのテストケースはコメントアウトしよう</div>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>
