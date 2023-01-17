@@ -1307,3 +1307,42 @@ tkr「word sizeを64bitにしたけどセグフォがなおらん〜〜〜」
 tkr「*&x はいけるけど y=&x の時 *y はセグフォになる、変数の値の読み書き死んでるなこれ」
 tkr「mov [rax], edi -> mov [rax], rdi にしたらなおった」
 tkr「add命令を64bit化したらテスト2も通るようになった。ついでにsub/mulも64bit化」
+
+$DATE「2023年1月17日」
+hsjoihs「step 17 さっさとやっちゃうか」
+hsjoihs「とりあえず、「関数はいままでfoo(x, y)といった形で書いていましたが、これをint foo(int x, int y)といった形になるように改造します。」が一番ラクなので、これをまずやる」
+hsjoihs「えーと FunctionDefinition を生成しているところをいじればいいんだから」
+hsjoihs「FunctionDefinition 型の定義を変更」
+$source
+```rust
+pub struct FunctionDefinition {
+    pub func_name: String,
+    pub params: Vec<(Type, ParameterIdentifier)>,
+    pub pos: usize,
+    pub content: FunctionContent,
+    pub return_type: Type
+}
+```
+hsjoihs「として型の情報を足せばよく、」
+hsjoihs「トークナイザに予約語 int を足す必要もある」
+hsjoihs「関数定義のパースに int をねじ込んだので、今度はテストケースに int を入れていく必要がある」
+hsjoihs「足したはずなのに「トップレベルが型名でないもので始まっています」で落ちる。なぜだろう」
+hsjoihs「あー理解。`Identifier("__start")` で始まってると言われている。つまり、__start を C で書いてるからそこも直さなきゃいけない」
+hsjoihs「直した。テストが全部通ったのでコミット」
+hsjoihs「あとは、「変数定義文」「未定義変数をエラー」の二つだな」
+hsjoihs「こうなると、idents って HashMap を local_var_table に、functions って HashMap を function_table にしたくなる。しておこう」
+hsjoihs「次に、パーサーに変数定義文を足す。「真にいにしえの C」と同様に、関数の頭でだけ変数定義ができるようにしておこう」
+hsjoihs「after_param_list で関数の中身を読んでるので、そこの冒頭で変数宣言を読めるようにしよう」
+hsjoihs「とりあえず local_var_definitions という HashMap に読み込んでおくか」
+hsjoihs「で、それを FunctionDefinition に仕込んでおいて、」
+hsjoihs「えーと未定義変数は Codegen で怒るか。えーっと local_var_table が Codegen にあるのは間違いで」
+hsjoihs「あー、ちゃんと tkr もその問題に気づいていて「TODO: FunctionGenみたいなのに分けたい」というコメントが書いてあるな」
+hsjoihs「まあとりあえず、先に変数宣言をちゃんと読めているかをテストしよう」
+hsjoihs「読めているのでコミット」
+hsjoihs「さてリファクタリングしたい。とりあえず、CodeGen 自体を FunctionGen へと改名し、必要に応じて FunctionGen から追い出していこう」
+hsjoihs「リファクタリングした。『関数をコード生成しメインバッファとグローバル関数テーブルに挿入』だけを FunctionGen から追い出すだけで済んだ」
+hsjoihs「そうしたら、今度は FunctionGen に『関数先頭で宣言されている変数の一覧』を渡して、それと照合してエラーを出せばよい」
+hsjoihs「走らせてみると……関数の仮引数についても『知らん』と言われる。それはそう。なのでそいつらも合わせてやろう」
+hsjoihs「ちなみに、関数の先頭で宣言された変数は、関数の仮引数と同じスコープを持ち、名前がかぶってはいけない、というのが C の仕様なので、本当に等価に扱えばよい」
+hsjoihs「よし、実装できた」
+hsjoihs「おや～未定義動作を含む x = 3; y = 5; z = &y + 8; return *z; が CI でだけ落ちる。もういいや、未定義動作だしこのテストケースはコメントアウトしよう」

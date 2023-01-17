@@ -1,6 +1,7 @@
 use crate::apperror::*;
 use crate::ast::*;
 use crate::token::*;
+use std::collections::HashMap;
 use std::{iter::Peekable, slice::Iter};
 
 #[test]
@@ -723,18 +724,34 @@ pub struct ParameterIdentifier {
     pub pos: usize,
 }
 
-fn parse_parameter_identifier(
+fn parse_parameter_type_and_identifier(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-) -> Result<ParameterIdentifier, AppError> {
+) -> Result<(Type, ParameterIdentifier), AppError> {
+    let parameter_type = match tokens.next().unwrap() {
+        Token {
+            payload: TokenPayload::Int,
+            ..
+        } => Type::Int,
+        Token { pos, .. } => {
+            return Err(AppError {
+                message: "仮引数に型名がありません".to_string(),
+                input: input.to_string(),
+                pos: *pos,
+            })
+        }
+    };
     match tokens.next().unwrap() {
         Token {
             payload: TokenPayload::Identifier(ident),
             pos,
-        } => Ok(ParameterIdentifier {
-            ident: ident.clone(),
-            pos: *pos,
-        }),
+        } => Ok((
+            parameter_type,
+            ParameterIdentifier {
+                ident: ident.clone(),
+                pos: *pos,
+            },
+        )),
         Token { pos, .. } => Err(AppError {
             message: "仮引数をパースできません".to_string(),
             input: input.to_string(),
@@ -743,18 +760,26 @@ fn parse_parameter_identifier(
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum Type {
+    Int,
+}
+
 pub struct FunctionDefinition {
     pub func_name: String,
-    pub params: Vec<ParameterIdentifier>,
+    pub params: Vec<(Type, ParameterIdentifier)>,
     pub pos: usize,
     pub content: FunctionContent,
+    pub return_type: Type,
+    pub local_var_declarations: HashMap<String, Type>,
 }
 
 fn after_param_list(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-    params: Vec<ParameterIdentifier>,
+    params: Vec<(Type, ParameterIdentifier)>,
     pos: usize,
+    return_type: Type,
     ident: &str,
 ) -> Result<FunctionDefinition, AppError> {
     match tokens.peek().unwrap() {
@@ -762,13 +787,91 @@ fn after_param_list(
             payload: TokenPayload::開き波括弧,
             ..
         } => {
-            let content = parse_statement(tokens, input)?;
+            tokens.next();
+            let mut local_var_declarations = HashMap::new();
+            #[allow(clippy::while_let_loop)]
+            loop {
+                let local_var_type = match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::Int,
+                        ..
+                    } => {
+                        tokens.next();
+                        Type::Int
+                    }
+                    Token { .. } => {
+                        // 変数定義は終わり
+                        break;
+                    }
+                };
+                let local_var_name = match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::Identifier(ident),
+                        ..
+                    } => {
+                        tokens.next();
+                        ident.clone()
+                    }
+                    Token { pos, .. } => {
+                        return Err(AppError {
+                            message: "関数内の変数宣言で、型名の後に識別子以外が来ました"
+                                .to_string(),
+                            input: input.to_string(),
+                            pos: *pos,
+                        })
+                    }
+                };
+                match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::Semicolon,
+                        ..
+                    } => {
+                        tokens.next();
+                    }
+                    Token { pos, .. } => {
+                        return Err(AppError {
+                            message:
+                                "関数内の変数宣言で、型名と識別子の後にセミコロン以外が来ました"
+                                    .to_string(),
+                            input: input.to_string(),
+                            pos: *pos,
+                        })
+                    }
+                }
+                local_var_declarations.insert(local_var_name, local_var_type);
+            }
+            let mut statements = vec![];
+            loop {
+                match tokens.peek().unwrap() {
+                    Token {
+                        payload: TokenPayload::Eof,
+                        pos,
+                    } => {
+                        return Err(AppError {
+                            message: "期待された閉じ波括弧が来ませんでした".to_string(),
+                            input: input.to_string(),
+                            pos: *pos,
+                        })
+                    }
+                    Token {
+                        payload: TokenPayload::閉じ波括弧,
+                        ..
+                    } => {
+                        tokens.next();
+
+                        break;
+                    }
+                    _ => statements.push(parse_statement(tokens, input)?),
+                }
+            }
 
             let expr = FunctionDefinition {
                 func_name: ident.to_string(),
                 params,
                 pos,
-                content: FunctionContent::Statements(vec![content]),
+                content: FunctionContent::Statements(statements),
+                return_type,
+                local_var_declarations,
             };
             Ok(expr)
         }
@@ -784,6 +887,22 @@ pub fn parse_toplevel_function_definition(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<FunctionDefinition, AppError> {
+    let return_type = match tokens.next().unwrap() {
+        Token {
+            payload: TokenPayload::Int,
+            ..
+        } => Type::Int,
+        Token { pos, payload } => {
+            return Err(AppError {
+                message: format!(
+                    "トップレベルが型名でないもので始まっています: {:?}",
+                    payload
+                ),
+                input: input.to_string(),
+                pos: *pos,
+            })
+        }
+    };
     match tokens.next().unwrap() {
         Token {
             payload: TokenPayload::Identifier(ident),
@@ -803,10 +922,10 @@ pub fn parse_toplevel_function_definition(
                         ..
                     } => {
                         tokens.next();
-                        return after_param_list(tokens, input, params, *pos, ident);
+                        return after_param_list(tokens, input, params, *pos, return_type, ident);
                     }
                     _ => {
-                        let param = parse_parameter_identifier(tokens, input)?;
+                        let param = parse_parameter_type_and_identifier(tokens, input)?;
                         params.push(param);
                     }
                 }
@@ -818,14 +937,21 @@ pub fn parse_toplevel_function_definition(
                             ..
                         } => {
                             tokens.next();
-                            return after_param_list(tokens, input, params, *pos, ident);
+                            return after_param_list(
+                                tokens,
+                                input,
+                                params,
+                                *pos,
+                                return_type,
+                                ident,
+                            );
                         }
                         Token {
                             payload: TokenPayload::Comma,
                             ..
                         } => {
                             tokens.next();
-                            let param = parse_parameter_identifier(tokens, input)?;
+                            let param = parse_parameter_type_and_identifier(tokens, input)?;
                             params.push(param);
                         }
                         _ => {

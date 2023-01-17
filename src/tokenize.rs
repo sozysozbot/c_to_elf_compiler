@@ -57,6 +57,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     "else" => TokenPayload::Else,
                     "while" => TokenPayload::While,
                     "for" => TokenPayload::For,
+                    "int" => TokenPayload::Int,
                     _ => TokenPayload::Identifier(ident),
                 };
 
