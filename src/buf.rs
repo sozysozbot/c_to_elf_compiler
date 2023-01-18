@@ -45,6 +45,7 @@ impl Buf {
         }
     }
 
+    #[must_use]
     pub fn join(self, other: impl Into<Buf>) -> Self {
         let other = other.into();
         let len = self.len() + other.len();
@@ -54,6 +55,12 @@ impl Buf {
             right: Box::new(other),
             len,
         }
+    }
+
+    pub fn append(&mut self, other: impl Into<Buf>) {
+        let buf = std::mem::take(self);
+        let buf = buf.join(other);
+        *self = buf;
     }
 
     fn write_to_vec(&self, buf: &mut Vec<u8>) {
