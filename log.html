@@ -65,7 +65,7 @@
 <h1>ELF を吐く C コンパイラを Rui 本の方式で作る</h1>
 <p>編纂者：<a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></p>
 <p><a href="https://github.com/sozysozbot/c_to_elf_compiler">リポジトリへのリンク</a></p>
-<p><a href="https://hsjoihs.hatenablog.com/entry/*****">はてなブログへのバックリンク (FIXME)</a></p>
+<p><a href="https://docs.google.com/presentation/d/1ms7ZhaBbwB9zPcvax-ElwFXIMu28jE4D6QRBWNPoIDo">Google Presentation へのバックリンク</a></p>
 
 <h2>会話ログ本体</h2><h3 class="date">2022年10月3日（Discord にて）</h3>
 <div class="one_person">
@@ -2394,6 +2394,37 @@ main() {
 		<div class="content">add命令を64bit化したらテスト2も通るようになった。ついでにsub/mulも64bit化</div>
 	</div>
 </div>
+<h3 class="date">2023年1月16日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_fc31c67c88a05f3a4e02a9cd76810015').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_fc31c67c88a05f3a4e02a9cd76810015').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_fc31c67c88a05f3a4e02a9cd76810015" href="#permalink_fc31c67c88a05f3a4e02a9cd76810015" class="permalink">¶</a>
+		<div class="content">レビューをしていくか</div>
+		<div class="content">mulにだけ0x48がついてませんね</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1dfe620b9a215081b3a83d8f347dbce4').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1dfe620b9a215081b3a83d8f347dbce4').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_1dfe620b9a215081b3a83d8f347dbce4" href="#permalink_1dfe620b9a215081b3a83d8f347dbce4" class="permalink">¶</a>
+		<div class="content">あれ、ミスってた</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_5515aa0eef88a8d294d1def2e08e8205').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_5515aa0eef88a8d294d1def2e08e8205').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_5515aa0eef88a8d294d1def2e08e8205" href="#permalink_5515aa0eef88a8d294d1def2e08e8205" class="permalink">¶</a>
+		<div class="content">この U32_WORD_SIZE って変数名、u32 そのものの size っぽく読めてしまって紛らわしいので、WORD_SIZE_AS_U32 みたいな変数名にしたほうがよいと思います</div>
+		<div class="content">あと、トークンの方は Mul じゃなくて Asterisk にリネームしてもいいのかもですね。意味が 2 種類現れるようになったし。まあこのブランチをマージしたあとのリファクタリングとしてやってもいいか</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_9f27abf71b3449ae4a11976235b813ba').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_9f27abf71b3449ae4a11976235b813ba').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_9f27abf71b3449ae4a11976235b813ba" href="#permalink_9f27abf71b3449ae4a11976235b813ba" class="permalink">¶</a>
+		<div class="content">ですよねー</div>
+	</div>
+</div>
 <h3 class="date">2023年1月17日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
@@ -2434,6 +2465,79 @@ main() {
 		<div class="content">ちなみに、関数の先頭で宣言された変数は、関数の仮引数と同じスコープを持ち、名前がかぶってはいけない、というのが C の仕様なので、本当に等価に扱えばよい</div>
 		<div class="content">よし、実装できた</div>
 		<div class="content">おや～未定義動作を含む x = 3; y = 5; z = &amp;y + 8; return *z; が CI でだけ落ちる。もういいや、未定義動作だしこのテストケースはコメントアウトしよう</div>
+	</div>
+</div>
+<h3 class="date">2023年1月18日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_2f3642b2089a7f5a7f5a23669811c039').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_2f3642b2089a7f5a7f5a23669811c039').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_2f3642b2089a7f5a7f5a23669811c039" href="#permalink_2f3642b2089a7f5a7f5a23669811c039" class="permalink">¶</a>
+		<div class="content">FunctionGen の外側の Codegen は今のところ複雑じゃないしまだ分けなくていいか(グローバル変数の定義とか出てきたら考えましょう)</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_38701f51b626d592824be5dd85489d09').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_38701f51b626d592824be5dd85489d09').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_38701f51b626d592824be5dd85489d09" href="#permalink_38701f51b626d592824be5dd85489d09" class="permalink">¶</a>
+		<div class="content">そうね</div>
+		<div class="content">tkr 担当の step 18 は簡単で、その次の私がやる step 19 は alloc4(&amp;p, 1, 2, 4, 8) ができるようにしなきゃいけないんだよな</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4175e2498eb0e441bad5ea9c181519f9').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4175e2498eb0e441bad5ea9c181519f9').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_4175e2498eb0e441bad5ea9c181519f9" href="#permalink_4175e2498eb0e441bad5ea9c181519f9" class="permalink">¶</a>
+		<div class="content">とりあえず来週火曜まではお休みで…(発表あるので)</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_2ba0d4e719694ccd13b8efbb97545918').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_2ba0d4e719694ccd13b8efbb97545918').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_2ba0d4e719694ccd13b8efbb97545918" href="#permalink_2ba0d4e719694ccd13b8efbb97545918" class="permalink">¶</a>
+		<div class="content">了解です。私も授業が第二週に入ったのでそろそろ学業を真面目にやらんとあかん</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_41eb6acadc6a0385903d30be96aac8c5').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_41eb6acadc6a0385903d30be96aac8c5').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_41eb6acadc6a0385903d30be96aac8c5" href="#permalink_41eb6acadc6a0385903d30be96aac8c5" class="permalink">¶</a>
+		<div class="content">あ、1.5年修士だからまだ忙しいのか</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_eee7e831bd9df87b9e9b0f58475708c1').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_eee7e831bd9df87b9e9b0f58475708c1').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_eee7e831bd9df87b9e9b0f58475708c1" href="#permalink_eee7e831bd9df87b9e9b0f58475708c1" class="permalink">¶</a>
+		<div class="content">そういうことです（てか今学期末で卒業予定なので）</div>
+		<div class="content">とりあえず brk() の使い方を雑に理解したので組めそうだな</div>
+		<div class="content">この二つのリンクを残しておけば 2 週間後のわたしがサクッと組んでくれるでしょう</div>
+		<div class="content"><a href="https://github.com/ushitora-anqou/aqcc/blob/master/as/stdlib.c" target="_blank" rel="noopener noreferrer">https://github.com/ushitora-anqou/aqcc/blob/master/as/stdlib.c</a></div>
+		<div class="content"><a href="https://stackoverflow.com/questions/6988487/what-does-the-brk-system-call-do" target="_blank" rel="noopener noreferrer">https://stackoverflow.com/questions/6988487/what-does-the-brk-system-call-do</a></div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_8d23896fc6ab65cd367bc24d22a05c9c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8d23896fc6ab65cd367bc24d22a05c9c').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_8d23896fc6ab65cd367bc24d22a05c9c" href="#permalink_8d23896fc6ab65cd367bc24d22a05c9c" class="permalink">¶</a>
+		<div class="content">ポインタ+1確かに+1じゃないのかこれ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_389364df37dc2b4ec72fa37beb3365fd').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_389364df37dc2b4ec72fa37beb3365fd').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_389364df37dc2b4ec72fa37beb3365fd" href="#permalink_389364df37dc2b4ec72fa37beb3365fd" class="permalink">¶</a>
+		<div class="content">そうなのよね</div>
+		<div class="content">とりあえず小さなリファクタリングだけ入れといたので一応 review を request しておく</div>
+		<blockquote>パーサを式のとトップレベルのとに分ける
+いちいち std::mem::take するのが面倒なので Buf::append を実装する
+</blockquote>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_d43327dfd585f8fb42ad7ccb7b2a176f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_d43327dfd585f8fb42ad7ccb7b2a176f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_d43327dfd585f8fb42ad7ccb7b2a176f" href="#permalink_d43327dfd585f8fb42ad7ccb7b2a176f" class="permalink">¶</a>
+		<div class="content">approve</div>
 	</div>
 </div>
 
