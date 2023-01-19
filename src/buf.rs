@@ -2,6 +2,7 @@
 RopeのようなO(1)で連結できるバッファ
 */
 
+#[must_use]
 #[derive(Debug, Clone)]
 pub enum Buf {
     Leaf {
@@ -25,12 +26,14 @@ impl Buf {
         Self::from(Vec::new())
     }
 
+    #[must_use]
     pub fn to_vec(&self) -> Vec<u8> {
         let mut vec = Vec::new();
         self.write_to_vec(&mut vec);
         vec
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         match &self {
             Self::Leaf { buf } => buf.is_empty(),
@@ -38,6 +41,7 @@ impl Buf {
         }
     }
 
+    #[must_use]
     pub fn len(&self) -> usize {
         match &self {
             Self::Leaf { buf } => buf.len(),
@@ -45,7 +49,6 @@ impl Buf {
         }
     }
 
-    #[must_use]
     pub fn join(self, other: impl Into<Buf>) -> Self {
         let other = other.into();
         let len = self.len() + other.len();
