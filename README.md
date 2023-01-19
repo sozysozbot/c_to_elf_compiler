@@ -3,6 +3,12 @@ Follows https://www.sigbus.info/compilerbook but spits out an ELF / Rui 本ベ�
 
 [作業ログはこちら](https://sozysozbot.github.io/c_to_elf_compiler/log.html)
 
+## 発表
+[Kernel/VM探検隊online part6](https://kernelvm.connpass.com/event/256278/) で発表しました
+
+- [スライド](https://docs.google.com/presentation/d/1ms7ZhaBbwB9zPcvax-ElwFXIMu28jE4D6QRBWNPoIDo)
+- [録画](https://youtu.be/yuSVbuiaBuU?t=12063)
+
 ## Plan
 [hsjoihs](https://twitter.com/hsjoihs) will implement the odd-numbered steps, and [kgtkr](https://twitter.com/kgtkr) will implement the even-numbered steps. / hsjoihs が奇数番目のステップを、kgtkr が偶数番目のステップを実装する方針
 
