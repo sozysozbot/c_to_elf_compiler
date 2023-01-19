@@ -1308,6 +1308,14 @@ tkr「*&x はいけるけど y=&x の時 *y はセグフォになる、変数の
 tkr「mov [rax], edi -> mov [rax], rdi にしたらなおった」
 tkr「add命令を64bit化したらテスト2も通るようになった。ついでにsub/mulも64bit化」
 
+$DATE「2023年1月16日」
+hsjoihs「レビューをしていくか」
+hsjoihs「mulにだけ0x48がついてませんね」
+tkr「あれ、ミスってた」
+hsjoihs「この U32_WORD_SIZE って変数名、u32 そのものの size っぽく読めてしまって紛らわしいので、WORD_SIZE_AS_U32 みたいな変数名にしたほうがよいと思います」
+hsjoihs「あと、トークンの方は Mul じゃなくて Asterisk にリネームしてもいいのかもですね。意味が 2 種類現れるようになったし。まあこのブランチをマージしたあとのリファクタリングとしてやってもいいか」
+tkr「ですよねー」
+
 $DATE「2023年1月17日」
 hsjoihs「step 17 さっさとやっちゃうか」
 hsjoihs「とりあえず、「関数はいままでfoo(x, y)といった形で書いていましたが、これをint foo(int x, int y)といった形になるように改造します。」が一番ラクなので、これをまずやる」
@@ -1346,3 +1354,27 @@ hsjoihs「走らせてみると……関数の仮引数についても『知ら�
 hsjoihs「ちなみに、関数の先頭で宣言された変数は、関数の仮引数と同じスコープを持ち、名前がかぶってはいけない、というのが C の仕様なので、本当に等価に扱えばよい」
 hsjoihs「よし、実装できた」
 hsjoihs「おや～未定義動作を含む x = 3; y = 5; z = &y + 8; return *z; が CI でだけ落ちる。もういいや、未定義動作だしこのテストケースはコメントアウトしよう」
+
+$DATE「2023年1月18日」
+tkr「FunctionGen の外側の Codegen は今のところ複雑じゃないしまだ分けなくていいか(グローバル変数の定義とか出てきたら考えましょう)」
+hsjoihs「そうね」
+
+
+hsjoihs「tkr 担当の step 18 は簡単で、その次の私がやる step 19 は alloc4(&p, 1, 2, 4, 8) ができるようにしなきゃいけないんだよな」
+tkr「とりあえず来週火曜まではお休みで…(発表あるので)」
+hsjoihs「了解です。私も授業が第二週に入ったのでそろそろ学業を真面目にやらんとあかん」
+tkr「あ、1.5年修士だからまだ忙しいのか」
+hsjoihs「そういうことです（てか今学期末で卒業予定なので）」
+hsjoihs「とりあえず brk() の使い方を雑に理解したので組めそうだな」
+hsjoihs「この二つのリンクを残しておけば 2 週間後のわたしがサクッと組んでくれるでしょう」
+$URL「https://github.com/ushitora-anqou/aqcc/blob/master/as/stdlib.c」
+$URL「https://stackoverflow.com/questions/6988487/what-does-the-brk-system-call-do」
+tkr「ポインタ+1確かに+1じゃないのかこれ」
+hsjoihs「そうなのよね」
+hsjoihs「とりあえず小さなリファクタリングだけ入れといたので一応 review を request しておく」
+$blockquote
+```
+パーサを式のとトップレベルのとに分ける
+いちいち std::mem::take するのが面倒なので Buf::append を実装する
+```
+tkr「approve」
