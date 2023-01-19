@@ -708,72 +708,70 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
     function_gen.stack_size += 8;
     main_buf.append(rspをrbpにコピー());
 
-    let content_buf = match &definition.content {
-        FunctionContent::Statements(statements) => {
-            let mut parameter_buf = Buf::new();
-            let _return_type = &definition.return_type;
-            for (i, (_param_type, param)) in definition.params.iter().enumerate() {
-                let len = function_gen.local_var_table.len();
-                if function_gen.local_var_table.contains_key(&param.ident) {
-                    panic!(
-                        "関数 `{}` の仮引数 {} が重複しています",
-                        definition.func_name, param.ident
-                    )
-                }
-                let idx = function_gen
-                    .local_var_table
-                    .entry(param.ident.clone())
-                    .or_insert(len as u8);
-                let offset = *idx * WORD_SIZE + WORD_SIZE;
-                // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
-                // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
-                let negative_offset: i8 = -(offset as i8);
-                match i {
-                    0 => parameter_buf.append(rbpにoffsetを足した位置にediを代入(
-                        negative_offset,
-                    )),
-                    1 => parameter_buf.append(rbpにoffsetを足した位置にesiを代入(
-                        negative_offset,
-                    )),
-                    2 => parameter_buf.append(rbpにoffsetを足した位置にedxを代入(
-                        negative_offset,
-                    )),
-                    3 => parameter_buf.append(rbpにoffsetを足した位置にecxを代入(
-                        negative_offset,
-                    )),
-                    4 => parameter_buf.append(rbpにoffsetを足した位置にr8dを代入(
-                        negative_offset,
-                    )),
-                    5 => parameter_buf.append(rbpにoffsetを足した位置にr9dを代入(
-                        negative_offset,
-                    )),
-                    _ => panic!(
-                        "関数 `{}` に 7 つ以上の仮引数があります",
-                        definition.func_name
-                    ),
-                };
-            }
+    let mut parameter_buf = Buf::new();
+    let _return_type = &definition.return_type;
 
-            for (local_var_name, _local_var_type) in definition.local_var_declarations.iter() {
-                let len = function_gen.local_var_table.len();
-                if function_gen.local_var_table.contains_key(local_var_name) {
-                    panic!(
-                        "関数 `{}` 先頭で定義されているローカル変数 {} が仮引数またはローカル変数と重複しています",
-                        definition.func_name, local_var_name
-                    )
-                }
-                function_gen
-                    .local_var_table
-                    .entry(local_var_name.clone())
-                    .or_insert(len as u8);
-            }
-
-            statements
-                .iter()
-                .map(|stmt| function_gen.statementを評価(stmt))
-                .fold(parameter_buf, Buf::join)
+    for (i, (_param_type, param)) in definition.params.iter().enumerate() {
+        let len = function_gen.local_var_table.len();
+        if function_gen.local_var_table.contains_key(&param.ident) {
+            panic!(
+                "関数 `{}` の仮引数 {} が重複しています",
+                definition.func_name, param.ident
+            )
         }
-    };
+        let idx = function_gen
+            .local_var_table
+            .entry(param.ident.clone())
+            .or_insert(len as u8);
+        let offset = *idx * WORD_SIZE + WORD_SIZE;
+        // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
+        // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
+        let negative_offset: i8 = -(offset as i8);
+        match i {
+            0 => parameter_buf.append(rbpにoffsetを足した位置にediを代入(
+                negative_offset,
+            )),
+            1 => parameter_buf.append(rbpにoffsetを足した位置にesiを代入(
+                negative_offset,
+            )),
+            2 => parameter_buf.append(rbpにoffsetを足した位置にedxを代入(
+                negative_offset,
+            )),
+            3 => parameter_buf.append(rbpにoffsetを足した位置にecxを代入(
+                negative_offset,
+            )),
+            4 => parameter_buf.append(rbpにoffsetを足した位置にr8dを代入(
+                negative_offset,
+            )),
+            5 => parameter_buf.append(rbpにoffsetを足した位置にr9dを代入(
+                negative_offset,
+            )),
+            _ => panic!(
+                "関数 `{}` に 7 つ以上の仮引数があります",
+                definition.func_name
+            ),
+        };
+    }
+
+    for (local_var_name, _local_var_type) in definition.local_var_declarations.iter() {
+        let len = function_gen.local_var_table.len();
+        if function_gen.local_var_table.contains_key(local_var_name) {
+            panic!(
+                "関数 `{}` 先頭で定義されているローカル変数 {} が仮引数またはローカル変数と重複しています",
+                definition.func_name, local_var_name
+            )
+        }
+        function_gen
+            .local_var_table
+            .entry(local_var_name.clone())
+            .or_insert(len as u8);
+    }
+
+    let content_buf = definition
+        .statements
+        .iter()
+        .map(|stmt| function_gen.statementを評価(stmt))
+        .fold(parameter_buf, Buf::join);
 
     main_buf.append(rspから即値を引く(
         u8::try_from(function_gen.local_var_table.len() * WORD_SIZE as usize)

@@ -386,7 +386,7 @@ pub struct FunctionDefinition {
     pub func_name: String,
     pub params: Vec<(Type, ParameterIdentifier)>,
     pub pos: usize,
-    pub content: FunctionContent,
+    pub statements: Vec<Statement>,
     pub return_type: Type,
     pub local_var_declarations: HashMap<String, Type>,
 }
@@ -480,7 +480,7 @@ fn after_param_list(
                 func_name: ident.to_string(),
                 params,
                 pos,
-                content: FunctionContent::Statements(statements),
+                statements,
                 return_type,
                 local_var_declarations,
             };

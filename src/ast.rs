@@ -83,8 +83,3 @@ pub enum Statement {
         pos: usize,
     },
 }
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum FunctionContent {
-    Statements(Vec<Statement>),
-}
