@@ -6,7 +6,7 @@ use std::{iter::Peekable, slice::Iter};
 fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
     match tokens.next().unwrap() {
         Token {
-            payload: TokenPayload::Num(val),
+            tok: Tok::Num(val),
             pos,
         } => {
             let expr = Expr::Numeric {
@@ -16,11 +16,11 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
             Ok(expr)
         }
         Token {
-            payload: TokenPayload::Identifier(ident),
+            tok: Tok::Identifier(ident),
             pos,
         } => match tokens.peek().unwrap() {
             Token {
-                payload: TokenPayload::開き丸括弧,
+                tok: Tok::開き丸括弧,
                 pos: open_pos,
             } => {
                 tokens.next();
@@ -29,7 +29,7 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
 
                 match tokens.peek().unwrap() {
                     Token {
-                        payload: TokenPayload::閉じ丸括弧,
+                        tok: Tok::閉じ丸括弧,
                         ..
                     } => {
                         tokens.next();
@@ -49,7 +49,7 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
                 loop {
                     match tokens.peek().unwrap() {
                         Token {
-                            payload: TokenPayload::閉じ丸括弧,
+                            tok: Tok::閉じ丸括弧,
                             ..
                         } => {
                             tokens.next();
@@ -61,8 +61,7 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
                             break Ok(expr);
                         }
                         Token {
-                            payload: TokenPayload::Comma,
-                            ..
+                            tok: Tok::Comma, ..
                         } => {
                             tokens.next();
                             let expr = parse_expr(tokens, input)?;
@@ -87,13 +86,13 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
             }
         },
         Token {
-            payload: TokenPayload::開き丸括弧,
+            tok: Tok::開き丸括弧,
             pos,
         } => {
             let expr = parse_expr(tokens, input)?;
             match tokens.next().unwrap() {
                 Token {
-                    payload: TokenPayload::閉じ丸括弧,
+                    tok: Tok::閉じ丸括弧,
                     ..
                 } => Ok(expr),
                 _ => Err(AppError {
@@ -113,17 +112,11 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
 
 fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
     match tokens.peek() {
-        Some(Token {
-            payload: TokenPayload::Add,
-            ..
-        }) => {
+        Some(Token { tok: Tok::Add, .. }) => {
             tokens.next();
             parse_primary(tokens, input)
         }
-        Some(Token {
-            payload: TokenPayload::Sub,
-            pos,
-        }) => {
+        Some(Token { tok: Tok::Sub, pos }) => {
             tokens.next();
             let expr = parse_primary(tokens, input)?;
             Ok(Expr::BinaryExpr {
@@ -134,7 +127,7 @@ fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, 
             })
         }
         Some(Token {
-            payload: TokenPayload::Asterisk,
+            tok: Tok::Asterisk,
             pos,
         }) => {
             tokens.next();
@@ -146,7 +139,7 @@ fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, 
             })
         }
         Some(Token {
-            payload: TokenPayload::Ampersand,
+            tok: Tok::Ampersand,
             pos,
         }) => {
             tokens.next();
@@ -166,7 +159,7 @@ fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Resu
     loop {
         match tokens.peek() {
             Some(Token {
-                payload: TokenPayload::Asterisk,
+                tok: Tok::Asterisk,
                 pos: op_pos,
             }) => {
                 tokens.next();
@@ -180,7 +173,7 @@ fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Resu
                 };
             }
             Some(Token {
-                payload: TokenPayload::Div,
+                tok: Tok::Div,
                 pos: op_pos,
             }) => {
                 tokens.next();
@@ -207,7 +200,7 @@ fn parse_additive(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
         let tok = tokens.peek().unwrap();
         match tok {
             Token {
-                payload: TokenPayload::Add,
+                tok: Tok::Add,
                 pos: op_pos,
             } => {
                 tokens.next();
@@ -221,7 +214,7 @@ fn parse_additive(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
                 }
             }
             Token {
-                payload: TokenPayload::Sub,
+                tok: Tok::Sub,
                 pos: op_pos,
             } => {
                 tokens.next();
@@ -247,7 +240,7 @@ fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<E
         let tok = tokens.peek().unwrap();
         match tok {
             Token {
-                payload: TokenPayload::LessThan,
+                tok: Tok::LessThan,
                 pos: op_pos,
             } => {
                 tokens.next();
@@ -261,7 +254,7 @@ fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<E
                 }
             }
             Token {
-                payload: TokenPayload::LessThanOrEqual,
+                tok: Tok::LessThanOrEqual,
                 pos: op_pos,
             } => {
                 tokens.next();
@@ -275,7 +268,7 @@ fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<E
                 }
             }
             Token {
-                payload: TokenPayload::GreaterThan,
+                tok: Tok::GreaterThan,
                 pos: op_pos,
             } => {
                 tokens.next();
@@ -289,7 +282,7 @@ fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<E
                 }
             }
             Token {
-                payload: TokenPayload::GreaterThanOrEqual,
+                tok: Tok::GreaterThanOrEqual,
                 pos: op_pos,
             } => {
                 tokens.next();
@@ -315,7 +308,7 @@ fn parse_equality(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
         let tok = tokens.peek().unwrap();
         match tok {
             Token {
-                payload: TokenPayload::Equal,
+                tok: Tok::Equal,
                 pos: op_pos,
             } => {
                 tokens.next();
@@ -329,7 +322,7 @@ fn parse_equality(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
                 }
             }
             Token {
-                payload: TokenPayload::NotEqual,
+                tok: Tok::NotEqual,
                 pos: op_pos,
             } => {
                 tokens.next();
@@ -354,7 +347,7 @@ pub fn parse_expr(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
     let tok = tokens.peek().unwrap();
     match tok {
         Token {
-            payload: TokenPayload::Assign,
+            tok: Tok::Assign,
             pos: op_pos,
         } => {
             tokens.next();

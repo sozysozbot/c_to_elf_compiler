@@ -1,5 +1,5 @@
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum TokenPayload {
+pub enum Tok {
     Num(u8),
     Add,
     Sub,
@@ -32,6 +32,6 @@ pub enum TokenPayload {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Token {
-    pub payload: TokenPayload,
+    pub tok: Tok,
     pub pos: usize,
 }

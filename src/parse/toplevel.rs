@@ -30,15 +30,14 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
     let tok = tokens.peek().unwrap();
     match tok {
         Token {
-            payload: TokenPayload::Throw,
-            ..
+            tok: Tok::Throw, ..
         } => {
             tokens.next();
             let expr = Box::new(parse_expr(tokens, input)?);
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {
                 Token {
-                    payload: TokenPayload::Semicolon,
+                    tok: Tok::Semicolon,
                     pos,
                 } => {
                     tokens.next();
@@ -58,15 +57,14 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             })
         }
         Token {
-            payload: TokenPayload::Return,
-            ..
+            tok: Tok::Return, ..
         } => {
             tokens.next();
             let expr = Box::new(parse_expr(tokens, input)?);
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {
                 Token {
-                    payload: TokenPayload::Semicolon,
+                    tok: Tok::Semicolon,
                     pos,
                 } => {
                     tokens.next();
@@ -85,15 +83,12 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                 expr,
             })
         }
-        Token {
-            payload: TokenPayload::If,
-            pos,
-        } => {
+        Token { tok: Tok::If, pos } => {
             tokens.next();
             let tok = tokens.peek().unwrap();
             match tok {
                 Token {
-                    payload: TokenPayload::開き丸括弧,
+                    tok: Tok::開き丸括弧,
                     ..
                 } => {
                     tokens.next();
@@ -111,7 +106,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             let tok = tokens.peek().unwrap();
             match tok {
                 Token {
-                    payload: TokenPayload::閉じ丸括弧,
+                    tok: Tok::閉じ丸括弧,
                     ..
                 } => {
                     tokens.next();
@@ -127,10 +122,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             let then = Box::new(parse_statement(tokens, input)?);
             let tok = tokens.peek().unwrap();
             let else_ = match tok {
-                Token {
-                    payload: TokenPayload::Else,
-                    ..
-                } => {
+                Token { tok: Tok::Else, .. } => {
                     tokens.next();
                     Some(Box::new(parse_statement(tokens, input)?))
                 }
@@ -144,14 +136,14 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             })
         }
         Token {
-            payload: TokenPayload::While,
+            tok: Tok::While,
             pos,
         } => {
             tokens.next();
             let tok = tokens.peek().unwrap();
             match tok {
                 Token {
-                    payload: TokenPayload::開き丸括弧,
+                    tok: Tok::開き丸括弧,
                     ..
                 } => {
                     tokens.next();
@@ -169,7 +161,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             let tok = tokens.peek().unwrap();
             match tok {
                 Token {
-                    payload: TokenPayload::閉じ丸括弧,
+                    tok: Tok::閉じ丸括弧,
                     ..
                 } => {
                     tokens.next();
@@ -189,15 +181,12 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                 pos: *pos,
             })
         }
-        Token {
-            payload: TokenPayload::For,
-            pos,
-        } => {
+        Token { tok: Tok::For, pos } => {
             tokens.next();
             let tok = tokens.peek().unwrap();
             match tok {
                 Token {
-                    payload: TokenPayload::開き丸括弧,
+                    tok: Tok::開き丸括弧,
                     ..
                 } => {
                     tokens.next();
@@ -213,7 +202,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             let tok = tokens.peek().unwrap();
             let init = match tok {
                 Token {
-                    payload: TokenPayload::Semicolon,
+                    tok: Tok::Semicolon,
                     ..
                 } => None,
                 _ => Some(Box::new(parse_expr(tokens, input)?)),
@@ -221,7 +210,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             let tok = tokens.peek().unwrap();
             match tok {
                 Token {
-                    payload: TokenPayload::Semicolon,
+                    tok: Tok::Semicolon,
                     ..
                 } => {
                     tokens.next();
@@ -237,7 +226,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             let tok = tokens.peek().unwrap();
             let cond = match tok {
                 Token {
-                    payload: TokenPayload::Semicolon,
+                    tok: Tok::Semicolon,
                     ..
                 } => None,
                 _ => Some(Box::new(parse_expr(tokens, input)?)),
@@ -245,7 +234,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             let tok = tokens.peek().unwrap();
             match tok {
                 Token {
-                    payload: TokenPayload::Semicolon,
+                    tok: Tok::Semicolon,
                     ..
                 } => {
                     tokens.next();
@@ -261,7 +250,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             let tok = tokens.peek().unwrap();
             let update = match tok {
                 Token {
-                    payload: TokenPayload::閉じ丸括弧,
+                    tok: Tok::閉じ丸括弧,
                     ..
                 } => None,
                 _ => Some(Box::new(parse_expr(tokens, input)?)),
@@ -269,7 +258,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             let tok = tokens.peek().unwrap();
             match tok {
                 Token {
-                    payload: TokenPayload::閉じ丸括弧,
+                    tok: Tok::閉じ丸括弧,
                     ..
                 } => {
                     tokens.next();
@@ -292,17 +281,14 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             })
         }
         Token {
-            payload: TokenPayload::開き波括弧,
+            tok: Tok::開き波括弧,
             pos,
         } => {
             tokens.next();
             let mut statements = vec![];
             loop {
                 match tokens.peek().unwrap() {
-                    Token {
-                        payload: TokenPayload::Eof,
-                        pos,
-                    } => {
+                    Token { tok: Tok::Eof, pos } => {
                         return Err(AppError {
                             message: "期待された閉じ波括弧が来ませんでした".to_string(),
                             input: input.to_string(),
@@ -310,7 +296,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                         })
                     }
                     Token {
-                        payload: TokenPayload::閉じ波括弧,
+                        tok: Tok::閉じ波括弧,
                         ..
                     } => {
                         tokens.next();
@@ -330,7 +316,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {
                 Token {
-                    payload: TokenPayload::Semicolon,
+                    tok: Tok::Semicolon,
                     pos,
                 } => {
                     tokens.next();
@@ -363,10 +349,7 @@ fn parse_parameter_type_and_identifier(
     input: &str,
 ) -> Result<(Type, ParameterIdentifier), AppError> {
     let parameter_type = match tokens.next().unwrap() {
-        Token {
-            payload: TokenPayload::Int,
-            ..
-        } => Type::Int,
+        Token { tok: Tok::Int, .. } => Type::Int,
         Token { pos, .. } => {
             return Err(AppError {
                 message: "仮引数に型名がありません".to_string(),
@@ -377,7 +360,7 @@ fn parse_parameter_type_and_identifier(
     };
     match tokens.next().unwrap() {
         Token {
-            payload: TokenPayload::Identifier(ident),
+            tok: Tok::Identifier(ident),
             pos,
         } => Ok((
             parameter_type,
@@ -403,7 +386,7 @@ pub struct FunctionDefinition {
     pub func_name: String,
     pub params: Vec<(Type, ParameterIdentifier)>,
     pub pos: usize,
-    pub content: FunctionContent,
+    pub statements: Vec<Statement>,
     pub return_type: Type,
     pub local_var_declarations: HashMap<String, Type>,
 }
@@ -418,7 +401,7 @@ fn after_param_list(
 ) -> Result<FunctionDefinition, AppError> {
     match tokens.peek().unwrap() {
         Token {
-            payload: TokenPayload::開き波括弧,
+            tok: Tok::開き波括弧,
             ..
         } => {
             tokens.next();
@@ -426,10 +409,7 @@ fn after_param_list(
             #[allow(clippy::while_let_loop)]
             loop {
                 let local_var_type = match tokens.peek().unwrap() {
-                    Token {
-                        payload: TokenPayload::Int,
-                        ..
-                    } => {
+                    Token { tok: Tok::Int, .. } => {
                         tokens.next();
                         Type::Int
                     }
@@ -440,7 +420,7 @@ fn after_param_list(
                 };
                 let local_var_name = match tokens.peek().unwrap() {
                     Token {
-                        payload: TokenPayload::Identifier(ident),
+                        tok: Tok::Identifier(ident),
                         ..
                     } => {
                         tokens.next();
@@ -457,7 +437,7 @@ fn after_param_list(
                 };
                 match tokens.peek().unwrap() {
                     Token {
-                        payload: TokenPayload::Semicolon,
+                        tok: Tok::Semicolon,
                         ..
                     } => {
                         tokens.next();
@@ -477,10 +457,7 @@ fn after_param_list(
             let mut statements = vec![];
             loop {
                 match tokens.peek().unwrap() {
-                    Token {
-                        payload: TokenPayload::Eof,
-                        pos,
-                    } => {
+                    Token { tok: Tok::Eof, pos } => {
                         return Err(AppError {
                             message: "期待された閉じ波括弧が来ませんでした".to_string(),
                             input: input.to_string(),
@@ -488,7 +465,7 @@ fn after_param_list(
                         })
                     }
                     Token {
-                        payload: TokenPayload::閉じ波括弧,
+                        tok: Tok::閉じ波括弧,
                         ..
                     } => {
                         tokens.next();
@@ -503,7 +480,7 @@ fn after_param_list(
                 func_name: ident.to_string(),
                 params,
                 pos,
-                content: FunctionContent::Statements(statements),
+                statements,
                 return_type,
                 local_var_declarations,
             };
@@ -522,11 +499,8 @@ pub fn parse_toplevel_function_definition(
     input: &str,
 ) -> Result<FunctionDefinition, AppError> {
     let return_type = match tokens.next().unwrap() {
-        Token {
-            payload: TokenPayload::Int,
-            ..
-        } => Type::Int,
-        Token { pos, payload } => {
+        Token { tok: Tok::Int, .. } => Type::Int,
+        Token { pos, tok: payload } => {
             return Err(AppError {
                 message: format!(
                     "トップレベルが型名でないもので始まっています: {:?}",
@@ -539,11 +513,11 @@ pub fn parse_toplevel_function_definition(
     };
     match tokens.next().unwrap() {
         Token {
-            payload: TokenPayload::Identifier(ident),
+            tok: Tok::Identifier(ident),
             pos,
         } => match tokens.peek().unwrap() {
             Token {
-                payload: TokenPayload::開き丸括弧,
+                tok: Tok::開き丸括弧,
                 pos: open_pos,
             } => {
                 tokens.next();
@@ -552,7 +526,7 @@ pub fn parse_toplevel_function_definition(
 
                 match tokens.peek().unwrap() {
                     Token {
-                        payload: TokenPayload::閉じ丸括弧,
+                        tok: Tok::閉じ丸括弧,
                         ..
                     } => {
                         tokens.next();
@@ -567,7 +541,7 @@ pub fn parse_toplevel_function_definition(
                 loop {
                     match tokens.peek().unwrap() {
                         Token {
-                            payload: TokenPayload::閉じ丸括弧,
+                            tok: Tok::閉じ丸括弧,
                             ..
                         } => {
                             tokens.next();
@@ -581,8 +555,7 @@ pub fn parse_toplevel_function_definition(
                             );
                         }
                         Token {
-                            payload: TokenPayload::Comma,
-                            ..
+                            tok: Tok::Comma, ..
                         } => {
                             tokens.next();
                             let param = parse_parameter_type_and_identifier(tokens, input)?;
@@ -621,7 +594,7 @@ fn parse_program(
     while !matches!(
         tokens.peek(),
         Some(Token {
-            payload: TokenPayload::Eof,
+            tok: Tok::Eof,
             pos: _,
         }),
     ) {
@@ -636,7 +609,7 @@ pub fn parse(
 ) -> Result<Vec<FunctionDefinition>, AppError> {
     let program = parse_program(tokens, input)?;
     let tok = tokens.peek().unwrap();
-    if tok.payload == TokenPayload::Eof {
+    if tok.tok == Tok::Eof {
         Ok(program)
     } else {
         Err(AppError {

@@ -7,19 +7,19 @@ fn tokenize_test() {
         tokenize("5 - 3").unwrap(),
         vec![
             Token {
-                payload: TokenPayload::Num(5),
+                tok: Tok::Num(5),
                 pos: 0
             },
             Token {
-                payload: TokenPayload::Sub,
+                tok: Tok::Sub,
                 pos: 2
             },
             Token {
-                payload: TokenPayload::Num(3),
+                tok: Tok::Num(3),
                 pos: 4
             },
             Token {
-                payload: TokenPayload::Eof,
+                tok: Tok::Eof,
                 pos: 5
             }
         ]
@@ -51,78 +51,69 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 }
 
                 let payload = match ident.as_str() {
-                    "__throw" => TokenPayload::Throw,
-                    "return" => TokenPayload::Return,
-                    "if" => TokenPayload::If,
-                    "else" => TokenPayload::Else,
-                    "while" => TokenPayload::While,
-                    "for" => TokenPayload::For,
-                    "int" => TokenPayload::Int,
-                    _ => TokenPayload::Identifier(ident),
+                    "__throw" => Tok::Throw,
+                    "return" => Tok::Return,
+                    "if" => Tok::If,
+                    "else" => Tok::Else,
+                    "while" => Tok::While,
+                    "for" => Tok::For,
+                    "int" => Tok::Int,
+                    _ => Tok::Identifier(ident),
                 };
 
-                ans.push(Token { payload, pos });
+                ans.push(Token { tok: payload, pos });
             }
             ';' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::Semicolon,
+                    tok: Tok::Semicolon,
                     pos,
                 });
             }
             '{' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::開き波括弧,
+                    tok: Tok::開き波括弧,
                     pos,
                 });
             }
             '}' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::閉じ波括弧,
+                    tok: Tok::閉じ波括弧,
                     pos,
                 });
             }
             '+' => {
                 iter.next();
-                ans.push(Token {
-                    payload: TokenPayload::Add,
-                    pos,
-                });
+                ans.push(Token { tok: Tok::Add, pos });
             }
             '-' => {
                 iter.next();
-                ans.push(Token {
-                    payload: TokenPayload::Sub,
-                    pos,
-                });
+                ans.push(Token { tok: Tok::Sub, pos });
             }
             '*' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::Asterisk,
+                    tok: Tok::Asterisk,
                     pos,
                 });
             }
             '/' => {
                 iter.next();
-                ans.push(Token {
-                    payload: TokenPayload::Div,
-                    pos,
-                });
+                ans.push(Token { tok: Tok::Div, pos });
             }
             '(' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::開き丸括弧,
+                    tok: Tok::開き丸括弧,
                     pos,
                 });
             }
             ')' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::閉じ丸括弧,
+                    tok: Tok::閉じ丸括弧,
                     pos,
                 });
             }
@@ -132,13 +123,13 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     Some(&(pos, '=')) => {
                         iter.next();
                         ans.push(Token {
-                            payload: TokenPayload::Equal,
+                            tok: Tok::Equal,
                             pos,
                         });
                     }
                     _ => {
                         ans.push(Token {
-                            payload: TokenPayload::Assign,
+                            tok: Tok::Assign,
                             pos,
                         });
                     }
@@ -150,7 +141,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     Some(&(pos, '=')) => {
                         iter.next();
                         ans.push(Token {
-                            payload: TokenPayload::NotEqual,
+                            tok: Tok::NotEqual,
                             pos,
                         });
                     }
@@ -169,12 +160,12 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     Some(&(pos, '=')) => {
                         iter.next();
                         ans.push(Token {
-                            payload: TokenPayload::LessThanOrEqual,
+                            tok: Tok::LessThanOrEqual,
                             pos,
                         });
                     }
                     _ => ans.push(Token {
-                        payload: TokenPayload::LessThan,
+                        tok: Tok::LessThan,
                         pos,
                     }),
                 }
@@ -185,18 +176,18 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     Some(&(pos, '=')) => {
                         iter.next();
                         ans.push(Token {
-                            payload: TokenPayload::GreaterThanOrEqual,
+                            tok: Tok::GreaterThanOrEqual,
                             pos,
                         });
                     }
                     _ => ans.push(Token {
-                        payload: TokenPayload::GreaterThan,
+                        tok: Tok::GreaterThan,
                         pos,
                     }),
                 }
             }
             '0'..='9' => ans.push(Token {
-                payload: TokenPayload::Num(parse_num(&mut iter).map_err(|message| AppError {
+                tok: Tok::Num(parse_num(&mut iter).map_err(|message| AppError {
                     message,
                     input: input.to_string(),
                     pos,
@@ -206,14 +197,14 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
             ',' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::Comma,
+                    tok: Tok::Comma,
                     pos,
                 });
             }
             '&' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::Ampersand,
+                    tok: Tok::Ampersand,
                     pos,
                 });
             }
@@ -230,7 +221,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
         }
     }
     ans.push(Token {
-        payload: TokenPayload::Eof,
+        tok: Tok::Eof,
         pos: input.len(),
     });
     Ok(ans)
