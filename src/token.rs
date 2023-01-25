@@ -7,7 +7,6 @@ pub enum Tok {
     Div,
     開き丸括弧,
     閉じ丸括弧,
-    Eof,
     GreaterThan,
     GreaterThanOrEqual,
     LessThan,

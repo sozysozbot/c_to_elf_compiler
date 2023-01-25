@@ -17,10 +17,6 @@ fn tokenize_test() {
             Token {
                 tok: Tok::Num(3),
                 pos: 4
-            },
-            Token {
-                tok: Tok::Eof,
-                pos: 5
             }
         ]
     );
@@ -220,10 +216,6 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
             }
         }
     }
-    ans.push(Token {
-        tok: Tok::Eof,
-        pos: input.len(),
-    });
     Ok(ans)
 }
 

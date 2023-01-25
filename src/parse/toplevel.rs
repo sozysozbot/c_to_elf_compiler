@@ -287,18 +287,18 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             tokens.next();
             let mut statements = vec![];
             loop {
-                match tokens.peek().unwrap() {
-                    Token { tok: Tok::Eof, pos } => {
+                match tokens.peek() {
+                    None => {
                         return Err(AppError {
                             message: "期待された閉じ波括弧が来ませんでした".to_string(),
                             input: input.to_string(),
-                            pos: *pos,
+                            pos: input.len(),
                         })
                     }
-                    Token {
+                    Some(Token {
                         tok: Tok::閉じ波括弧,
                         ..
-                    } => {
+                    }) => {
                         tokens.next();
 
                         break;
@@ -456,18 +456,18 @@ fn after_param_list(
             }
             let mut statements = vec![];
             loop {
-                match tokens.peek().unwrap() {
-                    Token { tok: Tok::Eof, pos } => {
+                match tokens.peek() {
+                    None => {
                         return Err(AppError {
                             message: "期待された閉じ波括弧が来ませんでした".to_string(),
                             input: input.to_string(),
-                            pos: *pos,
+                            pos: input.len(),
                         })
                     }
-                    Token {
+                    Some(Token {
                         tok: Tok::閉じ波括弧,
                         ..
-                    } => {
+                    }) => {
                         tokens.next();
 
                         break;
@@ -586,36 +586,13 @@ pub fn parse_toplevel_function_definition(
     }
 }
 
-fn parse_program(
-    tokens: &mut Peekable<Iter<Token>>,
-    input: &str,
-) -> Result<Vec<FunctionDefinition>, AppError> {
-    let mut function_definitions = vec![];
-    while !matches!(
-        tokens.peek(),
-        Some(Token {
-            tok: Tok::Eof,
-            pos: _,
-        }),
-    ) {
-        function_definitions.push(parse_toplevel_function_definition(tokens, input)?);
-    }
-    Ok(function_definitions)
-}
-
 pub fn parse(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<Vec<FunctionDefinition>, AppError> {
-    let program = parse_program(tokens, input)?;
-    let tok = tokens.peek().unwrap();
-    if tok.tok == Tok::Eof {
-        Ok(program)
-    } else {
-        Err(AppError {
-            message: "期待されたeofが来ませんでした".to_string(),
-            input: input.to_string(),
-            pos: tok.pos,
-        })
+    let mut function_definitions = vec![];
+    while tokens.peek().is_some() {
+        function_definitions.push(parse_toplevel_function_definition(tokens, input)?);
     }
+    Ok(function_definitions)
 }
