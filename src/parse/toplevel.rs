@@ -397,14 +397,6 @@ pub enum Type {
 }
 
 impl Type {
-    pub fn add(&self, 右辺: &Self) -> Option<Self> {
-        match (self, 右辺) {
-            (Type::Int, x) => Some(x.clone()),
-            (x, Type::Int) => Some(x.clone()),
-            _ => None,
-        }
-    }
-
     pub fn sub(&self, 右辺: &Self) -> Option<Self> {
         match (self, 右辺) {
             (x, Type::Int) => Some(x.clone()),
@@ -417,6 +409,13 @@ impl Type {
         match self {
             Type::Int => None,
             Type::Ptr(x) => Some((**x).clone()),
+        }
+    }
+
+    pub fn sizeof(&self) -> u8 {
+        match self {
+            Type::Int => 4,
+            Type::Ptr(_) => 8,
         }
     }
 }

@@ -254,6 +254,37 @@ fn parse_multiplicative(
     }
 }
 
+fn add(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
+    match (左辺.typ(), 右辺.typ()) {
+        (Type::Int, Type::Int) => Some(Expr::BinaryExpr {
+            op: BinaryOp::Add,
+            op_pos,
+            typ: Type::Int,
+            左辺,
+            右辺,
+        }),
+        (Type::Ptr(t), Type::Int) => Some(Expr::BinaryExpr {
+            op: BinaryOp::Add,
+            op_pos,
+            左辺,
+            右辺: Box::new(Expr::BinaryExpr {
+                op: BinaryOp::Mul,
+                op_pos,
+                左辺: Box::new(Expr::Numeric {
+                    val: t.sizeof(),
+                    pos: op_pos,
+                    typ: Type::Int,
+                }),
+                右辺,
+                typ: Type::Int,
+            }),
+            typ: Type::Ptr(t),
+        }),
+        (Type::Int, _) => add(右辺, 左辺, op_pos),
+        _ => None,
+    }
+}
+
 fn parse_additive(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
@@ -270,17 +301,16 @@ fn parse_additive(
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_multiplicative(context, tokens, input)?);
-                expr = Expr::BinaryExpr {
-                    op: BinaryOp::Add,
-                    op_pos: *op_pos,
-                    typ: 左辺.typ().add(&右辺.typ()).ok_or(AppError {
-                        message: "左辺の型と右辺の型を足し合わせることができません".to_string(),
-                        input: input.to_string(),
-                        pos: *op_pos,
-                    })?,
-                    左辺,
-                    右辺,
-                }
+                let message = format!(
+                    "左辺の型が {:?}、右辺の型が {:?} なので、足し合わせることができません",
+                    左辺.typ(),
+                    右辺.typ()
+                );
+                expr = add(左辺, 右辺, *op_pos).ok_or(AppError {
+                    message,
+                    input: input.to_string(),
+                    pos: *op_pos,
+                })?;
             }
             Token {
                 tok: Tok::Sub,
