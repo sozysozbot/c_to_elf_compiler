@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::{iter::Peekable, slice::Iter};
 
 use super::expression::parse_expr;
+use super::typ::parse_type;
 
 #[test]
 fn parse_test() {
@@ -348,16 +349,8 @@ fn parse_parameter_type_and_identifier(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<(Type, ParameterIdentifier), AppError> {
-    let parameter_type = match tokens.next().unwrap() {
-        Token { tok: Tok::Int, .. } => Type::Int,
-        Token { pos, .. } => {
-            return Err(AppError {
-                message: "仮引数に型名がありません".to_string(),
-                input: input.to_string(),
-                pos: *pos,
-            })
-        }
-    };
+    let parameter_type = parse_type(tokens, input)?;
+
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Identifier(ident),
@@ -377,9 +370,10 @@ fn parse_parameter_type_and_identifier(
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum Type {
     Int,
+    Ptr(Box<Type>),
 }
 
 pub struct FunctionDefinition {
@@ -409,10 +403,7 @@ fn after_param_list(
             #[allow(clippy::while_let_loop)]
             loop {
                 let local_var_type = match tokens.peek().unwrap() {
-                    Token { tok: Tok::Int, .. } => {
-                        tokens.next();
-                        Type::Int
-                    }
+                    Token { tok: Tok::Int, .. } => parse_type(tokens, input)?,
                     Token { .. } => {
                         // 変数定義は終わり
                         break;
@@ -498,19 +489,7 @@ pub fn parse_toplevel_function_definition(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<FunctionDefinition, AppError> {
-    let return_type = match tokens.next().unwrap() {
-        Token { tok: Tok::Int, .. } => Type::Int,
-        Token { pos, tok: payload } => {
-            return Err(AppError {
-                message: format!(
-                    "トップレベルが型名でないもので始まっています: {:?}",
-                    payload
-                ),
-                input: input.to_string(),
-                pos: *pos,
-            })
-        }
-    };
+    let return_type = parse_type(tokens, input)?;
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Identifier(ident),
