@@ -127,7 +127,11 @@ fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Untype
                 op: BinaryOp::Sub,
                 op_pos: *pos,
                 typ: Any,
-                左辺: Box::new(UntypedExpr::Numeric { val: 0, pos: *pos, typ: Any, }),
+                左辺: Box::new(UntypedExpr::Numeric {
+                    val: 0,
+                    pos: *pos,
+                    typ: Any,
+                }),
                 右辺: Box::new(expr),
             })
         }

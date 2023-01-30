@@ -1399,3 +1399,4 @@ hsjoihs「まあ、まず恒等変換を書いて、その後に TypedExpr に�
 hsjoihs「ということで、ステップ 19」
 hsjoihs「Expr を UntypedExpr に改名しようかと思ったが、Rust だしジェネリックパラメータに空タプル or 型情報でやればいいか」
 hsjoihs「空タプルを使うのもどうかと思うので、Any という名のゼロサイズ型を定義し、そいつをつけてまわることで、とりあえず UntypedExpr 化に成功」
+hsjoihs「で、次に local_var_declarations を Context という名前の中に突っ込み、そいつを parse_statement につけてまわる」
