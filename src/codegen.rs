@@ -508,7 +508,7 @@ impl<'a> FunctionGen<'a> {
                 op_pos: _,
                 左辺,
                 右辺,
-                typ: _,
+                typ,
             } => {
                 self.exprを左辺値として評価してアドレスをrdiレジスタへ(
                     buf, 左辺,
@@ -519,7 +519,11 @@ impl<'a> FunctionGen<'a> {
 
                 buf.append(raxへとポップ()); // 左辺のアドレス
                 self.stack_size -= WORD_SIZE_AS_U32;
-                buf.append(raxが指す位置にrdiを代入());
+                match typ.sizeof() {
+                    8 => buf.append(raxが指す位置にrdiを代入()),
+                    4 => buf.append(raxが指す位置にediを代入()),
+                    _ => panic!("size が {} な型への代入はできません", typ.sizeof()),
+                };
             }
             Expr::Identifier { .. } => {
                 self.exprを左辺値として評価してアドレスをrdiレジスタへ(

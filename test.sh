@@ -124,6 +124,9 @@ check 11 "int main() { int *p; p = __builtin_alloc4(2, 4, 8, 11); return *(p+3);
 
 check 15 "int main() { int *p; p = __builtin_alloc4(1, 2, 4, 8); return *p + *(p+1) + *(p+2) + *(p+3); }"
 
+check 15 "int main() { int *p; p = __builtin_alloc4(3, 3, 3, 3); *(p+3) = 8; *(p+2) = 4; *(p+1) = 2; *p = 1; return *p + *(p+1) + *(p+2) + *(p+3); }"
+
+
 for job in `jobs -p`
 do
     wait $job

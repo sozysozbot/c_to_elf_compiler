@@ -1842,3 +1842,21 @@ hsjoihs「これ 32 bit 配列に 64 bit 書き込みをしてるのが原因だ
 $IMAGE「64bit_assign.png」
 hsjoihs「なのでこれ直せば動くはず。まずは alloc4 の実装を直して、」
 hsjoihs「よ～し動いた。しかし現状だと『このビルトインで確保した配列に、自分で値を書き込む』をやると 64 bit 書き込みになってバグるはず。試そう」
+
+$source
+```
+[FAIL] int main() { int *p; p = __builtin_alloc4(3, 3, 3, 3); *(p+3) = 8; *(p+2) = 4; *(p+1) = 2; *p = 1; return *p + *(p+1) + *(p+2) + *(p+3); } => 15 expected, but got 1
+```
+
+hsjoihs「よし期待通り。なので、ここの書き込みも sizeof を見るようにしなければならない」
+
+$source
+```rust
+match typ.sizeof() {
+    8 => buf.append(raxが指す位置にrdiを代入()),
+    4 => buf.append(raxが指す位置にediを代入()),
+    _ => panic!("size が {} な型への代入はできません", typ.sizeof()),
+};
+```
+hsjoihs「よし通った！！！」
+hsjoihs「しかし、アセンブリの書きやすさのためにp[3] → p[2] → p[1] → p[0] の順で書き込んでいっていて幸いだったな。おかげでバグに気づけた」
