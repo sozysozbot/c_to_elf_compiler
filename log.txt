@@ -1518,3 +1518,9 @@ int main() {
 $URL「https://wandbox.org/permlink/Z7DfkoQk7CX4QxVC」
 hsjoihs「ちゃんと動いてますね。もちろんたまたま動いているだけかもしれんけど」
 hsjoihs「ん？ ushitora-anqou 実装では最初にゼロ渡すのもその後に拡張するのも両方 syscall(12, addr) で実装しているけど、これでいいの？」
+hsjoihs「なるほど、 https://man7.org/linux/man-pages/man2/brk.2.html に書いてある。」
+$blockquote
+```
+However, the actual Linux system call returns the new program break on success.  On failure, the system call returns the current break.
+```
+hsjoihs「理解。なので、syscall(12, NULL) を最初に走らせて現在の break 位置を知り、その後にその現在の break 位置から必要量だけ増やした位置を syscall(12, new_break) すれば動くのか」
