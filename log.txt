@@ -1808,3 +1808,37 @@ ff: 58                      pop    rax
 ```
 hsjoihs「よし、わからん！」
 hsjoihs「とりあえず、困難を分割しよう。p[0] から p[3] のうち、格納に成功しているのはどこまでだろうか」
+$source
+```bash
+check 1 "int main() { int *p; p = __builtin_alloc4(1, 2, 4, 8); return *p; }"
+check 7 "int main() { int *p; p = __builtin_alloc4(7, 2, 4, 8); return *p; }"
+check 11 "int main() { int *p; p = __builtin_alloc4(11, 2, 4, 8); return *p; }"
+```
+hsjoihs「通る。p[0]は格納できているようだ」
+$source
+```
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 1, 4, 8); return *(p+1); } => 1 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 7, 4, 8); return *(p+1); } => 7 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 11, 4, 8); return *(p+1); } => 11 expected, but got 0
+```
+hsjoihs「はいはい」
+$source
+```
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 1, 8); return *(p+2); } => 1 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 7, 8); return *(p+2); } => 7 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 11, 8); return *(p+2); } => 11 expected, but got 0
+```
+hsjoihs「パターン見えてきたよ」
+$source
+```
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 8, 1); return *(p+3); } => 1 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 8, 7); return *(p+3); } => 7 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 8, 11); return *(p+3); } => 11 expected, but got 0
+```
+hsjoihs「でしょうね」
+hsjoihs「ということで、先頭要素の格納にだけは成功しているが、残りの 3 つが格納できておらず、必ず 0 で埋まっている」
+hsjoihs「……あっ、分かったような気がするぞ」
+hsjoihs「これ 32 bit 配列に 64 bit 書き込みをしてるのが原因だわ」
+$IMAGE「64bit_assign.png」
+hsjoihs「なのでこれ直せば動くはず。まずは alloc4 の実装を直して、」
+hsjoihs「よ～し動いた。しかし現状だと『このビルトインで確保した配列に、自分で値を書き込む』をやると 64 bit 書き込みになってバグるはず。試そう」

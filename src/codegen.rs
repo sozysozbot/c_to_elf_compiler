@@ -154,6 +154,10 @@ fn raxが指す位置にrdiを代入() -> [u8; 3] {
     [0x48, 0x89, 0x38]
 }
 
+fn raxが指す位置にediを代入() -> [u8; 2] {
+    [0x89, 0x38]
+}
+
 fn ediが0かを確認() -> [u8; 3] {
     [0x83, 0xff, 0x00]
 }
@@ -296,7 +300,7 @@ pub fn builtin_alloc4関数を生成() -> Buf {
             -WORD_SIZE_AS_I8 * 4,
         )) // rax: br + 12, rdi: &d
         .join(rdiを間接参照()) // rax: br + 12, rdi: d
-        .join(raxが指す位置にrdiを代入()) // *(br + 12) = d;
+        .join(raxが指す位置にediを代入()) // *(br + 12) = d;
         //
         // br[2] = c
         .join(raxから即値を引く(4)) // rax: br + 8
@@ -304,7 +308,7 @@ pub fn builtin_alloc4関数を生成() -> Buf {
             -WORD_SIZE_AS_I8 * 3,
         )) // rax: br + 12, rdi: &c
         .join(rdiを間接参照()) // rax: br + 8, rdi: c
-        .join(raxが指す位置にrdiを代入()) // *(br + 8) = c;
+        .join(raxが指す位置にediを代入()) // *(br + 8) = c;
         //
         // br[1] = b
         .join(raxから即値を引く(4)) // rax: br + 4
@@ -312,7 +316,7 @@ pub fn builtin_alloc4関数を生成() -> Buf {
             -WORD_SIZE_AS_I8 * 2,
         )) // rax: br + 12, rdi: &b
         .join(rdiを間接参照()) // rax: br + 4, rdi: b
-        .join(raxが指す位置にrdiを代入()) // *(br + 4) = b;
+        .join(raxが指す位置にediを代入()) // *(br + 4) = b;
         //
         // br[0] = a
         .join(raxから即値を引く(4)) // rax: br
@@ -320,7 +324,7 @@ pub fn builtin_alloc4関数を生成() -> Buf {
             -WORD_SIZE_AS_I8,
         )) // rax: br, rdi: &a
         .join(rdiを間接参照()) // rax: br, rdi: a
-        .join(raxが指す位置にrdiを代入()) // *br = a;
+        .join(raxが指す位置にediを代入()) // *br = a;
         .join(エピローグ())
 }
 

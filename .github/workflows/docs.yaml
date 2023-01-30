@@ -25,7 +25,7 @@ jobs:
           npm ci
           npx ts-node index.ts
           mkdir dist
-          cp -r ./icons ./log.html ./highlight.min.js ./vs.min.css ./dist
+          cp -r ./icons ./media ./log.html ./highlight.min.js ./vs.min.css ./dist
         working-directory: ./docs
       - uses: actions/upload-pages-artifact@v1
         with:
