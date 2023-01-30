@@ -428,14 +428,14 @@ pub struct FunctionDefinition {
     pub local_var_declarations: HashMap<String, Type>,
 }
 
-impl Into<FunctionDeclaration> for FunctionDefinition {
-    fn into(self) -> FunctionDeclaration {
+impl From<FunctionDefinition> for FunctionDeclaration  {
+    fn from(s: FunctionDefinition) -> FunctionDeclaration {
         (
-            self.func_name,
+            s.func_name,
             FunctionSignature {
-                pos: self.pos,
-                return_type: self.return_type,
-                params: self.params.into_iter().map(|(typ, _)| typ).collect(),
+                pos: s.pos,
+                return_type: s.return_type,
+                params: s.params.into_iter().map(|(typ, _)| typ).collect(),
             },
         )
     }
