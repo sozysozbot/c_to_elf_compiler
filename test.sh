@@ -101,11 +101,12 @@ check 0 "int if_non0(int n) { if (n) { __builtin_putchar(n + 48); } else { __bui
 # `%` と `?` と `++` と `-=` 演算子が未実装で、`255` も書けない
 # check 0 "if_non0(n) { __builtin_putchar(n ? n + 48 : 32); return 0; } print(n) { if_non0(n / 100); if_non0((n / 10) % 10); __builtin_putchar((n % 10) + 48); return 0; } int main() { a = 0; b = 1; for(;a<255;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } return 0; }" "  0,  1,  1,  2,  3,  5,  8, 13, 21, 34, 55, 89,144,233,"
 # この y は本来 int* であるべき
-check 3 "int main() { int x; int y; x = 3; y = &x; return *y; }"
+check 3 "int main() { int x; int *y; x = 3; y = &x; return *y; }"
 # TODO: 未定義動作なのでそのうち消す
 # この y, z は本来 int* であるべき
 # hsjoihs の WSL では通ったが、CI に通らない（なぜか 40 が返ってくる）ので一旦コメントアウト
 # check 3 "int main() { int x; int y; int z; x = 3; y = 5; z = &y + 8; return *z; }"
+check 3 "int main() { int x; int *y; y = &x; *y = 3; return x; }"
 for job in `jobs -p`
 do
     wait $job
