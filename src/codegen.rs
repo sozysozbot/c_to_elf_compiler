@@ -270,6 +270,13 @@ impl<'a> FunctionGen<'a> {
                 buf.append(rdiへとポップ());
                 buf.append(rdiから即値を引く(offset));
             }
+            Expr::UnaryExpr {
+                op: UnaryOp::Deref,
+                expr,
+                ..
+            } => {
+                self.exprを評価してediレジスタへ(buf, expr);
+            }
             _ => panic!("代入式の左辺に左辺値以外が来ています"),
         }
     }
@@ -637,12 +644,10 @@ impl<'a> FunctionGen<'a> {
                     buf, expr,
                 );
             }
-            Expr::UnaryExpr {
-                op: UnaryOp::Deref,
-                op_pos: _,
-                expr,
-            } => {
-                self.exprを評価してediレジスタへ(buf, expr);
+            Expr::UnaryExpr { .. } => {
+                self.exprを左辺値として評価してアドレスをrdiレジスタへ(
+                    buf, expr,
+                );
                 buf.append(rdiを間接参照());
             }
         }
