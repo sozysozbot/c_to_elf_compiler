@@ -254,7 +254,7 @@ impl<'a> FunctionGen<'a> {
     pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
         &mut self,
         buf: &mut Buf,
-        expr: &Expr<Type>,
+        expr: &Expr,
     ) {
         match expr {
             Expr::Identifier {
@@ -289,7 +289,7 @@ impl<'a> FunctionGen<'a> {
         }
     }
 
-    pub fn statementを評価(&mut self, stmt: &Statement<Type>) -> Buf {
+    pub fn statementを評価(&mut self, stmt: &Statement) -> Buf {
         match stmt {
             Statement::Expr {
                 expr,
@@ -416,7 +416,7 @@ impl<'a> FunctionGen<'a> {
     }
 
     #[allow(clippy::too_many_lines)]
-    pub fn exprを評価してediレジスタへ(&mut self, buf: &mut Buf, expr: &Expr<Type>) {
+    pub fn exprを評価してediレジスタへ(&mut self, buf: &mut Buf, expr: &Expr) {
         match expr {
             Expr::BinaryExpr {
                 op: BinaryOp::Assign,
@@ -684,8 +684,8 @@ impl<'a> FunctionGen<'a> {
     fn 比較演算を評価してediレジスタへ(
         &mut self,
         buf: &mut Buf,
-        左辺: &Expr<Type>,
-        右辺: &Expr<Type>,
+        左辺: &Expr,
+        右辺: &Expr,
         フラグをalに移す: &[u8],
     ) {
         self.exprを評価してediレジスタへ(buf, 左辺);

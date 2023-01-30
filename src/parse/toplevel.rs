@@ -47,7 +47,7 @@ fn parse_statement(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-) -> Result<Statement<Type>, AppError> {
+) -> Result<Statement, AppError> {
     let tok = tokens.peek().unwrap();
     match tok {
         Token {
@@ -426,7 +426,7 @@ pub struct FunctionDefinition {
     pub func_name: String,
     pub params: Vec<(Type, ParameterIdentifier)>,
     pub pos: usize,
-    pub statements: Vec<Statement<Type>>,
+    pub statements: Vec<Statement>,
     pub return_type: Type,
     pub local_var_declarations: HashMap<String, Type>,
 }
