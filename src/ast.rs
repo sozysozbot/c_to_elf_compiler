@@ -59,6 +59,21 @@ pub enum Expr<T> {
     },
 }
 
+impl<T> Expr<T> {
+    pub fn typ(&self) -> T
+    where
+        T: Clone,
+    {
+        match self {
+            Expr::BinaryExpr { typ, .. }
+            | Expr::Numeric { typ, .. }
+            | Expr::Identifier { typ, .. }
+            | Expr::Call { typ, .. }
+            | Expr::UnaryExpr { typ, .. } => (*typ).clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Statement<T> {
     Expr {

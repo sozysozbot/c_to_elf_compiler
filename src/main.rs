@@ -6,6 +6,8 @@ use c_to_elf_compiler::apperror::AppError;
 use c_to_elf_compiler::codegen;
 use c_to_elf_compiler::parse::toplevel;
 use c_to_elf_compiler::parse::toplevel::FunctionDefinition;
+use c_to_elf_compiler::parse::toplevel::FunctionSignature;
+use c_to_elf_compiler::parse::toplevel::Type;
 use c_to_elf_compiler::token::Token;
 use c_to_elf_compiler::tokenize;
 use c_to_elf_compiler::Buf;
@@ -62,7 +64,19 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
         // スタートアップ処理はここに C のソースコードとして実装
         let tokens = tokenize::tokenize("int __start() { __throw main(); }").unwrap();
         let mut tokens = tokens.iter().peekable();
-        toplevel::parse_toplevel_function_definition(&mut tokens, input)?
+        toplevel::parse_toplevel_function_definition(
+            &[(
+                "main".to_string(),
+                FunctionSignature {
+                    params: vec![],
+                    pos: 0,
+                    return_type: Type::Int,
+                },
+            )].into_iter()
+            .collect(),
+            &mut tokens,
+            input,
+        )?
     };
     let entry_pos = codegen::関数をコード生成しメインバッファとグローバル関数テーブルに挿入(
         &mut global_function_table,

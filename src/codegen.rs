@@ -1,4 +1,8 @@
-use crate::{ast::*, parse::toplevel::FunctionDefinition, Buf};
+use crate::{
+    ast::*,
+    parse::toplevel::{FunctionDefinition, Type},
+    Buf,
+};
 use std::collections::HashMap;
 
 /*
@@ -250,7 +254,7 @@ impl<'a> FunctionGen<'a> {
     pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
         &mut self,
         buf: &mut Buf,
-        expr: &UntypedExpr,
+        expr: &Expr<Type>,
     ) {
         match expr {
             Expr::Identifier {
@@ -285,7 +289,7 @@ impl<'a> FunctionGen<'a> {
         }
     }
 
-    pub fn statementを評価(&mut self, stmt: &Statement<Any>) -> Buf {
+    pub fn statementを評価(&mut self, stmt: &Statement<Type>) -> Buf {
         match stmt {
             Statement::Expr {
                 expr,
@@ -381,7 +385,7 @@ impl<'a> FunctionGen<'a> {
                             Box::new(Expr::Numeric {
                                 val: 1,
                                 pos: *pos,
-                                typ: Any,
+                                typ: Type::Int,
                             })
                         }),
                         body: Box::new(Statement::Block {
@@ -412,7 +416,7 @@ impl<'a> FunctionGen<'a> {
     }
 
     #[allow(clippy::too_many_lines)]
-    pub fn exprを評価してediレジスタへ(&mut self, buf: &mut Buf, expr: &UntypedExpr) {
+    pub fn exprを評価してediレジスタへ(&mut self, buf: &mut Buf, expr: &Expr<Type>) {
         match expr {
             Expr::BinaryExpr {
                 op: BinaryOp::Assign,
@@ -680,8 +684,8 @@ impl<'a> FunctionGen<'a> {
     fn 比較演算を評価してediレジスタへ(
         &mut self,
         buf: &mut Buf,
-        左辺: &UntypedExpr,
-        右辺: &UntypedExpr,
+        左辺: &Expr<Type>,
+        右辺: &Expr<Type>,
         フラグをalに移す: &[u8],
     ) {
         self.exprを評価してediレジスタへ(buf, 左辺);
