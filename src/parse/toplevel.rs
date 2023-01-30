@@ -397,14 +397,6 @@ pub enum Type {
 }
 
 impl Type {
-    pub fn sub(&self, 右辺: &Self) -> Option<Self> {
-        match (self, 右辺) {
-            (x, Type::Int) => Some(x.clone()),
-            (x, y) if x == y => Some(Type::Int),
-            _ => None,
-        }
-    }
-
     pub fn deref(&self) -> Option<Self> {
         match self {
             Type::Int => None,
