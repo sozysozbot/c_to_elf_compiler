@@ -27,6 +27,10 @@ fn rdiから即値を引く(n: u8) -> [u8; 4] {
     [0x48, 0x83, 0xef, n]
 }
 
+fn raxから即値を引く(n: u8) -> [u8; 4] {
+    [0x48, 0x83, 0xe8, n]
+}
+
 fn ediに代入(n: u8) -> [u8; 5] {
     [0xbf, n, 0x00, 0x00, 0x00]
 }
@@ -228,6 +232,10 @@ fn rbpにoffsetを足したアドレスをrsiに代入(offset: i8) -> [u8; 4] {
     [0x48, 0x8d, 0x75, offset.to_le_bytes()[0]]
 }
 
+fn rbpにoffsetを足したアドレスをrdiに代入(offset: i8) -> [u8; 4] {
+    [0x48, 0x8d, 0x7d, offset.to_le_bytes()[0]]
+}
+
 pub fn builtin_putchar関数を生成() -> Buf {
     プロローグ(WORD_SIZE)
         .join(rbpにoffsetを足した位置にediを代入(
@@ -240,6 +248,79 @@ pub fn builtin_putchar関数を生成() -> Buf {
         )) // buf
         .join(edxに即値をセット(1)) // count
         .join(syscall())
+        .join(エピローグ())
+}
+
+/**
+ * int *alloc4(int a, int b, int c, int d) {
+ *     int *br = syscall(12, NULL); // On failure, the system call returns the current break
+ *     int *new_br = syscall(12, br + 4); // the actual Linux system call returns the new program break on success
+ *     new_br--; // new_br = br + 3
+ *     *new_br = d;
+ *     new_br--; // new_br = br + 2
+ *     *new_br = c;
+ *     new_br--; // new_br = br + 1
+ *     *new_br = b; 
+ *     new_br--; // new_br = br
+ *     *new_br = a; 
+ *     return new_br; // new_br == br
+ * }
+ */
+pub fn builtin_alloc4関数を生成() -> Buf {
+    プロローグ(WORD_SIZE)
+        .join(rbpにoffsetを足した位置にediを代入(
+            -WORD_SIZE_AS_I8, // a
+        ))
+        .join(rbpにoffsetを足した位置にesiを代入(
+            -WORD_SIZE_AS_I8 * 2, // b
+        ))
+        .join(rbpにoffsetを足した位置にedxを代入(
+            -WORD_SIZE_AS_I8 * 3, // c
+        ))
+        .join(rbpにoffsetを足した位置にecxを代入(
+            -WORD_SIZE_AS_I8 * 4, // d
+        ))
+        .join(eaxに即値をセット(12)) // sys_brk
+        .join(ediに代入(0)) // NULL
+        .join(syscall()) // rax: br
+        .join(raxをプッシュ())
+        .join(rdiへとポップ()) // rdi: br,
+        .join(eaxに即値をセット(16)) // rax: 16, rdi: br
+        .join(rdiにraxを足し合わせる()) // rdi: br + 16
+        .join(eaxに即値をセット(12)) // rax: 12(sys_brk), rdi: br + 16
+        .join(syscall()) // rax: br + 16
+        //
+        // br[3] = d
+        .join(raxから即値を引く(4)) // rax: br + 12
+        .join(rbpにoffsetを足したアドレスをrdiに代入(
+            -WORD_SIZE_AS_I8 * 4,
+        )) // rax: br + 12, rdi: &d
+        .join(rdiを間接参照()) // rax: br + 12, rdi: d
+        .join(raxが指す位置にrdiを代入()) // *(br + 12) = d;
+        //
+        // br[2] = c
+        .join(raxから即値を引く(4)) // rax: br + 8
+        .join(rbpにoffsetを足したアドレスをrdiに代入(
+            -WORD_SIZE_AS_I8 * 3,
+        )) // rax: br + 12, rdi: &c
+        .join(rdiを間接参照()) // rax: br + 8, rdi: c
+        .join(raxが指す位置にrdiを代入()) // *(br + 8) = c;
+        //
+        // br[1] = b
+        .join(raxから即値を引く(4)) // rax: br + 4
+        .join(rbpにoffsetを足したアドレスをrdiに代入(
+            -WORD_SIZE_AS_I8 * 2,
+        )) // rax: br + 12, rdi: &b
+        .join(rdiを間接参照()) // rax: br + 4, rdi: b
+        .join(raxが指す位置にrdiを代入()) // *(br + 4) = b;
+        //
+        // br[0] = a
+        .join(raxから即値を引く(4)) // rax: br
+        .join(rbpにoffsetを足したアドレスをrdiに代入(
+            -WORD_SIZE_AS_I8,
+        )) // rax: br, rdi: &a
+        .join(rdiを間接参照()) // rax: br, rdi: a
+        .join(raxが指す位置にrdiを代入()) // *br = a;
         .join(エピローグ())
 }
 

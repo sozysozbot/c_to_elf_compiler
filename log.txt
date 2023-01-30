@@ -1524,3 +1524,7 @@ $blockquote
 However, the actual Linux system call returns the new program break on success.  On failure, the system call returns the current break.
 ```
 hsjoihs「理解。なので、syscall(12, NULL) を最初に走らせて現在の break 位置を知り、その後にその現在の break 位置から必要量だけ増やした位置を syscall(12, new_break) すれば動くのか」
+hsjoihs「さて、こいつは 5 引数関数だから……あ、第一引数ポインタだから『rbpにoffsetを足した位置にediを代入』で事故りそう」
+hsjoihs「まあいいや、とりあえず戻り値にポインタ入れちゃおう」
+hsjoihs「あとはアセンブリプログラミングを頑張り、えーっとこうすればスタックを使わないからアラインメントも気にしなくてよくなって」
+hsjoihs「よし、実装できた。あとはこれをコンパイラに教え、呼ぶだけだ」
