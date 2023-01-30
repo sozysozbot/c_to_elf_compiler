@@ -1536,3 +1536,275 @@ $blockquote
 hsjoihs「おや～？」
 hsjoihs「えーと testwork フォルダ内に当該バイナリがあるはず。一旦 rm -rf testwork/* してから ./test.sh することにより ./a.out が手に入る」
 hsjoihs「とりあえず failing.out とかいう名前を付けて一旦コミットし、この検体を分析しよう」
+$source
+```
+hsjoihs@LAPTOP-BKHPSENK:~/c-compilers/c_to_elf_compiler$ gdb failing.out
+GNU gdb (Ubuntu 9.2-0ubuntu1~20.04.1) 9.2
+Copyright (C) 2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from failing.out...
+(No debugging symbols found in failing.out)
+(gdb) run
+Starting program: /home/hsjoihs/c-compilers/c_to_elf_compiler/failing.out 
+[Inferior 1 (process 10911) exited with code 01]
+(gdb) start
+No symbol table is loaded.  Use the "file" command.
+Make breakpoint pending on future shared library load? (y or [n]) y
+Temporary breakpoint 1 (-qualified main) pending.
+Starting program: /home/hsjoihs/c-compilers/c_to_elf_compiler/failing.out 
+[Inferior 1 (process 10945) exited with code 01]
+(gdb) file
+No executable file now.
+No symbol file now.
+(gdb) 
+```
+hsjoihs「え～っと run は動くが start も file も効かない。どうしようかな。あ、file failing.out なら動いた。そうするのか」
+hsjoihs「いや stepi できないな。もういい、objdump する」
+
+$source
+```
+hsjoihs@LAPTOP-BKHPSENK:~/c-compilers/c_to_elf_compiler$ objdump -d failing.out
+
+failing.out:     file format elf64-x86-64
+```
+hsjoihs「うお～ section が存在しないから disass されない」
+hsjoihs「もういいや、バイナリエディタを開いて、中身を https://defuse.ca/online-x86-assembler.htm に突っ込んで、」
+
+$source
+```
+えーとこれが __builtin_putchar よね。あれ？__builtin_three はどこ行った？
+0:  55                      push   rbp
+1:  48 89 e5                mov    rbp,rsp
+4:  48 83 ec 08             sub    rsp,0x8
+8:  89 7d f8                mov    DWORD PTR [rbp-0x8],edi
+b:  b8 01 00 00 00          mov    eax,0x1
+10: bf 01 00 00 00          mov    edi,0x1
+15: 48 8d 75 f8             lea    rsi,[rbp-0x8]
+19: ba 01 00 00 00          mov    edx,0x1
+1e: 0f 05                   syscall
+20: c9                      leave
+21: c3                      ret
+
+次にこれが __builtin_alloc4 だけど……あっプロローグでローカル変数の分の引き算をしていない！！これだ
+22: 55                      push   rbp
+23: 48 89 e5                mov    rbp,rsp
+26: 48 83 ec 08             sub    rsp,0x8
+2a: 89 7d f8                mov    DWORD PTR [rbp-0x8],edi
+2d: 89 75 f0                mov    DWORD PTR [rbp-0x10],esi
+30: 89 55 e8                mov    DWORD PTR [rbp-0x18],edx
+33: 89 4d e0                mov    DWORD PTR [rbp-0x20],ecx
+36: b8 0c 00 00 00          mov    eax,0xc
+3b: bf 00 00 00 00          mov    edi,0x0
+40: 0f 05                   syscall
+42: 50                      push   rax
+43: 5f                      pop    rdi
+44: b8 10 00 00 00          mov    eax,0x10
+49: 48 01 c7                add    rdi,rax
+4c: b8 0c 00 00 00          mov    eax,0xc
+51: 0f 05                   syscall
+53: 48 83 e8 04             sub    rax,0x4
+57: 48 8d 7d e0             lea    rdi,[rbp-0x20]
+5b: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+5e: 48 89 38                mov    QWORD PTR [rax],rdi
+61: 48 83 e8 04             sub    rax,0x4
+65: 48 8d 7d e8             lea    rdi,[rbp-0x18]
+69: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+6c: 48 89 38                mov    QWORD PTR [rax],rdi
+6f: 48 83 e8 04             sub    rax,0x4
+73: 48 8d 7d f0             lea    rdi,[rbp-0x10]
+77: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+7a: 48 89 38                mov    QWORD PTR [rax],rdi
+7d: 48 83 e8 04             sub    rax,0x4
+81: 48 8d 7d f8             lea    rdi,[rbp-0x8]
+85: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+88: 48 89 38                mov    QWORD PTR [rax],rdi
+8b: c9                      leave
+8c: c3                      ret
+```
+hsjoihs「はい～単純な凡ミス。これを直して………あれ？？？まだ通らない。なにゆえ～」
+hsjoihs「とりあえず、もう一回検体を生成しよう」
+$source
+```
+ああ普通に __builtin_three あるね。さっきはコピペ範囲をミスっただけか
+0:  55                      push   rbp
+1:  48 89 e5                mov    rbp,rsp
+4:  48 83 ec 00             sub    rsp,0x0
+8:  b8 03 00 00 00          mov    eax,0x3
+d:  c9                      leave
+e:  c3                      ret
+
+次にこれが __builtin_putchar で、
+f:  55                      push   rbp
+10: 48 89 e5                mov    rbp,rsp
+13: 48 83 ec 08             sub    rsp,0x8
+17: 89 7d f8                mov    DWORD PTR [rbp-0x8],edi
+1a: b8 01 00 00 00          mov    eax,0x1
+1f: bf 01 00 00 00          mov    edi,0x1
+24: 48 8d 75 f8             lea    rsi,[rbp-0x8]
+28: ba 01 00 00 00          mov    edx,0x1
+2d: 0f 05                   syscall
+2f: c9                      leave
+30: c3                      ret
+
+お次のこれが __builtin_alloc4 のはず。今度はちゃんと 0x20 を引いてるんだけどなぁ
+31: 55                      push   rbp
+32: 48 89 e5                mov    rbp,rsp
+35: 48 83 ec 20             sub    rsp,0x20
+39: 89 7d f8                mov    DWORD PTR [rbp-0x8],edi
+3c: 89 75 f0                mov    DWORD PTR [rbp-0x10],esi
+3f: 89 55 e8                mov    DWORD PTR [rbp-0x18],edx
+42: 89 4d e0                mov    DWORD PTR [rbp-0x20],ecx
+45: b8 0c 00 00 00          mov    eax,0xc
+4a: bf 00 00 00 00          mov    edi,0x0
+4f: 0f 05                   syscall
+51: 50                      push   rax
+52: 5f                      pop    rdi
+53: b8 10 00 00 00          mov    eax,0x10
+58: 48 01 c7                add    rdi,rax
+5b: b8 0c 00 00 00          mov    eax,0xc
+60: 0f 05                   syscall
+62: 48 83 e8 04             sub    rax,0x4
+66: 48 8d 7d e0             lea    rdi,[rbp-0x20]
+6a: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+6d: 48 89 38                mov    QWORD PTR [rax],rdi
+70: 48 83 e8 04             sub    rax,0x4
+74: 48 8d 7d e8             lea    rdi,[rbp-0x18]
+78: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+7b: 48 89 38                mov    QWORD PTR [rax],rdi
+7e: 48 83 e8 04             sub    rax,0x4
+82: 48 8d 7d f0             lea    rdi,[rbp-0x10]
+86: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+89: 48 89 38                mov    QWORD PTR [rax],rdi
+8c: 48 83 e8 04             sub    rax,0x4
+90: 48 8d 7d f8             lea    rdi,[rbp-0x8]
+94: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+97: 48 89 38                mov    QWORD PTR [rax],rdi
+9a: c9                      leave
+9b: c3                      ret
+
+で、こいつが今回試されるべき int main() { int *p; p = __builtin_alloc4(1, 2, 4, 8); return *p + *(p+1) + *(p+2) + *(p+3); }
+9c: 55                      push   rbp
+9d: 48 89 e5                mov    rbp,rsp
+a0: 48 83 ec 08             sub    rsp,0x8
+a4: 55                      push   rbp
+a5: 5f                      pop    rdi
+a6: 48 83 ef 08             sub    rdi,0x8
+aa: 57                      push   rdi
+ab: 48 83 ec 10             sub    rsp,0x10
+af: bf 08 00 00 00          mov    edi,0x8
+b4: 57                      push   rdi
+b5: bf 04 00 00 00          mov    edi,0x4
+ba: 57                      push   rdi
+bb: bf 02 00 00 00          mov    edi,0x2
+c0: 57                      push   rdi
+c1: bf 01 00 00 00          mov    edi,0x1
+c6: 57                      push   rdi
+c7: 5f                      pop    rdi
+c8: 5e                      pop    rsi
+c9: 5a                      pop    rdx
+ca: 59                      pop    rcx
+cb: b8 a9 00 40 00          mov    eax,0x4000a9
+d0: ff d0                   call   rax
+d2: 89 c7                   mov    edi,eax
+d4: 48 83 c4 10             add    rsp,0x10
+d8: 58                      pop    rax
+d9: 48 89 38                mov    QWORD PTR [rax],rdi
+dc: 55                      push   rbp
+dd: 5f                      pop    rdi
+de: 48 83 ef 08             sub    rdi,0x8
+e2: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+e5: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+e8: 57                      push   rdi
+e9: 55                      push   rbp
+ea: 5f                      pop    rdi
+eb: 48 83 ef 08             sub    rdi,0x8
+ef: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+f2: 57                      push   rdi
+f3: bf 04 00 00 00          mov    edi,0x4
+f8: 57                      push   rdi
+f9: bf 01 00 00 00          mov    edi,0x1
+fe: 57                      push   rdi
+ff: 58                      pop    rax
+100:    5f                      pop    rdi
+101:    48 0f af f8             imul   rdi,rax
+105:    57                      push   rdi
+106:    58                      pop    rax
+107:    5f                      pop    rdi
+108:    48 01 c7                add    rdi,rax
+10b:    48 8b 3f                mov    rdi,QWORD PTR [rdi]
+10e:    57                      push   rdi
+10f:    58                      pop    rax
+110:    5f                      pop    rdi
+111:    48 01 c7                add    rdi,rax
+114:    57                      push   rdi
+115:    55                      push   rbp
+116:    5f                      pop    rdi
+117:    48 83 ef 08             sub    rdi,0x8
+11b:    48 8b 3f                mov    rdi,QWORD PTR [rdi]
+11e:    57                      push   rdi
+11f:    bf 04 00 00 00          mov    edi,0x4
+124:    57                      push   rdi
+125:    bf 02 00 00 00          mov    edi,0x2
+12a:    57                      push   rdi
+12b:    58                      pop    rax
+12c:    5f                      pop    rdi
+12d:    48 0f af f8             imul   rdi,rax
+131:    57                      push   rdi
+132:    58                      pop    rax
+133:    5f                      pop    rdi
+134:    48 01 c7                add    rdi,rax
+137:    48 8b 3f                mov    rdi,QWORD PTR [rdi]
+13a:    57                      push   rdi
+13b:    58                      pop    rax
+13c:    5f                      pop    rdi
+13d:    48 01 c7                add    rdi,rax
+140:    57                      push   rdi
+141:    55                      push   rbp
+142:    5f                      pop    rdi
+143:    48 83 ef 08             sub    rdi,0x8
+147:    48 8b 3f                mov    rdi,QWORD PTR [rdi]
+14a:    57                      push   rdi
+14b:    bf 04 00 00 00          mov    edi,0x4
+150:    57                      push   rdi
+151:    bf 03 00 00 00          mov    edi,0x3
+156:    57                      push   rdi
+157:    58                      pop    rax
+158:    5f                      pop    rdi
+159:    48 0f af f8             imul   rdi,rax
+15d:    57                      push   rdi
+15e:    58                      pop    rax
+15f:    5f                      pop    rdi
+160:    48 01 c7                add    rdi,rax
+163:    48 8b 3f                mov    rdi,QWORD PTR [rdi]
+166:    57                      push   rdi
+167:    58                      pop    rax
+168:    5f                      pop    rdi
+169:    48 01 c7                add    rdi,rax
+16c:    89 f8                   mov    eax,edi
+16e:    c9                      leave
+16f:    c3                      ret
+170:    55                      push   rbp
+171:    48 89 e5                mov    rbp,rsp
+174:    48 83 ec 00             sub    rsp,0x0
+178:    48 83 ec 08             sub    rsp,0x8
+17c:    b8 14 01 40 00          mov    eax,0x400114
+181:    ff d0                   call   rax
+183:    89 c7                   mov    edi,eax
+185:    48 83 c4 08             add    rsp,0x8
+189:    b8 3c 00 00 00          mov    eax,0x3c
+18e:    0f 05                   syscall
+```
+hsjoihs「よし、わからん！」
+hsjoihs「とりあえず、困難を分割しよう。p[0] から p[3] のうち、格納に成功しているのはどこまでだろうか」

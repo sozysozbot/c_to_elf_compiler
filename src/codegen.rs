@@ -267,7 +267,7 @@ pub fn builtin_putchar関数を生成() -> Buf {
  * }
  */
 pub fn builtin_alloc4関数を生成() -> Buf {
-    プロローグ(WORD_SIZE)
+    プロローグ(WORD_SIZE * 4)
         .join(rbpにoffsetを足した位置にediを代入(
             -WORD_SIZE_AS_I8, // a
         ))
