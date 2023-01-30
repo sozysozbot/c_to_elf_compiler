@@ -5,9 +5,8 @@ use std::{iter::Peekable, slice::Iter};
 
 use super::toplevel::Context;
 use super::toplevel::Type;
-impl Context {
     fn parse_primary(
-        &self,
+        context: &Context,
         tokens: &mut Peekable<Iter<Token>>,
         input: &str,
     ) -> Result<Expr<Type>, AppError> {
@@ -42,7 +41,7 @@ impl Context {
                         } => {
                             tokens.next();
                             let func_decl =
-                                self.function_declarations.get(ident).ok_or(AppError {
+                                context.function_declarations.get(ident).ok_or(AppError {
                                     message: format!(
                                         "関数 {} は宣言されておらず、戻り値の型が分かりません",
                                         ident
@@ -59,7 +58,7 @@ impl Context {
                             return Ok(expr);
                         }
                         _ => {
-                            let expr = self.parse_expr(tokens, input)?;
+                            let expr = parse_expr(context, tokens, input)?;
                             args.push(expr);
                         }
                     }
@@ -72,7 +71,7 @@ impl Context {
                             } => {
                                 tokens.next();
                                 let func_decl =
-                                    self.function_declarations.get(ident).ok_or(AppError {
+                                    context.function_declarations.get(ident).ok_or(AppError {
                                         message: format!(
                                             "関数 {} は宣言されておらず、戻り値の型が分かりません",
                                             ident
@@ -92,7 +91,7 @@ impl Context {
                                 tok: Tok::Comma, ..
                             } => {
                                 tokens.next();
-                                let expr = self.parse_expr(tokens, input)?;
+                                let expr = parse_expr(context, tokens, input)?;
                                 args.push(expr);
                             }
                             _ => {
@@ -109,7 +108,7 @@ impl Context {
                     let expr = Expr::Identifier {
                         ident: ident.clone(),
                         pos: *ident_pos,
-                        typ: self
+                        typ: context
                             .local_var_and_param_declarations
                             .get(ident)
                             .ok_or(AppError {
@@ -129,7 +128,7 @@ impl Context {
                 tok: Tok::開き丸括弧,
                 pos,
             } => {
-                let expr = self.parse_expr(tokens, input)?;
+                let expr = parse_expr(context, tokens, input)?;
                 match tokens.next().unwrap() {
                     Token {
                         tok: Tok::閉じ丸括弧,
@@ -151,18 +150,18 @@ impl Context {
     }
 
     fn parse_unary(
-        &self,
+        context: &Context,
         tokens: &mut Peekable<Iter<Token>>,
         input: &str,
     ) -> Result<Expr<Type>, AppError> {
         match tokens.peek() {
             Some(Token { tok: Tok::Add, .. }) => {
                 tokens.next();
-                self.parse_primary(tokens, input)
+                parse_primary(context, tokens, input)
             }
             Some(Token { tok: Tok::Sub, pos }) => {
                 tokens.next();
-                let expr: Expr<Type> = self.parse_primary(tokens, input)?;
+                let expr: Expr<Type> = parse_primary(context, tokens, input)?;
                 Ok(Expr::BinaryExpr {
                     op: BinaryOp::Sub,
                     op_pos: *pos,
@@ -180,7 +179,7 @@ impl Context {
                 pos,
             }) => {
                 tokens.next();
-                let expr = self.parse_unary(tokens, input)?;
+                let expr = parse_unary(context, tokens, input)?;
                 Ok(Expr::UnaryExpr {
                     op: UnaryOp::Deref,
                     op_pos: *pos,
@@ -197,7 +196,7 @@ impl Context {
                 pos,
             }) => {
                 tokens.next();
-                let expr = self.parse_unary(tokens, input)?;
+                let expr = parse_unary(context, tokens, input)?;
                 Ok(Expr::UnaryExpr {
                     op: UnaryOp::Addr,
                     op_pos: *pos,
@@ -205,16 +204,16 @@ impl Context {
                     expr: Box::new(expr),
                 })
             }
-            _ => self.parse_primary(tokens, input),
+            _ => parse_primary(context, tokens, input),
         }
     }
 
     fn parse_multiplicative(
-        &self,
+        context: &Context,
         tokens: &mut Peekable<Iter<Token>>,
         input: &str,
     ) -> Result<Expr<Type>, AppError> {
-        let mut expr: Expr<Type> = self.parse_unary(tokens, input)?;
+        let mut expr: Expr<Type> = parse_unary(context, tokens, input)?;
         loop {
             match tokens.peek() {
                 Some(Token {
@@ -223,7 +222,7 @@ impl Context {
                 }) => {
                     tokens.next();
                     let 左辺 = Box::new(expr);
-                    let 右辺 = Box::new(self.parse_unary(tokens, input)?);
+                    let 右辺 = Box::new(parse_unary(context, tokens, input)?);
                     expr = Expr::BinaryExpr {
                         op: BinaryOp::Mul,
                         op_pos: *op_pos,
@@ -238,7 +237,7 @@ impl Context {
                 }) => {
                     tokens.next();
                     let 左辺 = Box::new(expr);
-                    let 右辺 = Box::new(self.parse_unary(tokens, input)?);
+                    let 右辺 = Box::new(parse_unary(context, tokens, input)?);
                     expr = Expr::BinaryExpr {
                         op: BinaryOp::Div,
                         op_pos: *op_pos,
@@ -256,11 +255,11 @@ impl Context {
     }
 
     fn parse_additive(
-        &self,
+        context: &Context,
         tokens: &mut Peekable<Iter<Token>>,
         input: &str,
     ) -> Result<Expr<Type>, AppError> {
-        let mut expr: Expr<Type> = self.parse_multiplicative(tokens, input)?;
+        let mut expr: Expr<Type> = parse_multiplicative(context, tokens, input)?;
         loop {
             let tok = tokens.peek().unwrap();
             match tok {
@@ -270,7 +269,7 @@ impl Context {
                 } => {
                     tokens.next();
                     let 左辺 = Box::new(expr);
-                    let 右辺 = Box::new(self.parse_multiplicative(tokens, input)?);
+                    let 右辺 = Box::new(parse_multiplicative(context, tokens, input)?);
                     expr = Expr::BinaryExpr {
                         op: BinaryOp::Add,
                         op_pos: *op_pos,
@@ -289,7 +288,7 @@ impl Context {
                 } => {
                     tokens.next();
                     let 左辺 = Box::new(expr);
-                    let 右辺 = Box::new(self.parse_multiplicative(tokens, input)?);
+                    let 右辺 = Box::new(parse_multiplicative(context, tokens, input)?);
                     expr = Expr::BinaryExpr {
                         op: BinaryOp::Sub,
                         op_pos: *op_pos,
@@ -310,11 +309,11 @@ impl Context {
     }
 
     fn parse_relational(
-        &self,
+        context: &Context,
         tokens: &mut Peekable<Iter<Token>>,
         input: &str,
     ) -> Result<Expr<Type>, AppError> {
-        let mut expr: Expr<Type> = self.parse_additive(tokens, input)?;
+        let mut expr: Expr<Type> = parse_additive(context, tokens, input)?;
         loop {
             let tok = tokens.peek().unwrap();
             match tok {
@@ -324,7 +323,7 @@ impl Context {
                 } => {
                     tokens.next();
                     let 左辺 = Box::new(expr);
-                    let 右辺 = Box::new(self.parse_additive(tokens, input)?);
+                    let 右辺 = Box::new(parse_additive(context, tokens, input)?);
                     expr = Expr::BinaryExpr {
                         op: BinaryOp::LessThan,
                         op_pos: *op_pos,
@@ -339,7 +338,7 @@ impl Context {
                 } => {
                     tokens.next();
                     let 左辺 = Box::new(expr);
-                    let 右辺 = Box::new(self.parse_additive(tokens, input)?);
+                    let 右辺 = Box::new(parse_additive(context, tokens, input)?);
                     expr = Expr::BinaryExpr {
                         op: BinaryOp::LessThanOrEqual,
                         op_pos: *op_pos,
@@ -354,7 +353,7 @@ impl Context {
                 } => {
                     tokens.next();
                     let 左辺 = Box::new(expr);
-                    let 右辺 = Box::new(self.parse_additive(tokens, input)?);
+                    let 右辺 = Box::new(parse_additive(context, tokens, input)?);
                     expr = Expr::BinaryExpr {
                         op: BinaryOp::LessThan, // ここを逆転させ、
                         op_pos: *op_pos,
@@ -369,7 +368,7 @@ impl Context {
                 } => {
                     tokens.next();
                     let 左辺 = Box::new(expr);
-                    let 右辺 = Box::new(self.parse_additive(tokens, input)?);
+                    let 右辺 = Box::new(parse_additive(context, tokens, input)?);
                     expr = Expr::BinaryExpr {
                         op: BinaryOp::LessThanOrEqual, // ここを逆転させ、
                         op_pos: *op_pos,
@@ -386,11 +385,11 @@ impl Context {
     }
 
     fn parse_equality(
-        &self,
+        context: &Context,
         tokens: &mut Peekable<Iter<Token>>,
         input: &str,
     ) -> Result<Expr<Type>, AppError> {
-        let mut expr: Expr<Type> = self.parse_relational(tokens, input)?;
+        let mut expr: Expr<Type> = parse_relational(context, tokens, input)?;
         loop {
             let tok = tokens.peek().unwrap();
             match tok {
@@ -400,7 +399,7 @@ impl Context {
                 } => {
                     tokens.next();
                     let 左辺 = Box::new(expr);
-                    let 右辺 = Box::new(self.parse_relational(tokens, input)?);
+                    let 右辺 = Box::new(parse_relational(context, tokens, input)?);
                     expr = Expr::BinaryExpr {
                         op: BinaryOp::Equal,
                         op_pos: *op_pos,
@@ -415,7 +414,7 @@ impl Context {
                 } => {
                     tokens.next();
                     let 左辺 = Box::new(expr);
-                    let 右辺 = Box::new(self.parse_relational(tokens, input)?);
+                    let 右辺 = Box::new(parse_relational(context, tokens, input)?);
                     expr = Expr::BinaryExpr {
                         op: BinaryOp::NotEqual,
                         op_pos: *op_pos,
@@ -432,11 +431,11 @@ impl Context {
     }
 
     pub fn parse_expr(
-        &self,
+        context: &Context,
         tokens: &mut Peekable<Iter<Token>>,
         input: &str,
     ) -> Result<Expr<Type>, AppError> {
-        let expr = self.parse_equality(tokens, input)?;
+        let expr = parse_equality(context, tokens, input)?;
         let tok = tokens.peek().unwrap();
         match tok {
             Token {
@@ -445,7 +444,7 @@ impl Context {
             } => {
                 tokens.next();
                 let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(self.parse_expr(tokens, input)?);
+                let 右辺 = Box::new(parse_expr(context, tokens, input)?);
                 Ok(Expr::BinaryExpr {
                     op: BinaryOp::Assign,
                     op_pos: *op_pos,
@@ -457,4 +456,3 @@ impl Context {
             _ => Ok(expr),
         }
     }
-}
