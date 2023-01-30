@@ -1465,3 +1465,56 @@ hsjoihs「さて、ここでログを遡ると、『この二つのリンクを�
 $URL「https://github.com/ushitora-anqou/aqcc/blob/master/as/stdlib.c」
 $URL「https://stackoverflow.com/questions/6988487/what-does-the-brk-system-call-do」
 hsjoihs「これが伏線回収ってやつですね」
+hsjoihs「さて、これらのリンクを読んでいく限り、」
+$source
+```c
+#include <unistd.h>
+
+int brk(void* end_data_segment);
+void *sbrk(intptr_t increment);
+
+int alloc4(int **pp, int a, int b, int c, int d) {
+    int *p = sbrk(0);
+    brk(p + 4);
+    p[0] = a;
+    p[1] = b;
+    p[2] = c;
+    p[3] = d;
+    *pp = p;
+    return 0;
+}
+```
+hsjoihs「として alloc4 は実装できそうだ。wandbox でも試してみよう」
+$source
+```c
+#include <unistd.h>
+#include <stdio.h>
+
+int brk(void* end_data_segment);
+void *sbrk(intptr_t increment);
+
+int alloc4(int **pp, int a, int b, int c, int d) {
+    int *p = sbrk(0);
+    brk(p + 4);
+    p[0] = a;
+    p[1] = b;
+    p[2] = c;
+    p[3] = d;
+    *pp = p;
+    return 0;
+}
+
+int main() {
+    int *p;
+    alloc4(&p, 1, 2, 4, 8);
+    int *q;
+    q = p + 2;
+    printf("%d, ", *q); // 4
+    q = p + 3;
+    printf("%d\n", *q); // 8
+    return 0;
+}
+```
+$URL「https://wandbox.org/permlink/Z7DfkoQk7CX4QxVC」
+hsjoihs「ちゃんと動いてますね。もちろんたまたま動いているだけかもしれんけど」
+hsjoihs「ん？ ushitora-anqou 実装では最初にゼロ渡すのもその後に拡張するのも両方 syscall(12, addr) で実装しているけど、これでいいの？」
