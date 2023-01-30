@@ -260,9 +260,9 @@ pub fn builtin_putchar関数を生成() -> Buf {
  *     new_br--; // new_br = br + 2
  *     *new_br = c;
  *     new_br--; // new_br = br + 1
- *     *new_br = b; 
+ *     *new_br = b;
  *     new_br--; // new_br = br
- *     *new_br = a; 
+ *     *new_br = a;
  *     return new_br; // new_br == br
  * }
  */

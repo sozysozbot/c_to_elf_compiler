@@ -51,6 +51,14 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
                 return_type: Type::Int,
             },
         ),
+        (
+            "__builtin_alloc4".to_string(),
+            FunctionSignature {
+                params: vec![Type::Int, Type::Int, Type::Int, Type::Int],
+                pos: 0,
+                return_type: Type::Ptr(Box::new(Type::Int)),
+            },
+        ),
     ]
     .into_iter()
     .collect();
@@ -70,6 +78,10 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
         u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     buf.append(codegen::builtin_putchar関数を生成());
     global_function_table.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
+
+    let builtin_alloc4_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
+    buf.append(codegen::builtin_alloc4関数を生成());
+    global_function_table.insert("__builtin_alloc4".to_string(), builtin_alloc4_pos);
 
     let mut buf = buf;
 

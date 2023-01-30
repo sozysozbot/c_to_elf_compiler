@@ -106,6 +106,8 @@ check 3 "int main() { int x; int *y; y = &x; *y = 3; return x; }"
 check 3 "int main() { int x; int *y; y = &x; x = 3; return *y; }"
 check 3 "int main() { int x; *&x = 3; return x; }"
 
+check 15 "int main() { int *p; p = __builtin_alloc4(1, 2, 4, 8); return *p + *(p+1) + *(p+2) + *(p+3); }"
+
 for job in `jobs -p`
 do
     wait $job
