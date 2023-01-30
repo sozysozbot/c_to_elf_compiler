@@ -32,7 +32,7 @@ fn parse_primary(
             } => {
                 tokens.next();
 
-                let mut args: Vec<Expr> = Vec::new();
+                let mut args = Vec::new();
 
                 match tokens.peek().unwrap() {
                     Token {
@@ -161,7 +161,7 @@ fn parse_unary(
         }
         Some(Token { tok: Tok::Sub, pos }) => {
             tokens.next();
-            let expr: Expr = parse_primary(context, tokens, input)?;
+            let expr = parse_primary(context, tokens, input)?;
             Ok(Expr::BinaryExpr {
                 op: BinaryOp::Sub,
                 op_pos: *pos,
@@ -213,7 +213,7 @@ fn parse_multiplicative(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr: Expr = parse_unary(context, tokens, input)?;
+    let mut expr = parse_unary(context, tokens, input)?;
     loop {
         match tokens.peek() {
             Some(Token {
@@ -259,7 +259,7 @@ fn parse_additive(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr: Expr = parse_multiplicative(context, tokens, input)?;
+    let mut expr = parse_multiplicative(context, tokens, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -313,7 +313,7 @@ fn parse_relational(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr: Expr = parse_additive(context, tokens, input)?;
+    let mut expr = parse_additive(context, tokens, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -389,7 +389,7 @@ fn parse_equality(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr: Expr = parse_relational(context, tokens, input)?;
+    let mut expr = parse_relational(context, tokens, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {

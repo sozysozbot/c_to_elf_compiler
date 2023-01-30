@@ -1415,3 +1415,40 @@ hsjoihs「うおー Docker が変なエラーメッセージを吐いた。パ�
 hsjoihs「よし、diff が +410 -95 にまで減った」
 hsjoihs「あとは、結局 Any を使わなかったので、それも削ろう」
 hsjoihs「そしてジェネリクスにする必要ももはやないので、削る」
+hsjoihs「これで +384 -70 で済んだ」
+hsjoihs「あと、定義が」
+$source
+```rust
+pub enum Expr {
+    BinaryExpr {
+        op: BinaryOp,
+        op_pos: usize,
+        左辺: Box<Expr>,
+        右辺: Box<Expr>,
+        typ: Type,
+    },
+    Numeric {
+        val: u8,
+        pos: usize,
+        typ: Type,
+    },
+    Identifier {
+        ident: String,
+        pos: usize,
+        typ: Type,
+    },
+    Call {
+        ident: String,
+        pos: usize,
+        args: Vec<Expr>,
+        typ: Type,
+    },
+    UnaryExpr {
+        op: UnaryOp,
+        op_pos: usize,
+        expr: Box<Expr>,
+        typ: Type,
+    },
+}
+```
+hsjoihs「になってて、全部に typ を書いているのもあんまり賢くないんだよな。とはいえこれを変えると diff が増えるので今は放置しよう（本末転倒）」
