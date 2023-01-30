@@ -1378,3 +1378,7 @@ $blockquote
 いちいち std::mem::take するのが面倒なので Buf::append を実装する
 ```
 tkr「approve」
+
+$DATE「2023年1月30日」
+tkr「パーサを修正してcodegenを少しいじるだけでよさそう」
+tkr「ポインタ型ではないものをderefしたらエラーとかは今のところは不要みたい」
