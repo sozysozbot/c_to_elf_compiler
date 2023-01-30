@@ -14,7 +14,7 @@ fn parse_test() {
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
         Context {
-            local_var_declarations: HashMap::new(),
+            local_var_and_param_declarations: HashMap::new(),
             previous_function_declarations: HashMap::new()
         }
         .parse_statement(&mut tokens, input)
@@ -451,7 +451,7 @@ pub struct FunctionSignature {
 pub type FunctionDeclaration = (String, FunctionSignature);
 
 pub struct Context {
-    pub local_var_declarations: HashMap<String, Type>,
+    pub local_var_and_param_declarations: HashMap<String, Type>,
     pub previous_function_declarations: HashMap<String, FunctionSignature>,
 }
 
@@ -534,13 +534,22 @@ fn after_param_list(
 
                         break;
                     }
-                    _ => statements.push(
-                        Context {
-                            local_var_declarations: local_var_declarations.clone(),
-                            previous_function_declarations: previous_function_declarations.clone(),
-                        }
-                        .parse_statement(tokens, input)?,
-                    ),
+                    _ => {
+                        let mut local_var_and_param_declarations = local_var_declarations.clone();
+                        local_var_and_param_declarations.extend(
+                            params
+                                .iter()
+                                .map(|(typ, ident)| (ident.ident.clone(), (*typ).clone())),
+                        );
+                        statements.push(
+                            Context {
+                                local_var_and_param_declarations,
+                                previous_function_declarations: previous_function_declarations
+                                    .clone(),
+                            }
+                            .parse_statement(tokens, input)?,
+                        )
+                    }
                 }
             }
 
@@ -653,13 +662,13 @@ pub fn parse_toplevel_function_definition(
 }
 
 pub fn parse(
+    function_declarations: &mut HashMap<String, FunctionSignature>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<Vec<FunctionDefinition>, AppError> {
     let mut function_definitions: Vec<FunctionDefinition> = vec![];
-    let mut function_declarations: HashMap<String, FunctionSignature> = HashMap::new();
     while tokens.peek().is_some() {
-        let new_def = parse_toplevel_function_definition(&function_declarations, tokens, input)?;
+        let new_def = parse_toplevel_function_definition(function_declarations, tokens, input)?;
         let (name, signature) = new_def.clone().into();
         function_declarations.insert(name, signature);
         function_definitions.push(new_def);

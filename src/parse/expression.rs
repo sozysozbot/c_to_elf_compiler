@@ -113,7 +113,7 @@ impl Context {
                             ident: ident.clone(),
                             pos: *ident_pos,
                             typ: self
-                                .local_var_declarations
+                                .local_var_and_param_declarations
                                 .get(ident)
                                 .ok_or(AppError {
                                     message: format!(

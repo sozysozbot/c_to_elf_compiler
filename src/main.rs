@@ -34,7 +34,28 @@ fn main() -> std::io::Result<()> {
 
 fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError> {
     let mut tokens = tokens.iter().peekable();
-    let function_definitions = toplevel::parse(&mut tokens, input)?;
+    let mut function_declarations: HashMap<String, FunctionSignature> = [
+        (
+            "__builtin_three".to_string(),
+            FunctionSignature {
+                params: Vec::new(),
+                pos: 0,
+                return_type: Type::Int,
+            },
+        ),
+        (
+            "__builtin_putchar".to_string(),
+            FunctionSignature {
+                params: vec![Type::Int],
+                pos: 0,
+                return_type: Type::Int,
+            },
+        ),
+    ]
+    .into_iter()
+    .collect();
+
+    let function_definitions = toplevel::parse(&mut function_declarations, &mut tokens, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let mut buf = Buf::from(&tiny[0..0x78]);
@@ -72,7 +93,8 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
                     pos: 0,
                     return_type: Type::Int,
                 },
-            )].into_iter()
+            )]
+            .into_iter()
             .collect(),
             &mut tokens,
             input,
