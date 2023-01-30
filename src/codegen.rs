@@ -250,10 +250,14 @@ impl<'a> FunctionGen<'a> {
     pub fn exprを左辺値として評価してアドレスをrdiレジスタへ(
         &mut self,
         buf: &mut Buf,
-        expr: &Expr,
+        expr: &UntypedExpr,
     ) {
         match expr {
-            Expr::Identifier { ident, pos: _ } => {
+            Expr::Identifier {
+                ident,
+                pos: _,
+                typ: _,
+            } => {
                 if !self.local_var_table.contains_key(ident) {
                     panic!(
                         "変数 {ident} は関数 {} 内で宣言されていません",
@@ -281,7 +285,7 @@ impl<'a> FunctionGen<'a> {
         }
     }
 
-    pub fn statementを評価(&mut self, stmt: &Statement) -> Buf {
+    pub fn statementを評価(&mut self, stmt: &Statement<Any>) -> Buf {
         match stmt {
             Statement::Expr {
                 expr,
@@ -373,9 +377,13 @@ impl<'a> FunctionGen<'a> {
                         semicolon_pos: *pos,
                     }),
                     Some(Statement::While {
-                        cond: cond
-                            .clone()
-                            .unwrap_or_else(|| Box::new(Expr::Numeric { val: 1, pos: *pos })),
+                        cond: cond.clone().unwrap_or_else(|| {
+                            Box::new(Expr::Numeric {
+                                val: 1,
+                                pos: *pos,
+                                typ: Any,
+                            })
+                        }),
                         body: Box::new(Statement::Block {
                             statements: vec![
                                 Some(body.as_ref().clone()),
@@ -404,13 +412,14 @@ impl<'a> FunctionGen<'a> {
     }
 
     #[allow(clippy::too_many_lines)]
-    pub fn exprを評価してediレジスタへ(&mut self, buf: &mut Buf, expr: &Expr) {
+    pub fn exprを評価してediレジスタへ(&mut self, buf: &mut Buf, expr: &UntypedExpr) {
         match expr {
             Expr::BinaryExpr {
                 op: BinaryOp::Assign,
                 op_pos: _,
                 左辺,
                 右辺,
+                typ: _,
             } => {
                 self.exprを左辺値として評価してアドレスをrdiレジスタへ(
                     buf, 左辺,
@@ -434,6 +443,7 @@ impl<'a> FunctionGen<'a> {
                 op_pos: _,
                 左辺,
                 右辺,
+                typ: _,
             } => {
                 self.exprを評価してediレジスタへ(buf, 左辺); // 左辺は push せずに捨てる
                 self.exprを評価してediレジスタへ(buf, 右辺);
@@ -443,6 +453,7 @@ impl<'a> FunctionGen<'a> {
                 op_pos: _,
                 左辺,
                 右辺,
+                typ: _,
             } => {
                 self.exprを評価してediレジスタへ(buf, 左辺);
                 buf.append(rdiをプッシュ());
@@ -461,6 +472,7 @@ impl<'a> FunctionGen<'a> {
                 op_pos: _,
                 左辺,
                 右辺,
+                typ: _,
             } => {
                 self.exprを評価してediレジスタへ(buf, 左辺);
                 buf.append(rdiをプッシュ());
@@ -479,6 +491,7 @@ impl<'a> FunctionGen<'a> {
                 op_pos: _,
                 左辺,
                 右辺,
+                typ: _,
             } => {
                 self.exprを評価してediレジスタへ(buf, 左辺);
                 buf.append(rdiをプッシュ());
@@ -498,6 +511,7 @@ impl<'a> FunctionGen<'a> {
                 op_pos: _,
                 左辺,
                 右辺,
+                typ: _,
             } => {
                 self.exprを評価してediレジスタへ(buf, 左辺);
                 buf.append(rdiをプッシュ());
@@ -524,6 +538,7 @@ impl<'a> FunctionGen<'a> {
                 op_pos: _,
                 左辺,
                 右辺,
+                typ: _,
             } => {
                 self.比較演算を評価してediレジスタへ(
                     buf,
@@ -537,6 +552,7 @@ impl<'a> FunctionGen<'a> {
                 op_pos: _,
                 左辺,
                 右辺,
+                typ: _,
             } => {
                 self.比較演算を評価してediレジスタへ(
                     buf,
@@ -550,6 +566,7 @@ impl<'a> FunctionGen<'a> {
                 op_pos: _,
                 左辺,
                 右辺,
+                typ: _,
             } => {
                 self.比較演算を評価してediレジスタへ(
                     buf,
@@ -563,6 +580,7 @@ impl<'a> FunctionGen<'a> {
                 op_pos: _,
                 左辺,
                 右辺,
+                typ: _,
             } => {
                 self.比較演算を評価してediレジスタへ(
                     buf,
@@ -571,13 +589,18 @@ impl<'a> FunctionGen<'a> {
                     &フラグを読んで以下であるかどうかをalにセット(),
                 );
             }
-            Expr::Numeric { val, pos: _ } => {
+            Expr::Numeric {
+                val,
+                pos: _,
+                typ: _,
+            } => {
                 buf.append(ediに代入(*val));
             }
             Expr::Call {
                 ident,
                 args,
                 pos: _,
+                typ: _,
             } => {
                 let function = *self
                     .global_function_table
@@ -639,6 +662,7 @@ impl<'a> FunctionGen<'a> {
                 op: UnaryOp::Addr,
                 op_pos: _,
                 expr,
+                typ: _,
             } => {
                 self.exprを左辺値として評価してアドレスをrdiレジスタへ(
                     buf, expr,
@@ -656,8 +680,8 @@ impl<'a> FunctionGen<'a> {
     fn 比較演算を評価してediレジスタへ(
         &mut self,
         buf: &mut Buf,
-        左辺: &Expr,
-        右辺: &Expr,
+        左辺: &UntypedExpr,
+        右辺: &UntypedExpr,
         フラグをalに移す: &[u8],
     ) {
         self.exprを評価してediレジスタへ(buf, 左辺);

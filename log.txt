@@ -1395,3 +1395,7 @@ hsjoihs「UntypedExpr からなる構文木を元に、TypedExpr からなる構
 hsjoihs「私はどちらかというと前者が好み」
 tkr「そうよね。とはいえ面倒そう」
 hsjoihs「まあ、まず恒等変換を書いて、その後に TypedExpr に型フィールドを要求してエラーが出たところをどんどん直すだけ。そんなに難しくはない」
+
+hsjoihs「ということで、ステップ 19」
+hsjoihs「Expr を UntypedExpr に改名しようかと思ったが、Rust だしジェネリックパラメータに空タプル or 型情報でやればいいか」
+hsjoihs「空タプルを使うのもどうかと思うので、Any という名のゼロサイズ型を定義し、そいつをつけてまわることで、とりあえず UntypedExpr 化に成功」

@@ -16,18 +16,19 @@ fn parse_test() {
     assert_eq!(
         parse_statement(&mut tokens, input).unwrap(),
         Statement::Expr {
-            expr: Box::new(Expr::BinaryExpr {
+            expr: Box::new(UntypedExpr::BinaryExpr {
                 op: BinaryOp::Sub,
                 op_pos: 2,
-                左辺: Box::new(Expr::Numeric { val: 5, pos: 0 }),
-                右辺: Box::new(Expr::Numeric { val: 3, pos: 4 })
+                typ: Any,
+                左辺: Box::new(UntypedExpr::Numeric { val: 5, pos: 0, typ: Any }),
+                右辺: Box::new(UntypedExpr::Numeric { val: 3, pos: 4, typ: Any })
             }),
             semicolon_pos: 5
         }
     );
 }
 
-fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Statement, AppError> {
+fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Statement<Any>, AppError> {
     let tok = tokens.peek().unwrap();
     match tok {
         Token {
@@ -380,7 +381,7 @@ pub struct FunctionDefinition {
     pub func_name: String,
     pub params: Vec<(Type, ParameterIdentifier)>,
     pub pos: usize,
-    pub statements: Vec<Statement>,
+    pub statements: Vec<Statement<Any>>,
     pub return_type: Type,
     pub local_var_declarations: HashMap<String, Type>,
 }

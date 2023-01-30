@@ -3,15 +3,16 @@ use crate::ast::*;
 use crate::token::*;
 use std::{iter::Peekable, slice::Iter};
 
-fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<UntypedExpr, AppError> {
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Num(val),
             pos,
         } => {
-            let expr = Expr::Numeric {
+            let expr = UntypedExpr::Numeric {
                 val: *val,
                 pos: *pos,
+                typ: Any,
             };
             Ok(expr)
         }
@@ -33,10 +34,11 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
                         ..
                     } => {
                         tokens.next();
-                        let expr = Expr::Call {
+                        let expr = UntypedExpr::Call {
                             ident: ident.clone(),
                             args,
                             pos: *pos,
+                            typ: Any,
                         };
                         return Ok(expr);
                     }
@@ -53,10 +55,11 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
                             ..
                         } => {
                             tokens.next();
-                            let expr = Expr::Call {
+                            let expr = UntypedExpr::Call {
                                 ident: ident.clone(),
                                 args,
                                 pos: *pos,
+                                typ: Any,
                             };
                             break Ok(expr);
                         }
@@ -78,9 +81,10 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
                 }
             }
             _ => {
-                let expr = Expr::Identifier {
+                let expr = UntypedExpr::Identifier {
                     ident: ident.clone(),
                     pos: *pos,
+                    typ: Any,
                 };
                 Ok(expr)
             }
@@ -110,7 +114,7 @@ fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr
     }
 }
 
-fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<UntypedExpr, AppError> {
     match tokens.peek() {
         Some(Token { tok: Tok::Add, .. }) => {
             tokens.next();
@@ -119,10 +123,11 @@ fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, 
         Some(Token { tok: Tok::Sub, pos }) => {
             tokens.next();
             let expr = parse_primary(tokens, input)?;
-            Ok(Expr::BinaryExpr {
+            Ok(UntypedExpr::BinaryExpr {
                 op: BinaryOp::Sub,
                 op_pos: *pos,
-                左辺: Box::new(Expr::Numeric { val: 0, pos: *pos }),
+                typ: Any,
+                左辺: Box::new(UntypedExpr::Numeric { val: 0, pos: *pos, typ: Any, }),
                 右辺: Box::new(expr),
             })
         }
@@ -132,10 +137,11 @@ fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, 
         }) => {
             tokens.next();
             let expr = parse_unary(tokens, input)?;
-            Ok(Expr::UnaryExpr {
+            Ok(UntypedExpr::UnaryExpr {
                 op: UnaryOp::Deref,
                 op_pos: *pos,
                 expr: Box::new(expr),
+                typ: Any,
             })
         }
         Some(Token {
@@ -144,17 +150,21 @@ fn parse_unary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, 
         }) => {
             tokens.next();
             let expr = parse_unary(tokens, input)?;
-            Ok(Expr::UnaryExpr {
+            Ok(UntypedExpr::UnaryExpr {
                 op: UnaryOp::Addr,
                 op_pos: *pos,
                 expr: Box::new(expr),
+                typ: Any,
             })
         }
         _ => parse_primary(tokens, input),
     }
 }
 
-fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+fn parse_multiplicative(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<UntypedExpr, AppError> {
     let mut expr = parse_unary(tokens, input)?;
     loop {
         match tokens.peek() {
@@ -165,11 +175,12 @@ fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Resu
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_unary(tokens, input)?);
-                expr = Expr::BinaryExpr {
+                expr = UntypedExpr::BinaryExpr {
                     op: BinaryOp::Mul,
                     op_pos: *op_pos,
                     左辺,
                     右辺,
+                    typ: Any,
                 };
             }
             Some(Token {
@@ -179,11 +190,12 @@ fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Resu
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_unary(tokens, input)?);
-                expr = Expr::BinaryExpr {
+                expr = UntypedExpr::BinaryExpr {
                     op: BinaryOp::Div,
                     op_pos: *op_pos,
                     左辺,
                     右辺,
+                    typ: Any,
                 };
             }
 
@@ -194,7 +206,10 @@ fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Resu
     }
 }
 
-fn parse_additive(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+fn parse_additive(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<UntypedExpr, AppError> {
     let mut expr = parse_multiplicative(tokens, input)?;
     loop {
         let tok = tokens.peek().unwrap();
@@ -206,11 +221,12 @@ fn parse_additive(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_multiplicative(tokens, input)?);
-                expr = Expr::BinaryExpr {
+                expr = UntypedExpr::BinaryExpr {
                     op: BinaryOp::Add,
                     op_pos: *op_pos,
                     左辺,
                     右辺,
+                    typ: Any,
                 }
             }
             Token {
@@ -220,11 +236,12 @@ fn parse_additive(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_multiplicative(tokens, input)?);
-                expr = Expr::BinaryExpr {
+                expr = UntypedExpr::BinaryExpr {
                     op: BinaryOp::Sub,
                     op_pos: *op_pos,
                     左辺,
                     右辺,
+                    typ: Any,
                 }
             }
             _ => {
@@ -234,7 +251,10 @@ fn parse_additive(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
     }
 }
 
-fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+fn parse_relational(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<UntypedExpr, AppError> {
     let mut expr = parse_additive(tokens, input)?;
     loop {
         let tok = tokens.peek().unwrap();
@@ -246,11 +266,12 @@ fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<E
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_additive(tokens, input)?);
-                expr = Expr::BinaryExpr {
+                expr = UntypedExpr::BinaryExpr {
                     op: BinaryOp::LessThan,
                     op_pos: *op_pos,
                     左辺,
                     右辺,
+                    typ: Any,
                 }
             }
             Token {
@@ -260,11 +281,12 @@ fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<E
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_additive(tokens, input)?);
-                expr = Expr::BinaryExpr {
+                expr = UntypedExpr::BinaryExpr {
                     op: BinaryOp::LessThanOrEqual,
                     op_pos: *op_pos,
                     左辺,
                     右辺,
+                    typ: Any,
                 }
             }
             Token {
@@ -274,11 +296,12 @@ fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<E
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_additive(tokens, input)?);
-                expr = Expr::BinaryExpr {
+                expr = UntypedExpr::BinaryExpr {
                     op: BinaryOp::LessThan, // ここを逆転させ、
                     op_pos: *op_pos,
                     左辺: 右辺, // ここを逆転させればよい
                     右辺: 左辺,
+                    typ: Any,
                 }
             }
             Token {
@@ -288,11 +311,12 @@ fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<E
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_additive(tokens, input)?);
-                expr = Expr::BinaryExpr {
+                expr = UntypedExpr::BinaryExpr {
                     op: BinaryOp::LessThanOrEqual, // ここを逆転させ、
                     op_pos: *op_pos,
                     左辺: 右辺, // ここを逆転させればよい
                     右辺: 左辺,
+                    typ: Any,
                 }
             }
             _ => {
@@ -302,7 +326,10 @@ fn parse_relational(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<E
     }
 }
 
-fn parse_equality(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+fn parse_equality(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<UntypedExpr, AppError> {
     let mut expr = parse_relational(tokens, input)?;
     loop {
         let tok = tokens.peek().unwrap();
@@ -314,11 +341,12 @@ fn parse_equality(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_relational(tokens, input)?);
-                expr = Expr::BinaryExpr {
+                expr = UntypedExpr::BinaryExpr {
                     op: BinaryOp::Equal,
                     op_pos: *op_pos,
                     左辺,
                     右辺,
+                    typ: Any,
                 }
             }
             Token {
@@ -328,11 +356,12 @@ fn parse_equality(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
                 tokens.next();
                 let 左辺 = Box::new(expr);
                 let 右辺 = Box::new(parse_relational(tokens, input)?);
-                expr = Expr::BinaryExpr {
+                expr = UntypedExpr::BinaryExpr {
                     op: BinaryOp::NotEqual,
                     op_pos: *op_pos,
                     左辺,
                     右辺,
+                    typ: Any,
                 }
             }
             _ => {
@@ -342,7 +371,10 @@ fn parse_equality(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
     }
 }
 
-pub fn parse_expr(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
+pub fn parse_expr(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<UntypedExpr, AppError> {
     let expr = parse_equality(tokens, input)?;
     let tok = tokens.peek().unwrap();
     match tok {
@@ -353,11 +385,12 @@ pub fn parse_expr(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Exp
             tokens.next();
             let 左辺 = Box::new(expr);
             let 右辺 = Box::new(parse_expr(tokens, input)?);
-            Ok(Expr::BinaryExpr {
+            Ok(UntypedExpr::BinaryExpr {
                 op: BinaryOp::Assign,
                 op_pos: *op_pos,
                 左辺,
                 右辺,
+                typ: Any,
             })
         }
         _ => Ok(expr),
