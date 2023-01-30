@@ -26,26 +26,53 @@ impl Context {
             Token {
                 tok: Tok::Identifier(ident),
                 pos: ident_pos,
-            } => {
-                match tokens.peek().unwrap() {
-                    Token {
-                        tok: Tok::開き丸括弧,
-                        pos: open_pos,
-                    } => {
-                        tokens.next();
+            } => match tokens.peek().unwrap() {
+                Token {
+                    tok: Tok::開き丸括弧,
+                    pos: open_pos,
+                } => {
+                    tokens.next();
 
-                        let mut args: Vec<Expr<Type>> = Vec::new();
+                    let mut args: Vec<Expr<Type>> = Vec::new();
 
+                    match tokens.peek().unwrap() {
+                        Token {
+                            tok: Tok::閉じ丸括弧,
+                            ..
+                        } => {
+                            tokens.next();
+                            let func_decl =
+                                self.function_declarations.get(ident).ok_or(AppError {
+                                    message: format!(
+                                        "関数 {} は宣言されておらず、戻り値の型が分かりません",
+                                        ident
+                                    ),
+                                    input: input.to_string(),
+                                    pos: *ident_pos,
+                                })?;
+                            let expr = Expr::Call {
+                                ident: ident.clone(),
+                                args,
+                                pos: *ident_pos,
+                                typ: func_decl.return_type.clone(),
+                            };
+                            return Ok(expr);
+                        }
+                        _ => {
+                            let expr = self.parse_expr(tokens, input)?;
+                            args.push(expr);
+                        }
+                    }
+
+                    loop {
                         match tokens.peek().unwrap() {
                             Token {
                                 tok: Tok::閉じ丸括弧,
                                 ..
                             } => {
                                 tokens.next();
-                                let func_decl = self
-                                    .previous_function_declarations
-                                    .get(ident)
-                                    .ok_or(AppError {
+                                let func_decl =
+                                    self.function_declarations.get(ident).ok_or(AppError {
                                         message: format!(
                                             "関数 {} は宣言されておらず、戻り値の型が分かりません",
                                             ident
@@ -59,76 +86,45 @@ impl Context {
                                     pos: *ident_pos,
                                     typ: func_decl.return_type.clone(),
                                 };
-                                return Ok(expr);
+                                break Ok(expr);
                             }
-                            _ => {
+                            Token {
+                                tok: Tok::Comma, ..
+                            } => {
+                                tokens.next();
                                 let expr = self.parse_expr(tokens, input)?;
                                 args.push(expr);
                             }
-                        }
-
-                        loop {
-                            match tokens.peek().unwrap() {
-                                Token {
-                                    tok: Tok::閉じ丸括弧,
-                                    ..
-                                } => {
-                                    tokens.next();
-                                    let func_decl =
-                                self.previous_function_declarations
-                                    .get(ident)
-                                    .ok_or(AppError {
-                                        message: format!("関数 {} は宣言されておらず、戻り値の型が分かりません", ident),
-                                        input: input.to_string(),
-                                        pos: *ident_pos,
-                                    })?;
-                                    let expr = Expr::Call {
-                                        ident: ident.clone(),
-                                        args,
-                                        pos: *ident_pos,
-                                        typ: func_decl.return_type.clone(),
-                                    };
-                                    break Ok(expr);
-                                }
-                                Token {
-                                    tok: Tok::Comma, ..
-                                } => {
-                                    tokens.next();
-                                    let expr = self.parse_expr(tokens, input)?;
-                                    args.push(expr);
-                                }
-                                _ => {
-                                    break Err(AppError {
-                                        message: "閉じ丸括弧かカンマが期待されていました"
-                                            .to_string(),
-                                        input: input.to_string(),
-                                        pos: *open_pos + 1,
-                                    })
-                                }
+                            _ => {
+                                break Err(AppError {
+                                    message: "閉じ丸括弧かカンマが期待されていました".to_string(),
+                                    input: input.to_string(),
+                                    pos: *open_pos + 1,
+                                })
                             }
                         }
                     }
-                    _ => {
-                        let expr = Expr::Identifier {
-                            ident: ident.clone(),
-                            pos: *ident_pos,
-                            typ: self
-                                .local_var_and_param_declarations
-                                .get(ident)
-                                .ok_or(AppError {
-                                    message: format!(
-                                        "識別子 {} は定義されておらず、型が分かりません",
-                                        ident
-                                    ),
-                                    input: input.to_string(),
-                                    pos: *ident_pos,
-                                })?
-                                .clone(),
-                        };
-                        Ok(expr)
-                    }
                 }
-            }
+                _ => {
+                    let expr = Expr::Identifier {
+                        ident: ident.clone(),
+                        pos: *ident_pos,
+                        typ: self
+                            .local_var_and_param_declarations
+                            .get(ident)
+                            .ok_or(AppError {
+                                message: format!(
+                                    "識別子 {} は定義されておらず、型が分かりません",
+                                    ident
+                                ),
+                                input: input.to_string(),
+                                pos: *ident_pos,
+                            })?
+                            .clone(),
+                    };
+                    Ok(expr)
+                }
+            },
             Token {
                 tok: Tok::開き丸括弧,
                 pos,

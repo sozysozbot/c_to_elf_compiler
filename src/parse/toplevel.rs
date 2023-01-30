@@ -15,7 +15,7 @@ fn parse_test() {
     assert_eq!(
         Context {
             local_var_and_param_declarations: HashMap::new(),
-            previous_function_declarations: HashMap::new()
+            function_declarations: HashMap::new()
         }
         .parse_statement(&mut tokens, input)
         .unwrap(),
@@ -428,7 +428,7 @@ pub struct FunctionDefinition {
     pub local_var_declarations: HashMap<String, Type>,
 }
 
-impl From<FunctionDefinition> for FunctionDeclaration  {
+impl From<FunctionDefinition> for FunctionDeclaration {
     fn from(s: FunctionDefinition) -> FunctionDeclaration {
         (
             s.func_name,
@@ -452,7 +452,7 @@ pub type FunctionDeclaration = (String, FunctionSignature);
 
 pub struct Context {
     pub local_var_and_param_declarations: HashMap<String, Type>,
-    pub previous_function_declarations: HashMap<String, FunctionSignature>,
+    pub function_declarations: HashMap<String, FunctionSignature>,
 }
 
 fn after_param_list(
@@ -464,6 +464,11 @@ fn after_param_list(
     return_type: Type,
     ident: &str,
 ) -> Result<FunctionDefinition, AppError> {
+    let signature = FunctionSignature {
+        params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
+        pos,
+        return_type: return_type.clone(),
+    };
     match tokens.peek().unwrap() {
         Token {
             tok: Tok::開き波括弧,
@@ -516,6 +521,7 @@ fn after_param_list(
                 }
                 local_var_declarations.insert(local_var_name, local_var_type);
             }
+
             let mut statements = vec![];
             loop {
                 match tokens.peek() {
@@ -541,11 +547,16 @@ fn after_param_list(
                                 .iter()
                                 .map(|(typ, ident)| (ident.ident.clone(), (*typ).clone())),
                         );
+
+                        let mut function_declarations = previous_function_declarations.clone();
+
+                        // 今読んでる関数の定義も足さないと再帰呼び出しができない
+                        function_declarations.insert(ident.to_string(), signature.clone());
+
                         statements.push(
                             Context {
                                 local_var_and_param_declarations,
-                                previous_function_declarations: previous_function_declarations
-                                    .clone(),
+                                function_declarations,
                             }
                             .parse_statement(tokens, input)?,
                         )
