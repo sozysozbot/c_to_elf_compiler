@@ -1946,3 +1946,4 @@ hsjoihs「てか未定義変数をエラーにするようにした時点で .or
 hsjoihs「あ、.or_insert 全部外せる」
 hsjoihs「で、今度はオフセットを直に HashMap に入れるようにして、」
 hsjoihs「普通に更新を関数に切り出すべきだな」
+hsjoihs「HashMap に入れて max_offset を増やす LocalVarTable::allocate() も実装」

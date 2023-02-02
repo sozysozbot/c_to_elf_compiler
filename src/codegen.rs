@@ -333,6 +333,18 @@ pub struct LocalVarTable {
     pub max_offset: u8,
 }
 
+impl LocalVarTable {
+    pub fn allocate(&mut self, ident: &str, size: u8) -> u8 {
+        let offset = self
+            .max_offset
+            .checked_add(size)
+            .expect("オフセットが u8 に収まりません");
+        self.max_offset = offset;
+        self.offsets.insert(ident.to_owned(), offset);
+        offset
+    }
+}
+
 pub struct FunctionGen<'a> {
     local_var_table: LocalVarTable,
     stack_size: u32,
@@ -833,12 +845,9 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
                 definition.func_name, param
             )
         }
-        let offset = function_gen.local_var_table.max_offset + WORD_SIZE;
-        function_gen.local_var_table.max_offset = offset;
-        function_gen
+        let offset = function_gen
             .local_var_table
-            .offsets
-            .insert(param.clone(), offset);
+            .allocate(param, WORD_SIZE);
         // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
         // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
         let negative_offset: i8 = -(offset as i8);
@@ -879,12 +888,9 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
                 definition.func_name, local_var_name
             )
         }
-        let offset = function_gen.local_var_table.max_offset + WORD_SIZE;
-        function_gen.local_var_table.max_offset = offset;
         function_gen
             .local_var_table
-            .offsets
-            .insert(local_var_name.clone(), offset);
+            .allocate(local_var_name, WORD_SIZE);
     }
 
     let content_buf = definition
