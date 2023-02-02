@@ -27,6 +27,7 @@ pub enum Tok {
     Comma,
     Ampersand,
     Int,
+    Sizeof,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
