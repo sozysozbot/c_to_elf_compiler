@@ -68,7 +68,7 @@ impl Box_<Expr> {
     }
 }
 
-impl<T> Deref for Box_<T>{
+impl<T> Deref for Box_<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {

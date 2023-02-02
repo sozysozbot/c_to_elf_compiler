@@ -347,17 +347,12 @@ impl<'a> FunctionGen<'a> {
                 pos: _,
                 typ: _,
             } => {
-                if !self.local_var_table.contains_key(ident) {
+                let idx = self.local_var_table.get(ident).unwrap_or_else(|| {
                     panic!(
                         "変数 {ident} は関数 {} 内で宣言されていません",
                         self.function_name
                     )
-                }
-                let len = self.local_var_table.len();
-                let idx = self
-                    .local_var_table
-                    .entry(ident.clone())
-                    .or_insert(len as u8);
+                });
                 let offset = *idx * WORD_SIZE + WORD_SIZE;
                 buf.append(rbpをプッシュ());
                 buf.append(rdiへとポップ());
@@ -506,7 +501,7 @@ impl<'a> FunctionGen<'a> {
             self.exprを左辺値として評価してアドレスをrdiレジスタへ(buf, expr);
             return;
         }
-        
+
         match expr {
             Expr::DecayedArr { expr, .. } => {
                 self.exprを評価してediレジスタへ(buf, expr);
@@ -832,11 +827,11 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
                 definition.func_name, param
             )
         }
-        let idx = function_gen
+        let idx = len as u8;
+        function_gen
             .local_var_table
-            .entry(param.clone())
-            .or_insert(len as u8);
-        let offset = *idx * WORD_SIZE + WORD_SIZE;
+            .insert(param.clone(), idx);
+        let offset = idx * WORD_SIZE + WORD_SIZE;
         // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
         // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
         let negative_offset: i8 = -(offset as i8);
@@ -876,8 +871,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         }
         function_gen
             .local_var_table
-            .entry(local_var_name.clone())
-            .or_insert(len as u8);
+            .insert(local_var_name.clone(), len as u8);
     }
 
     let content_buf = definition
