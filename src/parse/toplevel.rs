@@ -360,30 +360,29 @@ fn parse_statement(
 }
 
 #[derive(Debug, Clone)]
-pub struct ParameterIdentifier {
+pub struct Identifier {
     pub ident: String,
     pub pos: usize,
 }
 
-fn parse_parameter_type_and_identifier(
+fn parse_type_and_identifier(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-) -> Result<(Type, ParameterIdentifier), AppError> {
-    let parameter_type = parse_type(tokens, input)?;
-
+) -> Result<(Type, Identifier), AppError> {
+    let typ = parse_type(tokens, input)?;
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Identifier(ident),
             pos,
         } => Ok((
-            parameter_type,
-            ParameterIdentifier {
+            typ,
+            Identifier {
                 ident: ident.clone(),
                 pos: *pos,
             },
         )),
         Token { pos, .. } => Err(AppError {
-            message: "仮引数をパースできません".to_string(),
+            message: "「型と識別子」をパースできません".to_string(),
             input: input.to_string(),
             pos: *pos,
         }),
@@ -420,7 +419,7 @@ impl Type {
 #[derive(Debug, Clone)]
 pub struct FunctionDefinition {
     pub func_name: String,
-    pub params: Vec<(Type, ParameterIdentifier)>,
+    pub params: Vec<(Type, Identifier)>,
     pub pos: usize,
     pub statements: Vec<Statement>,
     pub return_type: Type,
@@ -458,7 +457,7 @@ fn after_param_list(
     previous_function_declarations: &HashMap<String, FunctionSignature>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-    params: Vec<(Type, ParameterIdentifier)>,
+    params: Vec<(Type, Identifier)>,
     pos: usize,
     return_type: Type,
     ident: &str,
@@ -477,30 +476,17 @@ fn after_param_list(
             let mut local_var_declarations = HashMap::new();
             #[allow(clippy::while_let_loop)]
             loop {
-                let local_var_type = match tokens.peek().unwrap() {
-                    Token { tok: Tok::Int, .. } => parse_type(tokens, input)?,
-                    Token { .. } => {
-                        // 変数定義は終わり
-                        break;
-                    }
-                };
-                let local_var_name = match tokens.peek().unwrap() {
-                    Token {
-                        tok: Tok::Identifier(ident),
+                let (
+                    local_var_type,
+                    Identifier {
+                        ident: local_var_name,
                         ..
-                    } => {
-                        tokens.next();
-                        ident.clone()
-                    }
-                    Token { pos, .. } => {
-                        return Err(AppError {
-                            message: "関数内の変数宣言で、型名の後に識別子以外が来ました"
-                                .to_string(),
-                            input: input.to_string(),
-                            pos: *pos,
-                        })
-                    }
+                    },
+                ) = match tokens.peek().unwrap() {
+                    Token { tok: Tok::Int, .. } => parse_type_and_identifier(tokens, input)?,
+                    _ => break,
                 };
+
                 match tokens.peek().unwrap() {
                     Token {
                         tok: Tok::Semicolon,
@@ -618,7 +604,7 @@ pub fn parse_toplevel_function_definition(
                         );
                     }
                     _ => {
-                        let param = parse_parameter_type_and_identifier(tokens, input)?;
+                        let param = parse_type_and_identifier(tokens, input)?;
                         params.push(param);
                     }
                 }
@@ -644,7 +630,7 @@ pub fn parse_toplevel_function_definition(
                             tok: Tok::Comma, ..
                         } => {
                             tokens.next();
-                            let param = parse_parameter_type_and_identifier(tokens, input)?;
+                            let param = parse_type_and_identifier(tokens, input)?;
                             params.push(param);
                         }
                         _ => {

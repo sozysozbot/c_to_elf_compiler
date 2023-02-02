@@ -1918,3 +1918,6 @@ hsjoihs「ということで、『ステップ 21: 配列を実装する』を�
 hsjoihs「トークナイザに角括弧を追加」
 hsjoihs「enum Type にも配列の存在を教え、Type::sizeof も実装」
 hsjoihs「直前のステップ 20 で sizeof 演算子が実装してあることによりテストケースを書きやすくなっているの、なかなか上手い工夫なんだよな」
+hsjoihs「さて、問題はパーサー。『型をパース』と『識別子名をパース』してる関数を先に一つに固め、そこに変更を加えて配列を差し込んでいくのがラクです」
+hsjoihs「てか既に parse_parameter_type_and_identifier 関数がある。じゃあこれを改造しよう」
+hsjoihs「ローカル変数も関数引数もともに parse_type_and_identifier 関数を呼ぶように変更」
