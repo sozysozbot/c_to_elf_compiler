@@ -1861,6 +1861,35 @@ match typ.sizeof() {
 hsjoihs「よし通った！！！」
 hsjoihs「しかし、アセンブリの書きやすさのためにp[3] → p[2] → p[1] → p[0] の順で書き込んでいっていて幸いだったな。おかげでバグに気づけた」
 
+tkr「sizeof演算子って型だけじゃなくて式もかけたのまじか」
+
+$DATE「2023年2月1日」
+
+tkr「次ってなんでしたっけ」
+hsjoihs「sizeof なのでめちゃめちゃラクです」
+tkr「もう既に hsjoihs さんが実装終わらせてるようなもんだからな」
+hsjoihs「ここ数回は奇数ステップの方が圧倒的に実装重いですね」
+
+hsjoihs「現実逃避のパワーで、自分で別個でやってた C コンパイラ https://github.com/sozysozbot/2kmcc が compilerbook 基本走りきっちゃった」
+hsjoihs「ということで、課題をやります。レビューと実装をとても素早く終わらせることによって、tkr は私の課題の進捗を邪魔することができます」
+tkr「圧を掛けられている」
+
+$blockquote
+```
+hsjoihs「で、現状だと +933 -625 とあまりに diff が大きすぎる。しかしこれの大部分は式パーサーを impl Context にしたことによるインデントの変更なんだよな」
+```
+tkr「これってgitの設定でなんとかできなかったっけ」
+hsjoihs「できるんだけど（てか VSCode では勝手になんとかなる）、レビューは GitHub 上で発生するので、そっちでの負担が少なくなる方がいいだろうとの判断です 」
+tkr「あ〜〜」
+
+さうす「これ使えない？」
+$IMAGE「github-whitespace.png」
+hsjoihs「へ〜こんなのが」
+tkr「そんなのあったの」
+tkr「便利だ」
+hsjoihs「まあ今回は &mut Context じゃなくて &Context なので、第一引数で引き回してもそんなに読みづらくならないだろうとの判断もありました」
+hsjoihs「それはともかくさうすくんありがとうございます」
+
 $DATE「2023年2月2日」
 tkr「sizeofの実装やるぞ」
 tkr「トークナイザとパーサ変更して終わり。はい」
@@ -1869,4 +1898,18 @@ hsjoihs「まだ配列ないから sizeof(int **[5][2]) とか考えなくてい
 hsjoihs「sizeof は型取るときはカッコ必要ですよ」
 tkr「え、そうなのか。あぶなかった。カッコがなかったら絶対式だけど、カッコがあったら両方ありうる？めちゃくちゃ面倒じゃない？」
 hsjoihs「今の c_to_elf コンパイラの現状では型名はすべて int で始まるので、困りません」 
-tkr「できた」
+hsjoihs「ところで、型がカッコで括られているといえばキャストもありますが、こいつと sizeof の兼ね合いでこういう話がありますね」
+$URL「https://godbolt.org/z/1fhT5GMb1」
+$source
+```c
+int foo() {
+    int *p;
+    return sizeof((int)*p);
+}
+
+int bar() {
+    int a = 3;
+    return sizeof(int)*a;
+}
+```
+tkr「sizeof 実装できた」
