@@ -3041,6 +3041,45 @@ check 11 &quot;int main() { int *p; p = __builtin_alloc4(11, 2, 4, 8); return *p
 		<div class="content">しかし、アセンブリの書きやすさのためにp[3] → p[2] → p[1] → p[0] の順で書き込んでいっていて幸いだったな。おかげでバグに気づけた</div>
 	</div>
 </div>
+<h3 class="date">2023年2月2日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_6d62fa97612b13d4e58a6fce5280af23').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_6d62fa97612b13d4e58a6fce5280af23').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_6d62fa97612b13d4e58a6fce5280af23" href="#permalink_6d62fa97612b13d4e58a6fce5280af23" class="permalink">¶</a>
+		<div class="content">sizeofの実装やるぞ</div>
+		<div class="content">トークナイザとパーサ変更して終わり。はい</div>
+		<div class="content">sizeof 値 は一瞬で実装できたので、sizeof (型) を実装してからプルリク投げます</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_6b1cb23f6ea3adfd92bd24693bcbdb46').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_6b1cb23f6ea3adfd92bd24693bcbdb46').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_6b1cb23f6ea3adfd92bd24693bcbdb46" href="#permalink_6b1cb23f6ea3adfd92bd24693bcbdb46" class="permalink">¶</a>
+		<div class="content">まだ配列ないから sizeof(int **[5][2]) とか考えなくていいし、よさそう</div>
+		<div class="content">sizeof は型取るときはカッコ必要ですよ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_a763950d86b47f79eb0533441ecf28da').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_a763950d86b47f79eb0533441ecf28da').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_a763950d86b47f79eb0533441ecf28da" href="#permalink_a763950d86b47f79eb0533441ecf28da" class="permalink">¶</a>
+		<div class="content">え、そうなのか。あぶなかった。カッコがなかったら絶対式だけど、カッコがあったら両方ありうる？めちゃくちゃ面倒じゃない？</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1360e54f6b49be0fca07c2849f583055').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1360e54f6b49be0fca07c2849f583055').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_1360e54f6b49be0fca07c2849f583055" href="#permalink_1360e54f6b49be0fca07c2849f583055" class="permalink">¶</a>
+		<div class="content">今の c_to_elf コンパイラの現状では型名はすべて int で始まるので、困りません</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_43f24599639a530b69cafa6c2ef84624').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_43f24599639a530b69cafa6c2ef84624').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_43f24599639a530b69cafa6c2ef84624" href="#permalink_43f24599639a530b69cafa6c2ef84624" class="permalink">¶</a>
+		<div class="content">できた</div>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>
