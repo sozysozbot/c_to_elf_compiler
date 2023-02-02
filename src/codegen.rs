@@ -335,6 +335,7 @@ pub struct LocalVarTable {
 
 impl LocalVarTable {
     pub fn allocate(&mut self, ident: &str, size: u8) -> u8 {
+        let size = (size + WORD_SIZE - 1) / WORD_SIZE * WORD_SIZE;
         let offset = self
             .max_offset
             .checked_add(size)
@@ -838,7 +839,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
     let mut parameter_buf = Buf::new();
     let _return_type = &definition.return_type;
 
-    for (i, (_param_type, param)) in definition.params.iter().enumerate() {
+    for (i, (param_type, param)) in definition.params.iter().enumerate() {
         if function_gen.local_var_table.offsets.contains_key(param) {
             panic!(
                 "関数 `{}` の仮引数 {} が重複しています",
@@ -847,7 +848,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         }
         let offset = function_gen
             .local_var_table
-            .allocate(param, WORD_SIZE);
+            .allocate(param, param_type.sizeof());
         // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
         // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
         let negative_offset: i8 = -(offset as i8);
@@ -877,7 +878,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         };
     }
 
-    for (local_var_name, _local_var_type) in definition.local_var_declarations.iter() {
+    for (local_var_name, local_var_type) in definition.local_var_declarations.iter() {
         if function_gen
             .local_var_table
             .offsets
@@ -890,7 +891,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         }
         function_gen
             .local_var_table
-            .allocate(local_var_name, WORD_SIZE);
+            .allocate(local_var_name, local_var_type.sizeof());
     }
 
     let content_buf = definition
