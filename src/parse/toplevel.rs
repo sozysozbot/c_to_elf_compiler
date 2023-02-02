@@ -359,28 +359,16 @@ fn parse_statement(
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Identifier {
-    pub ident: String,
-    pub pos: usize,
-}
-
 fn parse_type_and_identifier(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-) -> Result<(Type, Identifier), AppError> {
+) -> Result<(Type, String), AppError> {
     let typ = parse_type(tokens, input)?;
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Identifier(ident),
-            pos,
-        } => Ok((
-            typ,
-            Identifier {
-                ident: ident.clone(),
-                pos: *pos,
-            },
-        )),
+            ..
+        } => Ok((typ, ident.clone())),
         Token { pos, .. } => Err(AppError {
             message: "「型と識別子」をパースできません".to_string(),
             input: input.to_string(),
@@ -419,7 +407,7 @@ impl Type {
 #[derive(Debug, Clone)]
 pub struct FunctionDefinition {
     pub func_name: String,
-    pub params: Vec<(Type, Identifier)>,
+    pub params: Vec<(Type, String)>,
     pub pos: usize,
     pub statements: Vec<Statement>,
     pub return_type: Type,
@@ -457,7 +445,7 @@ fn after_param_list(
     previous_function_declarations: &HashMap<String, FunctionSignature>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-    params: Vec<(Type, Identifier)>,
+    params: Vec<(Type, String)>,
     pos: usize,
     return_type: Type,
     ident: &str,
@@ -476,13 +464,7 @@ fn after_param_list(
             let mut local_var_declarations = HashMap::new();
             #[allow(clippy::while_let_loop)]
             loop {
-                let (
-                    local_var_type,
-                    Identifier {
-                        ident: local_var_name,
-                        ..
-                    },
-                ) = match tokens.peek().unwrap() {
+                let (local_var_type, local_var_name) = match tokens.peek().unwrap() {
                     Token { tok: Tok::Int, .. } => parse_type_and_identifier(tokens, input)?,
                     _ => break,
                 };
@@ -530,7 +512,7 @@ fn after_param_list(
                         local_var_and_param_declarations.extend(
                             params
                                 .iter()
-                                .map(|(typ, ident)| (ident.ident.clone(), (*typ).clone())),
+                                .map(|(typ, ident)| (ident.clone(), (*typ).clone())),
                         );
 
                         let mut function_declarations = previous_function_declarations.clone();

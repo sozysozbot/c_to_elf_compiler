@@ -818,15 +818,15 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
 
     for (i, (_param_type, param)) in definition.params.iter().enumerate() {
         let len = function_gen.local_var_table.len();
-        if function_gen.local_var_table.contains_key(&param.ident) {
+        if function_gen.local_var_table.contains_key(param) {
             panic!(
                 "関数 `{}` の仮引数 {} が重複しています",
-                definition.func_name, param.ident
+                definition.func_name, param
             )
         }
         let idx = function_gen
             .local_var_table
-            .entry(param.ident.clone())
+            .entry(param.clone())
             .or_insert(len as u8);
         let offset = *idx * WORD_SIZE + WORD_SIZE;
         // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
