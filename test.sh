@@ -126,6 +126,11 @@ check 15 "int main() { int *p; p = __builtin_alloc4(1, 2, 4, 8); return *p + *(p
 
 check 15 "int main() { int *p; p = __builtin_alloc4(3, 3, 3, 3); *(p+3) = 8; *(p+2) = 4; *(p+1) = 2; *p = 1; return *p + *(p+1) + *(p+2) + *(p+3); }"
 
+check 4 "int main() { return sizeof(1); }"
+check 8 "int main() { int x; return sizeof(&x); }"
+check 8 "int main() { int x; return sizeof(sizeof(&x)); }"
+
+
 
 for job in `jobs -p`
 do

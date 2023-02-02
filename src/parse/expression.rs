@@ -204,6 +204,18 @@ fn parse_unary(
                 expr: Box::new(expr),
             })
         }
+        Some(Token {
+            tok: Tok::Sizeof,
+            pos,
+        }) => {
+            tokens.next();
+            let expr = parse_unary(context, tokens, input)?;
+            Ok(Expr::Numeric {
+                val: expr.typ().sizeof(),
+                pos: *pos,
+                typ: Type::Int,
+            })
+        }
         _ => parse_primary(context, tokens, input),
     }
 }

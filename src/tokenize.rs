@@ -54,6 +54,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     "while" => Tok::While,
                     "for" => Tok::For,
                     "int" => Tok::Int,
+                    "sizeof" => Tok::Sizeof,
                     _ => Tok::Identifier(ident),
                 };
 
