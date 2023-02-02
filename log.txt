@@ -1921,3 +1921,22 @@ hsjoihs「直前のステップ 20 で sizeof 演算子が実装してあるこ�
 hsjoihs「さて、問題はパーサー。『型をパース』と『識別子名をパース』してる関数を先に一つに固め、そこに変更を加えて配列を差し込んでいくのがラクです」
 hsjoihs「てか既に parse_parameter_type_and_identifier 関数がある。じゃあこれを改造しよう」
 hsjoihs「ローカル変数も関数引数もともに parse_type_and_identifier 関数を呼ぶように変更」
+
+hsjoihs「配列をポインタに decay させるのは、Box_ という型を間に挟んで」
+$source
+```rust
+pub fn decay_if_arr(expr: Expr) -> Box_<Expr> {
+    match expr.typ() {
+        Type::Arr(t, _) => Box_(Box::new(Expr::DecayedArr {
+            expr: Box_(Box::new(expr)),
+            typ: Type::Ptr(t),
+        })),
+        _ => Box_(Box::new(expr)),
+    }
+}
+
+pub fn no_decay_even_if_arr(expr: Expr) -> Box_<Expr> {
+    Box_(Box::new(expr))
+}
+```
+hsjoihs「としてやることで解決。コード生成もした。さてあとは配列のための領域をスタックにアロケートするだけだな」

@@ -60,7 +60,7 @@ fn parse_primary(
                     }
                     _ => {
                         let expr = parse_expr(context, tokens, input)?;
-                        args.push(expr);
+                        args.push(decay_if_arr(expr));
                     }
                 }
 
@@ -93,7 +93,7 @@ fn parse_primary(
                         } => {
                             tokens.next();
                             let expr = parse_expr(context, tokens, input)?;
-                            args.push(expr);
+                            args.push(decay_if_arr(expr));
                         }
                         _ => {
                             break Err(AppError {
@@ -167,12 +167,12 @@ fn parse_unary(
                 op: BinaryOp::Sub,
                 op_pos: *pos,
                 typ: Type::Int,
-                左辺: Box::new(Expr::Numeric {
+                左辺: decay_if_arr(Expr::Numeric {
                     val: 0,
                     pos: *pos,
                     typ: Type::Int,
                 }),
-                右辺: Box::new(expr),
+                右辺: decay_if_arr(expr),
             })
         }
         Some(Token {
@@ -189,7 +189,7 @@ fn parse_unary(
                     input: input.to_string(),
                     pos: *pos,
                 })?,
-                expr: Box::new(expr),
+                expr: decay_if_arr(expr),
             })
         }
         Some(Token {
@@ -202,7 +202,7 @@ fn parse_unary(
                 op: UnaryOp::Addr,
                 op_pos: *pos,
                 typ: Type::Ptr(Box::new(expr.typ())),
-                expr: Box::new(expr),
+                expr: no_decay_even_if_arr(expr),
             })
         }
         Some(Token {
@@ -261,8 +261,8 @@ fn parse_multiplicative(
                 pos: op_pos,
             }) => {
                 tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_unary(context, tokens, input)?);
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_unary(context, tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Mul,
                     op_pos: *op_pos,
@@ -276,8 +276,8 @@ fn parse_multiplicative(
                 pos: op_pos,
             }) => {
                 tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_unary(context, tokens, input)?);
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_unary(context, tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Div,
                     op_pos: *op_pos,
@@ -294,7 +294,7 @@ fn parse_multiplicative(
     }
 }
 
-fn add(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
+fn add(左辺: Box_<Expr>, 右辺: Box_<Expr>, op_pos: usize) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
         (Type::Int, Type::Int) => Some(Expr::BinaryExpr {
             op: BinaryOp::Add,
@@ -307,10 +307,10 @@ fn add(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
             op: BinaryOp::Add,
             op_pos,
             左辺,
-            右辺: Box::new(Expr::BinaryExpr {
+            右辺: decay_if_arr(Expr::BinaryExpr {
                 op: BinaryOp::Mul,
                 op_pos,
-                左辺: Box::new(Expr::Numeric {
+                左辺: decay_if_arr(Expr::Numeric {
                     val: t.sizeof(),
                     pos: op_pos,
                     typ: Type::Int,
@@ -325,7 +325,7 @@ fn add(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
     }
 }
 
-fn subtract(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
+fn subtract(左辺: Box_<Expr>, 右辺: Box_<Expr>, op_pos: usize) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
         (Type::Int, Type::Int) => Some(Expr::BinaryExpr {
             op: BinaryOp::Sub,
@@ -338,10 +338,10 @@ fn subtract(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr>
             op: BinaryOp::Sub,
             op_pos,
             左辺,
-            右辺: Box::new(Expr::BinaryExpr {
+            右辺: decay_if_arr(Expr::BinaryExpr {
                 op: BinaryOp::Mul,
                 op_pos,
-                左辺: Box::new(Expr::Numeric {
+                左辺: decay_if_arr(Expr::Numeric {
                     val: t.sizeof(),
                     pos: op_pos,
                     typ: Type::Int,
@@ -354,14 +354,14 @@ fn subtract(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr>
         (Type::Ptr(t1), Type::Ptr(t2)) if t1 == t2 => Some(Expr::BinaryExpr {
             op: BinaryOp::Div,
             op_pos,
-            左辺: Box::new(Expr::BinaryExpr {
+            左辺: decay_if_arr(Expr::BinaryExpr {
                 op: BinaryOp::Sub,
                 op_pos,
                 左辺,
                 右辺,
                 typ: Type::Int,
             }),
-            右辺: Box::new(Expr::Numeric {
+            右辺: decay_if_arr(Expr::Numeric {
                 val: t1.sizeof(),
                 pos: op_pos,
                 typ: Type::Int,
@@ -386,8 +386,8 @@ fn parse_additive(
                 pos: op_pos,
             } => {
                 tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_multiplicative(context, tokens, input)?);
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_multiplicative(context, tokens, input)?);
                 let message = format!(
                     "左辺の型が {:?}、右辺の型が {:?} なので、足し合わせることができません",
                     左辺.typ(),
@@ -404,8 +404,8 @@ fn parse_additive(
                 pos: op_pos,
             } => {
                 tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_multiplicative(context, tokens, input)?);
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_multiplicative(context, tokens, input)?);
                 let message = format!(
                     "左辺の型が {:?}、右辺の型が {:?} なので、引き算できません",
                     左辺.typ(),
@@ -439,8 +439,8 @@ fn parse_relational(
                 pos: op_pos,
             } => {
                 tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_additive(context, tokens, input)?);
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_additive(context, tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThan,
                     op_pos: *op_pos,
@@ -454,8 +454,8 @@ fn parse_relational(
                 pos: op_pos,
             } => {
                 tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_additive(context, tokens, input)?);
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_additive(context, tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThanOrEqual,
                     op_pos: *op_pos,
@@ -469,8 +469,8 @@ fn parse_relational(
                 pos: op_pos,
             } => {
                 tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_additive(context, tokens, input)?);
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_additive(context, tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThan, // ここを逆転させ、
                     op_pos: *op_pos,
@@ -484,8 +484,8 @@ fn parse_relational(
                 pos: op_pos,
             } => {
                 tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_additive(context, tokens, input)?);
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_additive(context, tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThanOrEqual, // ここを逆転させ、
                     op_pos: *op_pos,
@@ -515,8 +515,8 @@ fn parse_equality(
                 pos: op_pos,
             } => {
                 tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_relational(context, tokens, input)?);
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_relational(context, tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Equal,
                     op_pos: *op_pos,
@@ -530,8 +530,8 @@ fn parse_equality(
                 pos: op_pos,
             } => {
                 tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_relational(context, tokens, input)?);
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_relational(context, tokens, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::NotEqual,
                     op_pos: *op_pos,
@@ -560,8 +560,8 @@ pub fn parse_expr(
             pos: op_pos,
         } => {
             tokens.next();
-            let 左辺 = Box::new(expr);
-            let 右辺 = Box::new(parse_expr(context, tokens, input)?);
+            let 左辺 = decay_if_arr(expr);
+            let 右辺 = decay_if_arr(parse_expr(context, tokens, input)?);
             Ok(Expr::BinaryExpr {
                 op: BinaryOp::Assign,
                 op_pos: *op_pos,

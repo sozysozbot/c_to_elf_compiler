@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::parse::toplevel::Type;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -25,8 +27,8 @@ pub enum Expr {
     BinaryExpr {
         op: BinaryOp,
         op_pos: usize,
-        左辺: Box<Expr>,
-        右辺: Box<Expr>,
+        左辺: Box_<Expr>,
+        右辺: Box_<Expr>,
         typ: Type,
     },
     Numeric {
@@ -42,27 +44,60 @@ pub enum Expr {
     Call {
         ident: String,
         pos: usize,
-        args: Vec<Expr>,
+        args: Vec<Box_<Expr>>,
         typ: Type,
     },
     UnaryExpr {
         op: UnaryOp,
         op_pos: usize,
-        expr: Box<Expr>,
+        expr: Box_<Expr>,
+        typ: Type,
+    },
+    DecayedArr {
+        expr: Box_<Expr>,
         typ: Type,
     },
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct Box_<T>(pub Box<T>);
+
+impl Box_<Expr> {
+    pub fn typ(&self) -> Type {
+        self.0.typ()
+    }
+}
+
+impl<T> Deref for Box_<T>{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+pub fn decay_if_arr(expr: Expr) -> Box_<Expr> {
+    match expr.typ() {
+        Type::Arr(t, _) => Box_(Box::new(Expr::DecayedArr {
+            expr: Box_(Box::new(expr)),
+            typ: Type::Ptr(t),
+        })),
+        _ => Box_(Box::new(expr)),
+    }
+}
+
+pub fn no_decay_even_if_arr(expr: Expr) -> Box_<Expr> {
+    Box_(Box::new(expr))
+}
+
 impl Expr {
-    pub fn typ(&self) -> Type
-    where
-        Type: Clone,
-    {
+    pub fn typ(&self) -> Type {
         match self {
             Expr::BinaryExpr { typ, .. }
             | Expr::Numeric { typ, .. }
             | Expr::Identifier { typ, .. }
             | Expr::Call { typ, .. }
+            | Expr::DecayedArr { typ, .. }
             | Expr::UnaryExpr { typ, .. } => (*typ).clone(),
         }
     }

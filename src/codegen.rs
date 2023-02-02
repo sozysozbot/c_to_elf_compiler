@@ -502,7 +502,15 @@ impl<'a> FunctionGen<'a> {
 
     #[allow(clippy::too_many_lines)]
     pub fn exprを評価してediレジスタへ(&mut self, buf: &mut Buf, expr: &Expr) {
+        if matches!(expr.typ(), Type::Arr(_, _)) {
+            self.exprを左辺値として評価してアドレスをrdiレジスタへ(buf, expr);
+            return;
+        }
+        
         match expr {
+            Expr::DecayedArr { expr, .. } => {
+                self.exprを評価してediレジスタへ(buf, expr);
+            }
             Expr::BinaryExpr {
                 op: BinaryOp::Assign,
                 op_pos: _,

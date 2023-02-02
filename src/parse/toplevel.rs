@@ -28,12 +28,12 @@ fn parse_test() {
                 op: BinaryOp::Sub,
                 op_pos: 2,
                 typ: Type::Int,
-                左辺: Box::new(Expr::Numeric {
+                左辺: decay_if_arr(Expr::Numeric {
                     val: 5,
                     pos: 0,
                     typ: Type::Int
                 }),
-                右辺: Box::new(Expr::Numeric {
+                右辺: decay_if_arr(Expr::Numeric {
                     val: 3,
                     pos: 4,
                     typ: Type::Int

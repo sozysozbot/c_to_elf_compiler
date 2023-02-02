@@ -136,6 +136,8 @@ check 8 "int main() { return sizeof(int*); }"
 check 20 "int main() { int arr[5]; return sizeof(arr); }"
 check 40 "int main() { int arr[5][2]; return sizeof(arr); }"
 
+check 3 "int main() { int a[2]; int *p; *a = 1; *(a + 1) = 2; p = a; return *p + *(p + 1); }"
+
 for job in `jobs -p`
 do
     wait $job
