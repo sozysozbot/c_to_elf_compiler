@@ -106,6 +106,27 @@ check 3 "int main() { int x; int *y; y = &x; *y = 3; return x; }"
 check 3 "int main() { int x; int *y; y = &x; x = 3; return *y; }"
 check 3 "int main() { int x; *&x = 3; return x; }"
 
+check 1 "int main() { int *p; p = __builtin_alloc4(1, 2, 4, 8); return *p; }"
+check 7 "int main() { int *p; p = __builtin_alloc4(7, 2, 4, 8); return *p; }"
+check 11 "int main() { int *p; p = __builtin_alloc4(11, 2, 4, 8); return *p; }"
+
+check 1 "int main() { int *p; p = __builtin_alloc4(2, 1, 4, 8); return *(p+1); }"
+check 7 "int main() { int *p; p = __builtin_alloc4(2, 7, 4, 8); return *(p+1); }"
+check 11 "int main() { int *p; p = __builtin_alloc4(2, 11, 4, 8); return *(p+1); }"
+
+check 1 "int main() { int *p; p = __builtin_alloc4(2, 4, 1, 8); return *(p+2); }"
+check 7 "int main() { int *p; p = __builtin_alloc4(2, 4, 7, 8); return *(p+2); }"
+check 11 "int main() { int *p; p = __builtin_alloc4(2, 4, 11, 8); return *(p+2); }"
+
+check 1 "int main() { int *p; p = __builtin_alloc4(2, 4, 8, 1); return *(p+3); }"
+check 7 "int main() { int *p; p = __builtin_alloc4(2, 4, 8, 7); return *(p+3); }"
+check 11 "int main() { int *p; p = __builtin_alloc4(2, 4, 8, 11); return *(p+3); }"
+
+check 15 "int main() { int *p; p = __builtin_alloc4(1, 2, 4, 8); return *p + *(p+1) + *(p+2) + *(p+3); }"
+
+check 15 "int main() { int *p; p = __builtin_alloc4(3, 3, 3, 3); *(p+3) = 8; *(p+2) = 4; *(p+1) = 2; *p = 1; return *p + *(p+1) + *(p+2) + *(p+3); }"
+
+
 for job in `jobs -p`
 do
     wait $job

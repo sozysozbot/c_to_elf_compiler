@@ -14,27 +14,47 @@ fn parse_test() {
     let tokens = tokenize(input).unwrap();
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
-        parse_statement(&mut tokens, input).unwrap(),
+        parse_statement(
+            &Context {
+                local_var_and_param_declarations: HashMap::new(),
+                function_declarations: HashMap::new()
+            },
+            &mut tokens,
+            input
+        )
+        .unwrap(),
         Statement::Expr {
             expr: Box::new(Expr::BinaryExpr {
                 op: BinaryOp::Sub,
                 op_pos: 2,
-                左辺: Box::new(Expr::Numeric { val: 5, pos: 0 }),
-                右辺: Box::new(Expr::Numeric { val: 3, pos: 4 })
+                typ: Type::Int,
+                左辺: Box::new(Expr::Numeric {
+                    val: 5,
+                    pos: 0,
+                    typ: Type::Int
+                }),
+                右辺: Box::new(Expr::Numeric {
+                    val: 3,
+                    pos: 4,
+                    typ: Type::Int
+                })
             }),
             semicolon_pos: 5
         }
     );
 }
-
-fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Statement, AppError> {
+fn parse_statement(
+    context: &Context,
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<Statement, AppError> {
     let tok = tokens.peek().unwrap();
     match tok {
         Token {
             tok: Tok::Throw, ..
         } => {
             tokens.next();
-            let expr = Box::new(parse_expr(tokens, input)?);
+            let expr = Box::new(parse_expr(context, tokens, input)?);
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {
                 Token {
@@ -61,7 +81,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             tok: Tok::Return, ..
         } => {
             tokens.next();
-            let expr = Box::new(parse_expr(tokens, input)?);
+            let expr = Box::new(parse_expr(context, tokens, input)?);
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {
                 Token {
@@ -102,7 +122,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                     })
                 }
             }
-            let cond = Box::new(parse_expr(tokens, input)?);
+            let cond = Box::new(parse_expr(context, tokens, input)?);
 
             let tok = tokens.peek().unwrap();
             match tok {
@@ -120,12 +140,12 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                     })
                 }
             }
-            let then = Box::new(parse_statement(tokens, input)?);
+            let then = Box::new(parse_statement(context, tokens, input)?);
             let tok = tokens.peek().unwrap();
             let else_ = match tok {
                 Token { tok: Tok::Else, .. } => {
                     tokens.next();
-                    Some(Box::new(parse_statement(tokens, input)?))
+                    Some(Box::new(parse_statement(context, tokens, input)?))
                 }
                 _ => None,
             };
@@ -157,7 +177,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                     })
                 }
             }
-            let cond = Box::new(parse_expr(tokens, input)?);
+            let cond = Box::new(parse_expr(context, tokens, input)?);
 
             let tok = tokens.peek().unwrap();
             match tok {
@@ -175,7 +195,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                     })
                 }
             }
-            let body = Box::new(parse_statement(tokens, input)?);
+            let body = Box::new(parse_statement(context, tokens, input)?);
             Ok(Statement::While {
                 cond,
                 body,
@@ -206,7 +226,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                     tok: Tok::Semicolon,
                     ..
                 } => None,
-                _ => Some(Box::new(parse_expr(tokens, input)?)),
+                _ => Some(Box::new(parse_expr(context, tokens, input)?)),
             };
             let tok = tokens.peek().unwrap();
             match tok {
@@ -230,7 +250,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                     tok: Tok::Semicolon,
                     ..
                 } => None,
-                _ => Some(Box::new(parse_expr(tokens, input)?)),
+                _ => Some(Box::new(parse_expr(context, tokens, input)?)),
             };
             let tok = tokens.peek().unwrap();
             match tok {
@@ -254,7 +274,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                     tok: Tok::閉じ丸括弧,
                     ..
                 } => None,
-                _ => Some(Box::new(parse_expr(tokens, input)?)),
+                _ => Some(Box::new(parse_expr(context, tokens, input)?)),
             };
             let tok = tokens.peek().unwrap();
             match tok {
@@ -272,7 +292,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
                     })
                 }
             }
-            let body = Box::new(parse_statement(tokens, input)?);
+            let body = Box::new(parse_statement(context, tokens, input)?);
             Ok(Statement::For {
                 init,
                 cond,
@@ -304,7 +324,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
 
                         break;
                     }
-                    _ => statements.push(parse_statement(tokens, input)?),
+                    _ => statements.push(parse_statement(context, tokens, input)?),
                 }
             }
             Ok(Statement::Block {
@@ -313,7 +333,7 @@ fn parse_statement(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<St
             })
         }
         _ => {
-            let expr = Box::new(parse_expr(tokens, input)?);
+            let expr = Box::new(parse_expr(context, tokens, input)?);
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {
                 Token {
@@ -370,12 +390,29 @@ fn parse_parameter_type_and_identifier(
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Type {
     Int,
     Ptr(Box<Type>),
 }
 
+impl Type {
+    pub fn deref(&self) -> Option<Self> {
+        match self {
+            Type::Int => None,
+            Type::Ptr(x) => Some((**x).clone()),
+        }
+    }
+
+    pub fn sizeof(&self) -> u8 {
+        match self {
+            Type::Int => 4,
+            Type::Ptr(_) => 8,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct FunctionDefinition {
     pub func_name: String,
     pub params: Vec<(Type, ParameterIdentifier)>,
@@ -385,7 +422,35 @@ pub struct FunctionDefinition {
     pub local_var_declarations: HashMap<String, Type>,
 }
 
+impl From<FunctionDefinition> for FunctionDeclaration {
+    fn from(s: FunctionDefinition) -> FunctionDeclaration {
+        (
+            s.func_name,
+            FunctionSignature {
+                pos: s.pos,
+                return_type: s.return_type,
+                params: s.params.into_iter().map(|(typ, _)| typ).collect(),
+            },
+        )
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FunctionSignature {
+    pub params: Vec<Type>,
+    pub pos: usize,
+    pub return_type: Type,
+}
+
+pub type FunctionDeclaration = (String, FunctionSignature);
+
+pub struct Context {
+    pub local_var_and_param_declarations: HashMap<String, Type>,
+    pub function_declarations: HashMap<String, FunctionSignature>,
+}
+
 fn after_param_list(
+    previous_function_declarations: &HashMap<String, FunctionSignature>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
     params: Vec<(Type, ParameterIdentifier)>,
@@ -393,6 +458,11 @@ fn after_param_list(
     return_type: Type,
     ident: &str,
 ) -> Result<FunctionDefinition, AppError> {
+    let signature = FunctionSignature {
+        params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
+        pos,
+        return_type: return_type.clone(),
+    };
     match tokens.peek().unwrap() {
         Token {
             tok: Tok::開き波括弧,
@@ -445,6 +515,7 @@ fn after_param_list(
                 }
                 local_var_declarations.insert(local_var_name, local_var_type);
             }
+
             let mut statements = vec![];
             loop {
                 match tokens.peek() {
@@ -463,11 +534,32 @@ fn after_param_list(
 
                         break;
                     }
-                    _ => statements.push(parse_statement(tokens, input)?),
+                    _ => {
+                        let mut local_var_and_param_declarations = local_var_declarations.clone();
+                        local_var_and_param_declarations.extend(
+                            params
+                                .iter()
+                                .map(|(typ, ident)| (ident.ident.clone(), (*typ).clone())),
+                        );
+
+                        let mut function_declarations = previous_function_declarations.clone();
+
+                        // 今読んでる関数の定義も足さないと再帰呼び出しができない
+                        function_declarations.insert(ident.to_string(), signature.clone());
+
+                        statements.push(parse_statement(
+                            &Context {
+                                local_var_and_param_declarations,
+                                function_declarations,
+                            },
+                            tokens,
+                            input,
+                        )?)
+                    }
                 }
             }
 
-            let expr = FunctionDefinition {
+            let func_def = FunctionDefinition {
                 func_name: ident.to_string(),
                 params,
                 pos,
@@ -475,7 +567,7 @@ fn after_param_list(
                 return_type,
                 local_var_declarations,
             };
-            Ok(expr)
+            Ok(func_def)
         }
         Token { pos, .. } => Err(AppError {
             message: "仮引数リストの後に、開き波括弧以外のトークンが来ました".to_string(),
@@ -486,6 +578,7 @@ fn after_param_list(
 }
 
 pub fn parse_toplevel_function_definition(
+    previous_declarations: &HashMap<String, FunctionSignature>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<FunctionDefinition, AppError> {
@@ -509,7 +602,15 @@ pub fn parse_toplevel_function_definition(
                         ..
                     } => {
                         tokens.next();
-                        return after_param_list(tokens, input, params, *pos, return_type, ident);
+                        return after_param_list(
+                            previous_declarations,
+                            tokens,
+                            input,
+                            params,
+                            *pos,
+                            return_type,
+                            ident,
+                        );
                     }
                     _ => {
                         let param = parse_parameter_type_and_identifier(tokens, input)?;
@@ -525,6 +626,7 @@ pub fn parse_toplevel_function_definition(
                         } => {
                             tokens.next();
                             return after_param_list(
+                                previous_declarations,
                                 tokens,
                                 input,
                                 params,
@@ -566,12 +668,16 @@ pub fn parse_toplevel_function_definition(
 }
 
 pub fn parse(
+    function_declarations: &mut HashMap<String, FunctionSignature>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<Vec<FunctionDefinition>, AppError> {
-    let mut function_definitions = vec![];
+    let mut function_definitions: Vec<FunctionDefinition> = vec![];
     while tokens.peek().is_some() {
-        function_definitions.push(parse_toplevel_function_definition(tokens, input)?);
+        let new_def = parse_toplevel_function_definition(function_declarations, tokens, input)?;
+        let (name, signature) = new_def.clone().into();
+        function_declarations.insert(name, signature);
+        function_definitions.push(new_def);
     }
     Ok(function_definitions)
 }

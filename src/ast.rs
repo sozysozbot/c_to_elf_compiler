@@ -1,3 +1,5 @@
+use crate::parse::toplevel::Type;
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum BinaryOp {
     Add,
@@ -25,25 +27,45 @@ pub enum Expr {
         op_pos: usize,
         左辺: Box<Expr>,
         右辺: Box<Expr>,
+        typ: Type,
     },
     Numeric {
         val: u8,
         pos: usize,
+        typ: Type,
     },
     Identifier {
         ident: String,
         pos: usize,
+        typ: Type,
     },
     Call {
         ident: String,
         pos: usize,
         args: Vec<Expr>,
+        typ: Type,
     },
     UnaryExpr {
         op: UnaryOp,
         op_pos: usize,
         expr: Box<Expr>,
+        typ: Type,
     },
+}
+
+impl Expr {
+    pub fn typ(&self) -> Type
+    where
+        Type: Clone,
+    {
+        match self {
+            Expr::BinaryExpr { typ, .. }
+            | Expr::Numeric { typ, .. }
+            | Expr::Identifier { typ, .. }
+            | Expr::Call { typ, .. }
+            | Expr::UnaryExpr { typ, .. } => (*typ).clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
