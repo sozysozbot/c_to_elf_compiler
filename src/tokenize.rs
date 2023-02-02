@@ -81,6 +81,20 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     pos,
                 });
             }
+            '[' => {
+                iter.next();
+                ans.push(Token {
+                    tok: Tok::開き角括弧,
+                    pos,
+                });
+            }
+            ']' => {
+                iter.next();
+                ans.push(Token {
+                    tok: Tok::閉じ角括弧,
+                    pos,
+                });
+            }
             '+' => {
                 iter.next();
                 ans.push(Token { tok: Tok::Add, pos });

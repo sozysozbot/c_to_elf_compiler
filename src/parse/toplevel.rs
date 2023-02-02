@@ -394,13 +394,14 @@ fn parse_parameter_type_and_identifier(
 pub enum Type {
     Int,
     Ptr(Box<Type>),
+    Arr(Box<Type>, u8),
 }
 
 impl Type {
     pub fn deref(&self) -> Option<Self> {
         match self {
             Type::Int => None,
-            Type::Ptr(x) => Some((**x).clone()),
+            Type::Ptr(x) | Type::Arr(x, _) => Some((**x).clone()),
         }
     }
 
@@ -408,6 +409,10 @@ impl Type {
         match self {
             Type::Int => 4,
             Type::Ptr(_) => 8,
+            Type::Arr(t, len) => t
+                .sizeof()
+                .checked_mul(*len)
+                .expect("型のサイズが u8 に収まりません"),
         }
     }
 }
