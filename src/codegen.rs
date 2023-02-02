@@ -433,7 +433,7 @@ impl<'a> FunctionGen<'a> {
                                 .unwrap_or_else(
                                     |_| panic!(
                                         "else でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です",
-                                        else_buf.len(), else_buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" ")
+                                        else_buf.len(), else_buf.to_vec().iter().map(|a| format!("{a:02x}")).collect::<Vec<_>>().join(" ")
                                     )
                                 )
                             )
@@ -461,7 +461,7 @@ impl<'a> FunctionGen<'a> {
 
                 let buf = cond_buf.join(body_buf);
                 let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap_or_else(
-                |_| panic!("while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" "))
+                |_| panic!("while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{a:02x}")).collect::<Vec<_>>().join(" "))
             );
                 buf.join(Buf::from(jmp(buf_len)))
             }
@@ -718,7 +718,7 @@ impl<'a> FunctionGen<'a> {
                 let function = *self
                     .global_function_table
                     .get(ident)
-                    .unwrap_or_else(|| panic!("関数 {} が見つかりません", ident));
+                    .unwrap_or_else(|| panic!("関数 {ident} が見つかりません"));
 
                 let stack_args_len = if args.len() > 6 { args.len() - 6 } else { 0 };
 

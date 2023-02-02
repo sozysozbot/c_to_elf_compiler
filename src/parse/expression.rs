@@ -44,8 +44,7 @@ fn parse_primary(
                         let func_decl =
                             context.function_declarations.get(ident).ok_or(AppError {
                                 message: format!(
-                                    "関数 {} は宣言されておらず、戻り値の型が分かりません",
-                                    ident
+                                    "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
                                 ),
                                 input: input.to_string(),
                                 pos: *ident_pos,
@@ -74,8 +73,7 @@ fn parse_primary(
                             let func_decl =
                                 context.function_declarations.get(ident).ok_or(AppError {
                                     message: format!(
-                                        "関数 {} は宣言されておらず、戻り値の型が分かりません",
-                                        ident
+                                        "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
                                     ),
                                     input: input.to_string(),
                                     pos: *ident_pos,
@@ -109,18 +107,18 @@ fn parse_primary(
                 let expr = Expr::Identifier {
                     ident: ident.clone(),
                     pos: *ident_pos,
-                    typ: context
-                        .local_var_and_param_declarations
-                        .get(ident)
-                        .ok_or(AppError {
-                            message: format!(
-                                "識別子 {} は定義されておらず、型が分かりません",
-                                ident
-                            ),
-                            input: input.to_string(),
-                            pos: *ident_pos,
-                        })?
-                        .clone(),
+                    typ:
+                        context
+                            .local_var_and_param_declarations
+                            .get(ident)
+                            .ok_or(AppError {
+                                message: format!(
+                                    "識別子 {ident} は定義されておらず、型が分かりません",
+                                ),
+                                input: input.to_string(),
+                                pos: *ident_pos,
+                            })?
+                            .clone(),
                 };
                 Ok(expr)
             }

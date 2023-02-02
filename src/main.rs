@@ -24,7 +24,7 @@ fn main() -> std::io::Result<()> {
             writer.write_all(&buf)?;
         }
         Err(e) => {
-            eprintln!("{}", e);
+            eprintln!("{e}");
             std::process::exit(1);
         }
     }
