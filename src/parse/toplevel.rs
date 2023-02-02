@@ -359,16 +359,69 @@ fn parse_statement(
     }
 }
 
+fn consume(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+    expected_tok: Tok,
+    msg: &str,
+) -> Result<(), AppError> {
+    match tokens.peek().unwrap() {
+        Token { tok, .. } if *tok == expected_tok => {
+            tokens.next();
+            Ok(())
+        }
+        Token { pos, .. } => Err(AppError {
+            message: msg.to_string(),
+            input: input.to_string(),
+            pos: *pos,
+        }),
+    }
+}
+
+fn consume_num(tokens: &mut Peekable<Iter<Token>>, input: &str, msg: &str) -> Result<u8, AppError> {
+    match tokens.peek().unwrap() {
+        Token {
+            tok: Tok::Num(n), ..
+        } => {
+            tokens.next();
+            Ok(*n)
+        }
+        Token { pos, .. } => Err(AppError {
+            message: msg.to_string(),
+            input: input.to_string(),
+            pos: *pos,
+        }),
+    }
+}
+
 fn parse_type_and_identifier(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<(Type, String), AppError> {
-    let typ = parse_type(tokens, input)?;
+    let mut typ = parse_type(tokens, input)?;
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Identifier(ident),
             ..
-        } => Ok((typ, ident.clone())),
+        } => {
+            let mut sizes = vec![];
+            while let Token {
+                tok: Tok::開き角括弧,
+                ..
+            } = tokens.peek().unwrap()
+            {
+                tokens.next();
+                let s = consume_num(tokens, input, "開き角括弧の後に数がない")?;
+                consume(tokens, input, Tok::閉じ角括弧, "数の後に閉じ角括弧がない")?;
+                sizes.push(s);
+            }
+
+            for s in sizes.into_iter().rev() {
+                typ = Type::Arr(Box::new(typ), s);
+            }
+
+            Ok((typ, ident.clone()))
+        }
         Token { pos, .. } => Err(AppError {
             message: "「型と識別子」をパースできません".to_string(),
             input: input.to_string(),
