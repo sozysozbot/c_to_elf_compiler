@@ -5,6 +5,7 @@ use std::{iter::Peekable, slice::Iter};
 
 use super::toplevel::Context;
 use super::toplevel::Type;
+use super::typ::parse_type;
 fn parse_primary(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
@@ -209,9 +210,36 @@ fn parse_unary(
             pos,
         }) => {
             tokens.next();
-            let expr = parse_unary(context, tokens, input)?;
+
+            let typ = match tokens.peek() {
+                Some(Token {
+                    tok: Tok::開き丸括弧,
+                    ..
+                }) => {
+                    tokens.next();
+                    let typ = match tokens.peek() {
+                        Some(Token { tok: Tok::Int, .. }) => parse_type(tokens, input)?,
+                        _ => parse_unary(context, tokens, input)?.typ(),
+                    };
+                    match tokens.next() {
+                        Some(Token {
+                            tok: Tok::閉じ丸括弧,
+                            ..
+                        }) => typ,
+                        _ => {
+                            return Err(AppError {
+                                message: "開き丸括弧に対応する閉じ丸括弧がありません".to_string(),
+                                input: input.to_string(),
+                                pos: *pos,
+                            })
+                        }
+                    }
+                }
+                _ => parse_unary(context, tokens, input)?.typ(),
+            };
+
             Ok(Expr::Numeric {
-                val: expr.typ().sizeof(),
+                val: typ.sizeof(),
                 pos: *pos,
                 typ: Type::Int,
             })

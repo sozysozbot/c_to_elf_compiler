@@ -129,7 +129,9 @@ check 15 "int main() { int *p; p = __builtin_alloc4(3, 3, 3, 3); *(p+3) = 8; *(p
 check 4 "int main() { return sizeof(1); }"
 check 8 "int main() { int x; return sizeof(&x); }"
 check 4 "int main() { int x; return sizeof(sizeof(&x)); }"
-
+check 4 "int main() { return sizeof 1; }"
+check 4 "int main() { return sizeof(int); }"
+check 8 "int main() { return sizeof(int*); }"
 
 
 for job in `jobs -p`
