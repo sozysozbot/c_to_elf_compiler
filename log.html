@@ -3041,6 +3041,99 @@ check 11 &quot;int main() { int *p; p = __builtin_alloc4(11, 2, 4, 8); return *p
 		<div class="content">しかし、アセンブリの書きやすさのためにp[3] → p[2] → p[1] → p[0] の順で書き込んでいっていて幸いだったな。おかげでバグに気づけた</div>
 	</div>
 </div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7e24f7b7e2f68f268382b864b50ee330').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7e24f7b7e2f68f268382b864b50ee330').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_7e24f7b7e2f68f268382b864b50ee330" href="#permalink_7e24f7b7e2f68f268382b864b50ee330" class="permalink">¶</a>
+		<div class="content">sizeof演算子って型だけじゃなくて式もかけたのまじか</div>
+	</div>
+</div>
+<h3 class="date">2023年2月1日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_0a8837c4335662371bab1e6c4e66e382').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_0a8837c4335662371bab1e6c4e66e382').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_0a8837c4335662371bab1e6c4e66e382" href="#permalink_0a8837c4335662371bab1e6c4e66e382" class="permalink">¶</a>
+		<div class="content">次ってなんでしたっけ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e6d60fbcd983e14c8142d0c4d7b73a79').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e6d60fbcd983e14c8142d0c4d7b73a79').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_e6d60fbcd983e14c8142d0c4d7b73a79" href="#permalink_e6d60fbcd983e14c8142d0c4d7b73a79" class="permalink">¶</a>
+		<div class="content">sizeof なのでめちゃめちゃラクです</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_580cfb0e92108c9da5d0e0f8c94228bc').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_580cfb0e92108c9da5d0e0f8c94228bc').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_580cfb0e92108c9da5d0e0f8c94228bc" href="#permalink_580cfb0e92108c9da5d0e0f8c94228bc" class="permalink">¶</a>
+		<div class="content">もう既に hsjoihs さんが実装終わらせてるようなもんだからな</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e426fb72767c43a155eb94009024ed16').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e426fb72767c43a155eb94009024ed16').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_e426fb72767c43a155eb94009024ed16" href="#permalink_e426fb72767c43a155eb94009024ed16" class="permalink">¶</a>
+		<div class="content">ここ数回は奇数ステップの方が圧倒的に実装重いですね</div>
+		<div class="content">現実逃避のパワーで、自分で別個でやってた C コンパイラ <a href="https://github.com/sozysozbot/2kmcc" target="_blank" rel="noopener noreferrer">https://github.com/sozysozbot/2kmcc</a> が compilerbook 基本走りきっちゃった</div>
+		<div class="content">ということで、課題をやります。レビューと実装をとても素早く終わらせることによって、tkr は私の課題の進捗を邪魔することができます</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_89a03b91e8565e0dede8b2612e8e5468').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_89a03b91e8565e0dede8b2612e8e5468').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_89a03b91e8565e0dede8b2612e8e5468" href="#permalink_89a03b91e8565e0dede8b2612e8e5468" class="permalink">¶</a>
+		<div class="content">圧を掛けられている</div>
+		<blockquote>hsjoihs「で、現状だと +933 -625 とあまりに diff が大きすぎる。しかしこれの大部分は式パーサーを impl Context にしたことによるインデントの変更なんだよな」
+</blockquote>
+		<div class="content">これってgitの設定でなんとかできなかったっけ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7955b0c5ac12814a8d2fbfaf026afba6').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7955b0c5ac12814a8d2fbfaf026afba6').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_7955b0c5ac12814a8d2fbfaf026afba6" href="#permalink_7955b0c5ac12814a8d2fbfaf026afba6" class="permalink">¶</a>
+		<div class="content">できるんだけど（てか VSCode では勝手になんとかなる）、レビューは GitHub 上で発生するので、そっちでの負担が少なくなる方がいいだろうとの判断です </div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_cb38d3b14f78e6499bb5486497ffa73f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_cb38d3b14f78e6499bb5486497ffa73f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_cb38d3b14f78e6499bb5486497ffa73f" href="#permalink_cb38d3b14f78e6499bb5486497ffa73f" class="permalink">¶</a>
+		<div class="content">あ〜〜</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/southball02" target="_blank" rel="noopener noreferrer"><img alt="さうす" class="icon" src="icons/さうす.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f0e44e3bf351d723bb9f9c0d89a79e65').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f0e44e3bf351d723bb9f9c0d89a79e65').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/southball02" target="_blank" rel="noopener noreferrer">さうす</a></span><a id="permalink_f0e44e3bf351d723bb9f9c0d89a79e65" href="#permalink_f0e44e3bf351d723bb9f9c0d89a79e65" class="permalink">¶</a>
+		<div class="content">これ使えない？</div>
+		<div class="content"><img width="500" src="media/github-whitespace.png"></div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4cef0e51cd21a2fbb38f32e358238971').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4cef0e51cd21a2fbb38f32e358238971').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_4cef0e51cd21a2fbb38f32e358238971" href="#permalink_4cef0e51cd21a2fbb38f32e358238971" class="permalink">¶</a>
+		<div class="content">へ〜こんなのが</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_965a745ad79435667385581d155e8122').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_965a745ad79435667385581d155e8122').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_965a745ad79435667385581d155e8122" href="#permalink_965a745ad79435667385581d155e8122" class="permalink">¶</a>
+		<div class="content">そんなのあったの</div>
+		<div class="content">便利だ</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_28dbe5438c366c2398c7f81ecd983e44').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_28dbe5438c366c2398c7f81ecd983e44').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_28dbe5438c366c2398c7f81ecd983e44" href="#permalink_28dbe5438c366c2398c7f81ecd983e44" class="permalink">¶</a>
+		<div class="content">まあ今回は &amp;mut Context じゃなくて &amp;Context なので、第一引数で引き回してもそんなに読みづらくならないだろうとの判断もありました</div>
+		<div class="content">それはともかくさうすくんありがとうございます</div>
+	</div>
+</div>
 <h3 class="date">2023年2月2日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
@@ -3068,16 +3161,28 @@ check 11 &quot;int main() { int *p; p = __builtin_alloc4(11, 2, 4, 8); return *p
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_1360e54f6b49be0fca07c2849f583055').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1360e54f6b49be0fca07c2849f583055').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_1360e54f6b49be0fca07c2849f583055" href="#permalink_1360e54f6b49be0fca07c2849f583055" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_c291334c9799f3c8639330fb27158e9e').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_c291334c9799f3c8639330fb27158e9e').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_c291334c9799f3c8639330fb27158e9e" href="#permalink_c291334c9799f3c8639330fb27158e9e" class="permalink">¶</a>
 		<div class="content">今の c_to_elf コンパイラの現状では型名はすべて int で始まるので、困りません</div>
+		<div class="content">ところで、型がカッコで括られているといえばキャストもありますが、こいつと sizeof の兼ね合いでこういう話がありますね</div>
+		<div class="content"><a href="https://godbolt.org/z/1fhT5GMb1" target="_blank" rel="noopener noreferrer">https://godbolt.org/z/1fhT5GMb1</a></div>
+		<pre><code class="language-c">int foo() {
+    int *p;
+    return sizeof((int)*p);
+}
+
+int bar() {
+    int a = 3;
+    return sizeof(int)*a;
+}
+</code></pre>
 	</div>
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_43f24599639a530b69cafa6c2ef84624').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_43f24599639a530b69cafa6c2ef84624').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_43f24599639a530b69cafa6c2ef84624" href="#permalink_43f24599639a530b69cafa6c2ef84624" class="permalink">¶</a>
-		<div class="content">できた</div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_5cf4911cfd4f77dcb26a87800145fd7f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_5cf4911cfd4f77dcb26a87800145fd7f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_5cf4911cfd4f77dcb26a87800145fd7f" href="#permalink_5cf4911cfd4f77dcb26a87800145fd7f" class="permalink">¶</a>
+		<div class="content">sizeof 実装できた</div>
 	</div>
 </div>
 
