@@ -292,7 +292,7 @@ fn parse_multiplicative(
     }
 }
 
-fn add(左辺: Box_<Expr>, 右辺: Box_<Expr>, op_pos: usize) -> Option<Expr> {
+fn add(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
         (Type::Int, Type::Int) => Some(Expr::BinaryExpr {
             op: BinaryOp::Add,
@@ -323,7 +323,7 @@ fn add(左辺: Box_<Expr>, 右辺: Box_<Expr>, op_pos: usize) -> Option<Expr> {
     }
 }
 
-fn subtract(左辺: Box_<Expr>, 右辺: Box_<Expr>, op_pos: usize) -> Option<Expr> {
+fn subtract(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
         (Type::Int, Type::Int) => Some(Expr::BinaryExpr {
             op: BinaryOp::Sub,
