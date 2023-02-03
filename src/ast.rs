@@ -42,7 +42,7 @@ pub enum Expr {
     Call {
         ident: String,
         pos: usize,
-        args: Vec<Box<Expr>>,
+        args: Vec<Expr>,
         typ: Type,
     },
     UnaryExpr {

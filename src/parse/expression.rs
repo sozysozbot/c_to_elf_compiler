@@ -59,7 +59,7 @@ fn parse_primary(
                     }
                     _ => {
                         let expr = parse_expr(context, tokens, input)?;
-                        args.push(decay_if_arr(expr));
+                        args.push(*decay_if_arr(expr));
                     }
                 }
 
@@ -91,7 +91,7 @@ fn parse_primary(
                         } => {
                             tokens.next();
                             let expr = parse_expr(context, tokens, input)?;
-                            args.push(decay_if_arr(expr));
+                            args.push(*decay_if_arr(expr));
                         }
                         _ => {
                             break Err(AppError {
