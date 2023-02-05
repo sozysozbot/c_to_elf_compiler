@@ -3185,6 +3185,43 @@ int bar() {
 		<div class="content">sizeof 実装できた</div>
 	</div>
 </div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_8444f51b6380cea36903d18f2861d82d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8444f51b6380cea36903d18f2861d82d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_8444f51b6380cea36903d18f2861d82d" href="#permalink_8444f51b6380cea36903d18f2861d82d" class="permalink">¶</a>
+		<div class="content">ということで、『ステップ 21: 配列を実装する』をやっていきます</div>
+		<div class="content">トークナイザに角括弧を追加</div>
+		<div class="content">enum Type にも配列の存在を教え、Type::sizeof も実装</div>
+		<div class="content">直前のステップ 20 で sizeof 演算子が実装してあることによりテストケースを書きやすくなっているの、なかなか上手い工夫なんだよな</div>
+		<div class="content">さて、問題はパーサー。『型をパース』と『識別子名をパース』してる関数を先に一つに固め、そこに変更を加えて配列を差し込んでいくのがラクです</div>
+		<div class="content">てか既に parse_parameter_type_and_identifier 関数がある。じゃあこれを改造しよう</div>
+		<div class="content">ローカル変数も関数引数もともに parse_type_and_identifier 関数を呼ぶように変更</div>
+		<div class="content">配列をポインタに decay させるのは、Box_ という型を間に挟んで</div>
+		<pre><code class="language-rust">pub fn decay_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
+    match expr.typ() {
+        Type::Arr(t, _) =&gt; Box_(Box::new(Expr::DecayedArr {
+            expr: Box_(Box::new(expr)),
+            typ: Type::Ptr(t),
+        })),
+        _ =&gt; Box_(Box::new(expr)),
+    }
+}
+
+pub fn no_decay_even_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
+    Box_(Box::new(expr))
+}
+</code></pre>
+		<div class="content">としてやることで解決。コード生成もした。さてあとは配列のための領域をスタックにアロケートするだけだな</div>
+		<div class="content">えーと現状では local_var_table に『何番目の変数か』を入れていて idx と呼び、それに WORD_SIZE を掛け算してオフセットが計算されている</div>
+		<div class="content">これを、オフセットを直に入れるように変更する必要があるな。これはもうこのテーブルを struct として切り出したりしたほうがいいんだろうか</div>
+		<div class="content">てか未定義変数をエラーにするようにした時点で .or_insert は一個削られる運命だったんだな。まずそれを処理しよう</div>
+		<div class="content">あ、.or_insert 全部外せる</div>
+		<div class="content">で、今度はオフセットを直に HashMap に入れるようにして、</div>
+		<div class="content">普通に更新を関数に切り出すべきだな</div>
+		<div class="content">HashMap に入れて max_offset を増やす LocalVarTable::allocate() も実装</div>
+		<div class="content">配列のサイズに基づいてアロケートするようにした。これでよかろう</div>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>
