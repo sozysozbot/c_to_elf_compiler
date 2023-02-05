@@ -27,6 +27,10 @@ fn parse_primary(
             tok: Tok::Identifier(ident),
             pos: ident_pos,
         } => match tokens.peek().unwrap() {
+            /*
+            関数呼び出しはsuffix opとして処理したいが、`識別子(...)` の形に限られるかつ、関数呼び出しか変数参照かで `識別子` の意味が大きく異なる為ここで処理する
+            構文解析と意味解析が分かれていれば問題ないが、ここで `識別子` の型を決めなければいけないため
+            */
             Token {
                 tok: Tok::開き丸括弧,
                 pos: open_pos,
@@ -148,6 +152,66 @@ fn parse_primary(
     }
 }
 
+fn parse_suffix_op(
+    context: &Context,
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<Expr, AppError> {
+    let mut expr = parse_primary(context, tokens, input)?;
+
+    loop {
+        match tokens.peek() {
+            Some(Token {
+                tok: Tok::開き角括弧,
+                ..
+            }) => {
+                tokens.next();
+                let index = parse_expr(context, tokens, input)?;
+                match tokens.next().unwrap() {
+                    Token {
+                        tok: Tok::閉じ角括弧,
+                        pos: op_pos,
+                    } => {
+                        let arr = decay_if_arr(expr);
+                        let typ = arr.typ();
+                        expr = Expr::UnaryExpr {
+                            op_pos: *op_pos,
+                            op: UnaryOp::Deref,
+                            expr: Box::new(Expr::BinaryExpr {
+                                op_pos: *op_pos,
+                                op: BinaryOp::Add,
+                                左辺: arr,
+                                右辺: decay_if_arr(index),
+                                typ: typ.clone(),
+                            }),
+                            typ: {
+                                match typ {
+                                    Type::Ptr(element_typ) => *element_typ,
+                                    _ => {
+                                        return Err(AppError {
+                                            message: "ポインタではありません".to_string(),
+                                            input: input.to_string(),
+                                            pos: *op_pos,
+                                        })
+                                    }
+                                }
+                            },
+                        };
+                    }
+                    Token { pos, .. } => {
+                        return Err(AppError {
+                            message: "この開き角括弧に対応する閉じ角括弧がありません".to_string(),
+                            input: input.to_string(),
+                            pos: *pos,
+                        })
+                    }
+                }
+            }
+            _ => return Ok(expr),
+        }
+    }
+}
+
 fn parse_unary(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
@@ -156,11 +220,11 @@ fn parse_unary(
     match tokens.peek() {
         Some(Token { tok: Tok::Add, .. }) => {
             tokens.next();
-            parse_primary(context, tokens, input)
+            parse_suffix_op(context, tokens, input)
         }
         Some(Token { tok: Tok::Sub, pos }) => {
             tokens.next();
-            let expr = parse_primary(context, tokens, input)?;
+            let expr = parse_suffix_op(context, tokens, input)?;
             Ok(Expr::BinaryExpr {
                 op: BinaryOp::Sub,
                 op_pos: *pos,
@@ -242,7 +306,7 @@ fn parse_unary(
                 typ: Type::Int,
             })
         }
-        _ => parse_primary(context, tokens, input),
+        _ => parse_suffix_op(context, tokens, input),
     }
 }
 

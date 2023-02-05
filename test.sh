@@ -152,4 +152,7 @@ check 3 "int main() { int a[2]; int *p; *a = 1; *(a + 1) = 2; p = a; return *p +
 
 check 2 "int main() { int a[20]; int *p; *(a + 9) = 2; p = a; return *(p + 9); }"
 
+check 3 "int main() { int a[2]; int *p; a[0] = 1; a[1] = 2; p = a; return p[0] + a[1]; }"
+check 2 "int main() { int a[20]; int *p; a[9] = 2; p = a; return p[9]; }"
+
 wait_jobs
