@@ -51,18 +51,34 @@ pub enum Expr {
         expr: Box<Expr>,
         typ: Type,
     },
+    DecayedArr {
+        expr: Box<Expr>,
+        typ: Type,
+    },
+}
+
+pub fn decay_if_arr(expr: Expr) -> Box<Expr> {
+    match expr.typ() {
+        Type::Arr(t, _) => Box::new(Expr::DecayedArr {
+            expr: Box::new(expr),
+            typ: Type::Ptr(t),
+        }),
+        _ => Box::new(expr),
+    }
+}
+
+pub fn no_decay_even_if_arr(expr: Expr) -> Box<Expr> {
+    Box::new(expr)
 }
 
 impl Expr {
-    pub fn typ(&self) -> Type
-    where
-        Type: Clone,
-    {
+    pub fn typ(&self) -> Type {
         match self {
             Expr::BinaryExpr { typ, .. }
             | Expr::Numeric { typ, .. }
             | Expr::Identifier { typ, .. }
             | Expr::Call { typ, .. }
+            | Expr::DecayedArr { typ, .. }
             | Expr::UnaryExpr { typ, .. } => (*typ).clone(),
         }
     }

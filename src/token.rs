@@ -28,6 +28,8 @@ pub enum Tok {
     Ampersand,
     Int,
     Sizeof,
+    開き角括弧,
+    閉じ角括弧,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

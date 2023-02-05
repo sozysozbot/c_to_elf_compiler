@@ -28,12 +28,12 @@ fn parse_test() {
                 op: BinaryOp::Sub,
                 op_pos: 2,
                 typ: Type::Int,
-                左辺: Box::new(Expr::Numeric {
+                左辺: decay_if_arr(Expr::Numeric {
                     val: 5,
                     pos: 0,
                     typ: Type::Int
                 }),
-                右辺: Box::new(Expr::Numeric {
+                右辺: decay_if_arr(Expr::Numeric {
                     val: 3,
                     pos: 4,
                     typ: Type::Int
@@ -359,31 +359,71 @@ fn parse_statement(
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct ParameterIdentifier {
-    pub ident: String,
-    pub pos: usize,
-}
-
-fn parse_parameter_type_and_identifier(
+fn consume(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-) -> Result<(Type, ParameterIdentifier), AppError> {
-    let parameter_type = parse_type(tokens, input)?;
+    expected_tok: Tok,
+    msg: &str,
+) -> Result<(), AppError> {
+    match tokens.peek().unwrap() {
+        Token { tok, .. } if *tok == expected_tok => {
+            tokens.next();
+            Ok(())
+        }
+        Token { pos, .. } => Err(AppError {
+            message: msg.to_string(),
+            input: input.to_string(),
+            pos: *pos,
+        }),
+    }
+}
 
+fn consume_num(tokens: &mut Peekable<Iter<Token>>, input: &str, msg: &str) -> Result<u8, AppError> {
+    match tokens.peek().unwrap() {
+        Token {
+            tok: Tok::Num(n), ..
+        } => {
+            tokens.next();
+            Ok(*n)
+        }
+        Token { pos, .. } => Err(AppError {
+            message: msg.to_string(),
+            input: input.to_string(),
+            pos: *pos,
+        }),
+    }
+}
+
+fn parse_type_and_identifier(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+) -> Result<(Type, String), AppError> {
+    let mut typ = parse_type(tokens, input)?;
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Identifier(ident),
-            pos,
-        } => Ok((
-            parameter_type,
-            ParameterIdentifier {
-                ident: ident.clone(),
-                pos: *pos,
-            },
-        )),
+            ..
+        } => {
+            let mut sizes = vec![];
+            while let Token {
+                tok: Tok::開き角括弧,
+                ..
+            } = tokens.peek().unwrap()
+            {
+                tokens.next();
+                let s = consume_num(tokens, input, "開き角括弧の後に数がない")?;
+                consume(tokens, input, Tok::閉じ角括弧, "数の後に閉じ角括弧がない")?;
+                sizes.push(s);
+            }
+
+            for s in sizes.into_iter().rev() {
+                typ = Type::Arr(Box::new(typ), s);
+            }
+
+            Ok((typ, ident.clone()))
+        }
         Token { pos, .. } => Err(AppError {
-            message: "仮引数をパースできません".to_string(),
+            message: "「型と識別子」をパースできません".to_string(),
             input: input.to_string(),
             pos: *pos,
         }),
@@ -394,13 +434,14 @@ fn parse_parameter_type_and_identifier(
 pub enum Type {
     Int,
     Ptr(Box<Type>),
+    Arr(Box<Type>, u8),
 }
 
 impl Type {
     pub fn deref(&self) -> Option<Self> {
         match self {
             Type::Int => None,
-            Type::Ptr(x) => Some((**x).clone()),
+            Type::Ptr(x) | Type::Arr(x, _) => Some((**x).clone()),
         }
     }
 
@@ -408,6 +449,10 @@ impl Type {
         match self {
             Type::Int => 4,
             Type::Ptr(_) => 8,
+            Type::Arr(t, len) => t
+                .sizeof()
+                .checked_mul(*len)
+                .expect("型のサイズが u8 に収まりません"),
         }
     }
 }
@@ -415,7 +460,7 @@ impl Type {
 #[derive(Debug, Clone)]
 pub struct FunctionDefinition {
     pub func_name: String,
-    pub params: Vec<(Type, ParameterIdentifier)>,
+    pub params: Vec<(Type, String)>,
     pub pos: usize,
     pub statements: Vec<Statement>,
     pub return_type: Type,
@@ -453,7 +498,7 @@ fn after_param_list(
     previous_function_declarations: &HashMap<String, FunctionSignature>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-    params: Vec<(Type, ParameterIdentifier)>,
+    params: Vec<(Type, String)>,
     pos: usize,
     return_type: Type,
     ident: &str,
@@ -472,30 +517,11 @@ fn after_param_list(
             let mut local_var_declarations = HashMap::new();
             #[allow(clippy::while_let_loop)]
             loop {
-                let local_var_type = match tokens.peek().unwrap() {
-                    Token { tok: Tok::Int, .. } => parse_type(tokens, input)?,
-                    Token { .. } => {
-                        // 変数定義は終わり
-                        break;
-                    }
+                let (local_var_type, local_var_name) = match tokens.peek().unwrap() {
+                    Token { tok: Tok::Int, .. } => parse_type_and_identifier(tokens, input)?,
+                    _ => break,
                 };
-                let local_var_name = match tokens.peek().unwrap() {
-                    Token {
-                        tok: Tok::Identifier(ident),
-                        ..
-                    } => {
-                        tokens.next();
-                        ident.clone()
-                    }
-                    Token { pos, .. } => {
-                        return Err(AppError {
-                            message: "関数内の変数宣言で、型名の後に識別子以外が来ました"
-                                .to_string(),
-                            input: input.to_string(),
-                            pos: *pos,
-                        })
-                    }
-                };
+
                 match tokens.peek().unwrap() {
                     Token {
                         tok: Tok::Semicolon,
@@ -539,7 +565,7 @@ fn after_param_list(
                         local_var_and_param_declarations.extend(
                             params
                                 .iter()
-                                .map(|(typ, ident)| (ident.ident.clone(), (*typ).clone())),
+                                .map(|(typ, ident)| (ident.clone(), (*typ).clone())),
                         );
 
                         let mut function_declarations = previous_function_declarations.clone();
@@ -613,7 +639,7 @@ pub fn parse_toplevel_function_definition(
                         );
                     }
                     _ => {
-                        let param = parse_parameter_type_and_identifier(tokens, input)?;
+                        let param = parse_type_and_identifier(tokens, input)?;
                         params.push(param);
                     }
                 }
@@ -639,7 +665,7 @@ pub fn parse_toplevel_function_definition(
                             tok: Tok::Comma, ..
                         } => {
                             tokens.next();
-                            let param = parse_parameter_type_and_identifier(tokens, input)?;
+                            let param = parse_type_and_identifier(tokens, input)?;
                             params.push(param);
                         }
                         _ => {

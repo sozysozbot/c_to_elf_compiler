@@ -1913,3 +1913,38 @@ int bar() {
 }
 ```
 tkr「sizeof 実装できた」
+
+hsjoihs「ということで、『ステップ 21: 配列を実装する』をやっていきます」
+hsjoihs「トークナイザに角括弧を追加」
+hsjoihs「enum Type にも配列の存在を教え、Type::sizeof も実装」
+hsjoihs「直前のステップ 20 で sizeof 演算子が実装してあることによりテストケースを書きやすくなっているの、なかなか上手い工夫なんだよな」
+hsjoihs「さて、問題はパーサー。『型をパース』と『識別子名をパース』してる関数を先に一つに固め、そこに変更を加えて配列を差し込んでいくのがラクです」
+hsjoihs「てか既に parse_parameter_type_and_identifier 関数がある。じゃあこれを改造しよう」
+hsjoihs「ローカル変数も関数引数もともに parse_type_and_identifier 関数を呼ぶように変更」
+
+hsjoihs「配列をポインタに decay させるのは、Box_ という型を間に挟んで」
+$source
+```rust
+pub fn decay_if_arr(expr: Expr) -> Box_<Expr> {
+    match expr.typ() {
+        Type::Arr(t, _) => Box_(Box::new(Expr::DecayedArr {
+            expr: Box_(Box::new(expr)),
+            typ: Type::Ptr(t),
+        })),
+        _ => Box_(Box::new(expr)),
+    }
+}
+
+pub fn no_decay_even_if_arr(expr: Expr) -> Box_<Expr> {
+    Box_(Box::new(expr))
+}
+```
+hsjoihs「としてやることで解決。コード生成もした。さてあとは配列のための領域をスタックにアロケートするだけだな」
+hsjoihs「えーと現状では local_var_table に『何番目の変数か』を入れていて idx と呼び、それに WORD_SIZE を掛け算してオフセットが計算されている」
+hsjoihs「これを、オフセットを直に入れるように変更する必要があるな。これはもうこのテーブルを struct として切り出したりしたほうがいいんだろうか」
+hsjoihs「てか未定義変数をエラーにするようにした時点で .or_insert は一個削られる運命だったんだな。まずそれを処理しよう」
+hsjoihs「あ、.or_insert 全部外せる」
+hsjoihs「で、今度はオフセットを直に HashMap に入れるようにして、」
+hsjoihs「普通に更新を関数に切り出すべきだな」
+hsjoihs「HashMap に入れて max_offset を増やす LocalVarTable::allocate() も実装」
+hsjoihs「配列のサイズに基づいてアロケートするようにした。これでよかろう」

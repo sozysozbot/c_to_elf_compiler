@@ -328,8 +328,26 @@ pub fn builtin_alloc4関数を生成() -> Buf {
         .join(エピローグ())
 }
 
+pub struct LocalVarTable {
+    pub offsets: HashMap<String, u8>,
+    pub max_offset: u8,
+}
+
+impl LocalVarTable {
+    pub fn allocate(&mut self, ident: &str, size: u8) -> u8 {
+        let size = (size + WORD_SIZE - 1) / WORD_SIZE * WORD_SIZE;
+        let offset = self
+            .max_offset
+            .checked_add(size)
+            .expect("オフセットが u8 に収まりません");
+        self.max_offset = offset;
+        self.offsets.insert(ident.to_owned(), offset);
+        offset
+    }
+}
+
 pub struct FunctionGen<'a> {
-    local_var_table: HashMap<String, u8>,
+    local_var_table: LocalVarTable,
     stack_size: u32,
     global_function_table: &'a HashMap<String, u32>,
     function_name: &'a str,
@@ -347,21 +365,15 @@ impl<'a> FunctionGen<'a> {
                 pos: _,
                 typ: _,
             } => {
-                if !self.local_var_table.contains_key(ident) {
+                let offset = self.local_var_table.offsets.get(ident).unwrap_or_else(|| {
                     panic!(
                         "変数 {ident} は関数 {} 内で宣言されていません",
                         self.function_name
                     )
-                }
-                let len = self.local_var_table.len();
-                let idx = self
-                    .local_var_table
-                    .entry(ident.clone())
-                    .or_insert(len as u8);
-                let offset = *idx * WORD_SIZE + WORD_SIZE;
+                });
                 buf.append(rbpをプッシュ());
                 buf.append(rdiへとポップ());
-                buf.append(rdiから即値を引く(offset));
+                buf.append(rdiから即値を引く(*offset));
             }
             Expr::UnaryExpr {
                 op: UnaryOp::Deref,
@@ -421,7 +433,7 @@ impl<'a> FunctionGen<'a> {
                                 .unwrap_or_else(
                                     |_| panic!(
                                         "else でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です",
-                                        else_buf.len(), else_buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" ")
+                                        else_buf.len(), else_buf.to_vec().iter().map(|a| format!("{a:02x}")).collect::<Vec<_>>().join(" ")
                                     )
                                 )
                             )
@@ -449,7 +461,7 @@ impl<'a> FunctionGen<'a> {
 
                 let buf = cond_buf.join(body_buf);
                 let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap_or_else(
-                |_| panic!("while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{:02x}", a)).collect::<Vec<_>>().join(" "))
+                |_| panic!("while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{a:02x}")).collect::<Vec<_>>().join(" "))
             );
                 buf.join(Buf::from(jmp(buf_len)))
             }
@@ -502,7 +514,15 @@ impl<'a> FunctionGen<'a> {
 
     #[allow(clippy::too_many_lines)]
     pub fn exprを評価してediレジスタへ(&mut self, buf: &mut Buf, expr: &Expr) {
+        if matches!(expr.typ(), Type::Arr(_, _)) {
+            self.exprを左辺値として評価してアドレスをrdiレジスタへ(buf, expr);
+            return;
+        }
+
         match expr {
+            Expr::DecayedArr { expr, .. } => {
+                self.exprを評価してediレジスタへ(buf, expr);
+            }
             Expr::BinaryExpr {
                 op: BinaryOp::Assign,
                 op_pos: _,
@@ -698,7 +718,7 @@ impl<'a> FunctionGen<'a> {
                 let function = *self
                     .global_function_table
                     .get(ident)
-                    .unwrap_or_else(|| panic!("関数 {} が見つかりません", ident));
+                    .unwrap_or_else(|| panic!("関数 {ident} が見つかりません"));
 
                 let stack_args_len = if args.len() > 6 { args.len() - 6 } else { 0 };
 
@@ -804,7 +824,10 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
     global_function_table.insert(definition.func_name.clone(), u32::from(func_pos));
 
     let mut function_gen = FunctionGen {
-        local_var_table: HashMap::new(),
+        local_var_table: LocalVarTable {
+            offsets: HashMap::new(),
+            max_offset: 0,
+        },
         stack_size: 0,
         global_function_table,
         function_name: &definition.func_name,
@@ -816,19 +839,16 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
     let mut parameter_buf = Buf::new();
     let _return_type = &definition.return_type;
 
-    for (i, (_param_type, param)) in definition.params.iter().enumerate() {
-        let len = function_gen.local_var_table.len();
-        if function_gen.local_var_table.contains_key(&param.ident) {
+    for (i, (param_type, param)) in definition.params.iter().enumerate() {
+        if function_gen.local_var_table.offsets.contains_key(param) {
             panic!(
                 "関数 `{}` の仮引数 {} が重複しています",
-                definition.func_name, param.ident
+                definition.func_name, param
             )
         }
-        let idx = function_gen
+        let offset = function_gen
             .local_var_table
-            .entry(param.ident.clone())
-            .or_insert(len as u8);
-        let offset = *idx * WORD_SIZE + WORD_SIZE;
+            .allocate(param, param_type.sizeof());
         // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
         // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
         let negative_offset: i8 = -(offset as i8);
@@ -858,9 +878,12 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         };
     }
 
-    for (local_var_name, _local_var_type) in definition.local_var_declarations.iter() {
-        let len = function_gen.local_var_table.len();
-        if function_gen.local_var_table.contains_key(local_var_name) {
+    for (local_var_name, local_var_type) in definition.local_var_declarations.iter() {
+        if function_gen
+            .local_var_table
+            .offsets
+            .contains_key(local_var_name)
+        {
             panic!(
                 "関数 `{}` 先頭で定義されているローカル変数 {} が仮引数またはローカル変数と重複しています",
                 definition.func_name, local_var_name
@@ -868,8 +891,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         }
         function_gen
             .local_var_table
-            .entry(local_var_name.clone())
-            .or_insert(len as u8);
+            .allocate(local_var_name, local_var_type.sizeof());
     }
 
     let content_buf = definition
@@ -879,8 +901,8 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         .fold(parameter_buf, Buf::join);
 
     main_buf.append(rspから即値を引く(
-        u8::try_from(function_gen.local_var_table.len() * WORD_SIZE as usize)
-            .expect("識別子の個数が u8 に収まりません"),
+        u8::try_from(function_gen.local_var_table.max_offset as usize)
+            .expect("ローカル変数のオフセットが u8 に収まりません"),
     ));
     main_buf.append(content_buf);
 
