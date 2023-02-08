@@ -4,6 +4,7 @@ use crate::token::*;
 use std::collections::HashMap;
 use std::{iter::Peekable, slice::Iter};
 
+use super::combinator::recover;
 use super::combinator::satisfy;
 use super::expression::parse_expr;
 use super::typ::parse_type;
@@ -162,40 +163,20 @@ fn parse_statement(
             pos,
         } => {
             tokens.next();
-            let tok = tokens.peek().unwrap();
-            match tok {
-                Token {
-                    tok: Tok::開き丸括弧,
-                    ..
-                } => {
-                    tokens.next();
-                }
-                _ => {
-                    return Err(AppError {
-                        message: "期待された開き括弧が来ませんでした".to_string(),
-                        input: input.to_string(),
-                        pos: tok.pos,
-                    })
-                }
-            }
+            satisfy(
+                tokens,
+                input,
+                |tok| tok == &Tok::開き丸括弧,
+                "期待された開き括弧が来ませんでした",
+            )?;
             let cond = Box::new(parse_expr(context, tokens, input)?);
 
-            let tok = tokens.peek().unwrap();
-            match tok {
-                Token {
-                    tok: Tok::閉じ丸括弧,
-                    ..
-                } => {
-                    tokens.next();
-                }
-                _ => {
-                    return Err(AppError {
-                        message: "期待された閉じ括弧が来ませんでした".to_string(),
-                        input: input.to_string(),
-                        pos: tok.pos,
-                    })
-                }
-            }
+            satisfy(
+                tokens,
+                input,
+                |tok| tok == &Tok::閉じ丸括弧,
+                "期待された閉じ括弧が来ませんでした",
+            )?;
             let body = Box::new(parse_statement(context, tokens, input)?);
             Ok(Statement::While {
                 cond,
@@ -205,22 +186,12 @@ fn parse_statement(
         }
         Token { tok: Tok::For, pos } => {
             tokens.next();
-            let tok = tokens.peek().unwrap();
-            match tok {
-                Token {
-                    tok: Tok::開き丸括弧,
-                    ..
-                } => {
-                    tokens.next();
-                }
-                _ => {
-                    return Err(AppError {
-                        message: "期待された開き括弧が来ませんでした".to_string(),
-                        input: input.to_string(),
-                        pos: tok.pos,
-                    })
-                }
-            }
+            satisfy(
+                tokens,
+                input,
+                |tok| tok == &Tok::開き丸括弧,
+                "期待された開き括弧が来ませんでした",
+            )?;
             let tok = tokens.peek().unwrap();
             let init = match tok {
                 Token {
@@ -229,22 +200,12 @@ fn parse_statement(
                 } => None,
                 _ => Some(Box::new(parse_expr(context, tokens, input)?)),
             };
-            let tok = tokens.peek().unwrap();
-            match tok {
-                Token {
-                    tok: Tok::Semicolon,
-                    ..
-                } => {
-                    tokens.next();
-                }
-                _ => {
-                    return Err(AppError {
-                        message: "期待されたセミコロンが来ませんでした".to_string(),
-                        input: input.to_string(),
-                        pos: tok.pos,
-                    })
-                }
-            }
+            satisfy(
+                tokens,
+                input,
+                |tok| tok == &Tok::Semicolon,
+                "期待されたセミコロンが来ませんでした",
+            )?;
             let tok = tokens.peek().unwrap();
             let cond = match tok {
                 Token {
@@ -253,22 +214,12 @@ fn parse_statement(
                 } => None,
                 _ => Some(Box::new(parse_expr(context, tokens, input)?)),
             };
-            let tok = tokens.peek().unwrap();
-            match tok {
-                Token {
-                    tok: Tok::Semicolon,
-                    ..
-                } => {
-                    tokens.next();
-                }
-                _ => {
-                    return Err(AppError {
-                        message: "期待されたセミコロンが来ませんでした".to_string(),
-                        input: input.to_string(),
-                        pos: tok.pos,
-                    })
-                }
-            }
+            satisfy(
+                tokens,
+                input,
+                |tok| tok == &Tok::Semicolon,
+                "期待されたセミコロンが来ませんでした",
+            )?;
             let tok = tokens.peek().unwrap();
             let update = match tok {
                 Token {
@@ -277,22 +228,12 @@ fn parse_statement(
                 } => None,
                 _ => Some(Box::new(parse_expr(context, tokens, input)?)),
             };
-            let tok = tokens.peek().unwrap();
-            match tok {
-                Token {
-                    tok: Tok::閉じ丸括弧,
-                    ..
-                } => {
-                    tokens.next();
-                }
-                _ => {
-                    return Err(AppError {
-                        message: "期待された閉じ括弧が来ませんでした".to_string(),
-                        input: input.to_string(),
-                        pos: tok.pos,
-                    })
-                }
-            }
+            satisfy(
+                tokens,
+                input,
+                |tok| tok == &Tok::閉じ丸括弧,
+                "期待された閉じ括弧が来ませんでした",
+            )?;
             let body = Box::new(parse_statement(context, tokens, input)?);
             Ok(Statement::For {
                 init,
@@ -335,23 +276,13 @@ fn parse_statement(
         }
         _ => {
             let expr = Box::new(parse_expr(context, tokens, input)?);
-            let tok = tokens.peek().unwrap();
-            let semicolon_pos = match tok {
-                Token {
-                    tok: Tok::Semicolon,
-                    pos,
-                } => {
-                    tokens.next();
-                    *pos
-                }
-                _ => {
-                    return Err(AppError {
-                        message: "期待されたセミコロンが来ませんでした".to_string(),
-                        input: input.to_string(),
-                        pos: tok.pos,
-                    })
-                }
-            };
+            let semicolon_pos = tokens.peek().unwrap().pos;
+            satisfy(
+                tokens,
+                input,
+                |tok| tok == &Tok::Semicolon,
+                "期待されたセミコロンが来ませんでした",
+            )?;
             Ok(Statement::Expr {
                 expr,
                 semicolon_pos,
@@ -504,9 +435,12 @@ fn after_param_list(
             let mut local_var_declarations = HashMap::new();
             #[allow(clippy::while_let_loop)]
             loop {
-                let (local_var_type, local_var_name) = match tokens.peek().unwrap() {
-                    Token { tok: Tok::Int, .. } => parse_type_and_identifier(tokens, input)?,
-                    _ => break,
+                let (local_var_type, local_var_name) = if let Some(typ) =
+                    recover(tokens, |tokens| parse_type_and_identifier(tokens, input))?
+                {
+                    typ
+                } else {
+                    break;
                 };
 
                 match tokens.peek().unwrap() {

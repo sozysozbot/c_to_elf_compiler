@@ -3,6 +3,8 @@ use crate::ast::*;
 use crate::token::*;
 use std::{iter::Peekable, slice::Iter};
 
+use super::combinator::recover;
+use super::combinator::satisfy;
 use super::toplevel::Context;
 use super::toplevel::Type;
 use super::typ::parse_type;
@@ -129,20 +131,16 @@ fn parse_primary(
         },
         Token {
             tok: Tok::開き丸括弧,
-            pos,
+            ..
         } => {
             let expr = parse_expr(context, tokens, input)?;
-            match tokens.next().unwrap() {
-                Token {
-                    tok: Tok::閉じ丸括弧,
-                    ..
-                } => Ok(expr),
-                _ => Err(AppError {
-                    message: "この開き丸括弧に対応する閉じ丸括弧がありません".to_string(),
-                    input: input.to_string(),
-                    pos: *pos,
-                }),
-            }
+            satisfy(
+                tokens,
+                input,
+                |tok| tok == &Tok::閉じ丸括弧,
+                "この開き丸括弧に対応する閉じ丸括弧がありません",
+            )?;
+            Ok(expr)
         }
         tok => Err(AppError {
             message: "数値リテラルでも開き丸括弧でもないものが来ました".to_string(),
@@ -167,45 +165,36 @@ fn parse_suffix_op(
             }) => {
                 tokens.next();
                 let index = parse_expr(context, tokens, input)?;
-                match tokens.next().unwrap() {
-                    Token {
-                        tok: Tok::閉じ角括弧,
-                        pos: op_pos,
-                    } => {
-                        let arr = decay_if_arr(expr);
-                        let typ = arr.typ();
-                        expr = Expr::UnaryExpr {
-                            op_pos: *op_pos,
-                            op: UnaryOp::Deref,
-                            expr: Box::new(Expr::BinaryExpr {
-                                op_pos: *op_pos,
-                                op: BinaryOp::Add,
-                                左辺: arr,
-                                右辺: decay_if_arr(index),
-                                typ: typ.clone(),
-                            }),
-                            typ: {
-                                match typ {
-                                    Type::Ptr(element_typ) => *element_typ,
-                                    _ => {
-                                        return Err(AppError {
-                                            message: "ポインタではありません".to_string(),
-                                            input: input.to_string(),
-                                            pos: *op_pos,
-                                        })
-                                    }
-                                }
-                            },
-                        };
-                    }
-                    Token { pos, .. } => {
+                let op_pos = tokens.peek().unwrap().pos;
+                satisfy(
+                    tokens,
+                    input,
+                    |tok| tok == &Tok::閉じ角括弧,
+                    "この開き角括弧に対応する閉じ角括弧がありません",
+                )?;
+                let arr = decay_if_arr(expr);
+                let typ = match arr.typ() {
+                    Type::Ptr(element_typ) => *element_typ,
+                    _ => {
                         return Err(AppError {
-                            message: "この開き角括弧に対応する閉じ角括弧がありません".to_string(),
+                            message: "ポインタではありません".to_string(),
                             input: input.to_string(),
-                            pos: *pos,
+                            pos: op_pos,
                         })
                     }
-                }
+                };
+                expr = Expr::UnaryExpr {
+                    op_pos: op_pos,
+                    op: UnaryOp::Deref,
+                    expr: Box::new(Expr::BinaryExpr {
+                        op_pos: op_pos,
+                        op: BinaryOp::Add,
+                        左辺: arr,
+                        右辺: decay_if_arr(index),
+                        typ: typ.clone(),
+                    }),
+                    typ,
+                };
             }
             _ => return Ok(expr),
         }
@@ -279,23 +268,19 @@ fn parse_unary(
                     ..
                 }) => {
                     tokens.next();
-                    let typ = match tokens.peek() {
-                        Some(Token { tok: Tok::Int, .. }) => parse_type(tokens, input)?,
-                        _ => parse_unary(context, tokens, input)?.typ(),
-                    };
-                    match tokens.next() {
-                        Some(Token {
-                            tok: Tok::閉じ丸括弧,
-                            ..
-                        }) => typ,
-                        _ => {
-                            return Err(AppError {
-                                message: "開き丸括弧に対応する閉じ丸括弧がありません".to_string(),
-                                input: input.to_string(),
-                                pos: *pos,
-                            })
-                        }
-                    }
+                    let typ =
+                        if let Some(typ) = recover(tokens, |tokens| parse_type(tokens, input))? {
+                            typ
+                        } else {
+                            parse_unary(context, tokens, input)?.typ()
+                        };
+                    satisfy(
+                        tokens,
+                        input,
+                        |tok| tok == &Tok::閉じ丸括弧,
+                        "開き丸括弧に対応する閉じ丸括弧がありません",
+                    )?;
+                    typ
                 }
                 _ => parse_unary(context, tokens, input)?.typ(),
             };

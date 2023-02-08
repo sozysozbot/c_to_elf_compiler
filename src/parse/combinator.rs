@@ -20,3 +20,21 @@ pub fn satisfy(
         }),
     }
 }
+
+pub fn recover<A>(
+    tokens: &mut Peekable<Iter<Token>>,
+    f: impl FnOnce(&mut Peekable<Iter<Token>>) -> Result<A, AppError>,
+) -> Result<Option<A>, AppError> {
+    let prev_pos = tokens.peek().unwrap().pos;
+    match f(tokens) {
+        Ok(a) => Ok(Some(a)),
+        Err(e) => {
+            let pos = tokens.peek().unwrap().pos;
+            if pos == prev_pos {
+                Ok(None)
+            } else {
+                Err(e)
+            }
+        }
+    }
+}
