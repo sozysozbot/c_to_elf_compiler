@@ -4,6 +4,7 @@ use crate::token::*;
 use std::collections::HashMap;
 use std::{iter::Peekable, slice::Iter};
 
+use super::combinator::satisfy;
 use super::expression::parse_expr;
 use super::typ::parse_type;
 
@@ -359,25 +360,6 @@ fn parse_statement(
     }
 }
 
-fn consume(
-    tokens: &mut Peekable<Iter<Token>>,
-    input: &str,
-    expected_tok: Tok,
-    msg: &str,
-) -> Result<(), AppError> {
-    match tokens.peek().unwrap() {
-        Token { tok, .. } if *tok == expected_tok => {
-            tokens.next();
-            Ok(())
-        }
-        Token { pos, .. } => Err(AppError {
-            message: msg.to_string(),
-            input: input.to_string(),
-            pos: *pos,
-        }),
-    }
-}
-
 fn consume_num(tokens: &mut Peekable<Iter<Token>>, input: &str, msg: &str) -> Result<u8, AppError> {
     match tokens.peek().unwrap() {
         Token {
@@ -412,7 +394,12 @@ fn parse_type_and_identifier(
             {
                 tokens.next();
                 let s = consume_num(tokens, input, "開き角括弧の後に数がない")?;
-                consume(tokens, input, Tok::閉じ角括弧, "数の後に閉じ角括弧がない")?;
+                satisfy(
+                    tokens,
+                    input,
+                    |tok| tok == &Tok::閉じ角括弧,
+                    "数の後に閉じ角括弧がない",
+                )?;
                 sizes.push(s);
             }
 
