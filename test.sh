@@ -32,8 +32,20 @@ check_inner() {
 }
 
 check() {
+  jobs_count=`jobs -p | wc -l`
+  if [ $jobs_count -gt 5 ]; then
+    wait_jobs
+  fi
   check_inner "$@" &
 }
+
+wait_jobs() {
+  for job in `jobs -p`
+  do
+    wait $job
+  done
+}
+
 check 8 "int main() { return 8; }"
 check 27 "int main() { return 27; }"
 check 3 "int main() { return 1+2; }"
@@ -140,7 +152,7 @@ check 3 "int main() { int a[2]; int *p; *a = 1; *(a + 1) = 2; p = a; return *p +
 
 check 2 "int main() { int a[20]; int *p; *(a + 9) = 2; p = a; return *(p + 9); }"
 
-for job in `jobs -p`
-do
-    wait $job
-done
+check 3 "int main() { int a[2]; int *p; a[0] = 1; a[1] = 2; p = a; return p[0] + a[1]; }"
+check 2 "int main() { int a[20]; int *p; a[9] = 2; p = a; return p[9]; }"
+
+wait_jobs
