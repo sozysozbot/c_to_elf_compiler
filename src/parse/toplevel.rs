@@ -307,6 +307,36 @@ fn consume_num(tokens: &mut Peekable<Iter<Token>>, input: &str, msg: &str) -> Re
     }
 }
 
+fn parse_角括弧に包まれた数の列(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+    typ: &mut Type,
+) -> Result<(), AppError> {
+    let mut sizes = vec![];
+    while let Token {
+        tok: Tok::開き角括弧,
+        ..
+    } = tokens.peek().unwrap()
+    {
+        tokens.next();
+        let s = consume_num(tokens, input, "開き角括弧の後に数がない")?;
+        satisfy(
+            tokens,
+            input,
+            |tok| tok == &Tok::閉じ角括弧,
+            "数の後に閉じ角括弧がない",
+        )?;
+        sizes.push(s);
+    }
+
+    for s in sizes.into_iter().rev() {
+        let t = std::mem::replace(typ, Type::Int);
+        *typ = Type::Arr(Box::new(t), s);
+    }
+
+    Ok(())
+}
+
 fn parse_type_and_identifier(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
@@ -317,27 +347,7 @@ fn parse_type_and_identifier(
             tok: Tok::Identifier(ident),
             ..
         } => {
-            let mut sizes = vec![];
-            while let Token {
-                tok: Tok::開き角括弧,
-                ..
-            } = tokens.peek().unwrap()
-            {
-                tokens.next();
-                let s = consume_num(tokens, input, "開き角括弧の後に数がない")?;
-                satisfy(
-                    tokens,
-                    input,
-                    |tok| tok == &Tok::閉じ角括弧,
-                    "数の後に閉じ角括弧がない",
-                )?;
-                sizes.push(s);
-            }
-
-            for s in sizes.into_iter().rev() {
-                typ = Type::Arr(Box::new(typ), s);
-            }
-
+            parse_角括弧に包まれた数の列(tokens, input, &mut typ)?;
             Ok((typ, ident.clone()))
         }
         Token { pos, .. } => Err(AppError {
@@ -541,7 +551,7 @@ pub fn parse_toplevel_definition(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<ToplevelDefinition, AppError> {
-    let return_type = parse_type(tokens, input)?;
+    let mut return_type = parse_type(tokens, input)?;
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Identifier(ident),
@@ -611,8 +621,23 @@ pub fn parse_toplevel_definition(
                     }
                 }
             }
+            Token {
+                tok: Tok::Semicolon,
+                ..
+            } => {
+                tokens.next();
+                Ok(ToplevelDefinition::GVar(GlobalVariableDefinition { name: ident.to_string(), typ: return_type }))
+            }
+            Token {
+                tok: Tok::開き角括弧,
+                ..
+            } => {
+                parse_角括弧に包まれた数の列(tokens, input, &mut return_type)?;
+                satisfy(tokens, input, |t| *t == Tok::Semicolon, "グローバルな配列宣言の後のセミコロンが期待されていました")?;
+                Ok(ToplevelDefinition::GVar(GlobalVariableDefinition { name: ident.to_string(), typ: return_type }))
+            }
             _ => Err(AppError {
-                message: "トップレベルに識別子がありますが、その後に関数引数の丸括弧がありません"
+                message: "トップレベルに識別子がありますが、その後に来たものが「関数引数の丸括弧」でも「グローバル変数定義を終わらせるセミコロン」でも「グローバル変数として配列を定義するための開き角括弧」でもありません"
                     .to_string(),
                 input: input.to_string(),
                 pos: *pos + 1,
@@ -641,7 +666,9 @@ pub fn parse(
                 function_declarations.insert(name, signature);
                 function_definitions.push(new_def);
             }
-            ToplevelDefinition::GVar(_) => todo!("registering global variable definition"),
+            ToplevelDefinition::GVar(gvar) => {
+                gvar_definitions.push(gvar)
+            },
         }
     }
     Ok((function_definitions, gvar_definitions))
