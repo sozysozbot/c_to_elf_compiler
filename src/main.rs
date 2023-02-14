@@ -64,8 +64,14 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     .into_iter()
     .collect();
 
-    let (function_definitions, gvar_definitions) =
-        toplevel::parse(&mut function_declarations, &mut tokens, input)?;
+    let mut global_var_declarations = HashMap::new();
+
+    let function_definitions = toplevel::parse(
+        &mut function_declarations,
+        &mut global_var_declarations,
+        &mut tokens,
+        input,
+    )?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let mut buf = Buf::from(&tiny[0..0x78]);
@@ -110,6 +116,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
             )]
             .into_iter()
             .collect(),
+            &HashMap::new(),
             &mut tokens,
             input,
         )? {

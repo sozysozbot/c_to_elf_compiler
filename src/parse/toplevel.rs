@@ -19,7 +19,8 @@ fn parse_test() {
         parse_statement(
             &Context {
                 local_var_and_param_declarations: HashMap::new(),
-                function_declarations: HashMap::new()
+                function_declarations: HashMap::new(),
+                global_var_declarations: HashMap::new()
             },
             &mut tokens,
             input
@@ -432,6 +433,7 @@ pub type FunctionDeclaration = (String, FunctionSignature);
 pub struct Context {
     pub local_var_and_param_declarations: HashMap<String, Type>,
     pub function_declarations: HashMap<String, FunctionSignature>,
+    pub global_var_declarations: HashMap<String, Type>,
 }
 
 fn after_param_list(
@@ -442,6 +444,7 @@ fn after_param_list(
     pos: usize,
     return_type: Type,
     ident: &str,
+    global_var_declarations: &HashMap<String, Type>,
 ) -> Result<FunctionDefinition, AppError> {
     let signature = FunctionSignature {
         params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
@@ -520,6 +523,7 @@ fn after_param_list(
                             &Context {
                                 local_var_and_param_declarations,
                                 function_declarations,
+                                global_var_declarations: global_var_declarations.clone(),
                             },
                             tokens,
                             input,
@@ -548,6 +552,7 @@ fn after_param_list(
 
 pub fn parse_toplevel_definition(
     previous_declarations: &HashMap<String, FunctionSignature>,
+    global_var_declarations: &HashMap<String, Type>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<ToplevelDefinition, AppError> {
@@ -579,6 +584,7 @@ pub fn parse_toplevel_definition(
                             *pos,
                             return_type,
                             ident,
+                            global_var_declarations,
                         )?));
                     }
                     _ => {
@@ -602,6 +608,7 @@ pub fn parse_toplevel_definition(
                                 *pos,
                                 return_type,
                                 ident,
+                                global_var_declarations,
                             )?));
                         }
                         Token {
@@ -653,13 +660,18 @@ pub fn parse_toplevel_definition(
 
 pub fn parse(
     function_declarations: &mut HashMap<String, FunctionSignature>,
+    global_var_declarations: &mut HashMap<String, Type>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-) -> Result<(Vec<FunctionDefinition>, Vec<GlobalVariableDefinition>), AppError> {
+) -> Result<Vec<FunctionDefinition>, AppError> {
     let mut function_definitions: Vec<FunctionDefinition> = vec![];
-    let mut gvar_definitions: Vec<GlobalVariableDefinition> = vec![];
     while tokens.peek().is_some() {
-        let new_def = parse_toplevel_definition(function_declarations, tokens, input)?;
+        let new_def = parse_toplevel_definition(
+            function_declarations,
+            global_var_declarations,
+            tokens,
+            input,
+        )?;
         match new_def {
             ToplevelDefinition::Func(new_def) => {
                 let (name, signature) = new_def.clone().into();
@@ -667,9 +679,9 @@ pub fn parse(
                 function_definitions.push(new_def);
             }
             ToplevelDefinition::GVar(gvar) => {
-                gvar_definitions.push(gvar)
-            },
+                global_var_declarations.insert(gvar.name, gvar.typ);
+            }
         }
     }
-    Ok((function_definitions, gvar_definitions))
+    Ok(function_definitions)
 }

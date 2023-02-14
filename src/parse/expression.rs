@@ -114,21 +114,21 @@ fn parse_primary(
                     }
                 }
             } else {
+                let typ = match context.local_var_and_param_declarations.get(ident) {
+                    Some(t) => t.clone(),
+                    None => match context.global_var_declarations.get(ident) {
+                        Some(t) => t.clone(),
+                        None => Err(AppError {
+                            message: format!("識別子 {ident} は定義されておらず、型が分かりません",),
+                            input: input.to_string(),
+                            pos: *ident_pos,
+                        })?,
+                    },
+                };
                 let expr = Expr::Identifier {
                     ident: ident.clone(),
                     pos: *ident_pos,
-                    typ:
-                        context
-                            .local_var_and_param_declarations
-                            .get(ident)
-                            .ok_or(AppError {
-                                message: format!(
-                                    "識別子 {ident} は定義されておらず、型が分かりません",
-                                ),
-                                input: input.to_string(),
-                                pos: *ident_pos,
-                            })?
-                            .clone(),
+                    typ,
                 };
                 Ok(expr)
             }

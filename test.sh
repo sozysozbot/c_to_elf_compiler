@@ -159,4 +159,9 @@ check 20 "int arr[5]; int main() { return 20; }"
 check 20 "int *arr[5][2]; int main() { return 20; }"
 check 20 "int ***arr[3][5][2]; int main() { return 20; }"
 
+check 20 "int arr[5]; int main() { return sizeof arr; }"
+check 48 "int *arr[3][2]; int main() { return sizeof arr; }"
+check 20 "int arr[7]; int main() { int arr[5]; return sizeof arr; }"
+
+
 wait_jobs
