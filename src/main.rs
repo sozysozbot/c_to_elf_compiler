@@ -7,6 +7,7 @@ use c_to_elf_compiler::codegen;
 use c_to_elf_compiler::parse::toplevel;
 use c_to_elf_compiler::parse::toplevel::FunctionDefinition;
 use c_to_elf_compiler::parse::toplevel::FunctionSignature;
+use c_to_elf_compiler::parse::toplevel::ToplevelDefinition;
 use c_to_elf_compiler::parse::toplevel::Type;
 use c_to_elf_compiler::token::Token;
 use c_to_elf_compiler::tokenize;
@@ -63,7 +64,8 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     .into_iter()
     .collect();
 
-    let function_definitions = toplevel::parse(&mut function_declarations, &mut tokens, input)?;
+    let (function_definitions, gvar_definitions) =
+        toplevel::parse(&mut function_declarations, &mut tokens, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let mut buf = Buf::from(&tiny[0..0x78]);
@@ -97,7 +99,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
         // スタートアップ処理はここに C のソースコードとして実装
         let tokens = tokenize::tokenize("int __start() { __throw main(); }").unwrap();
         let mut tokens = tokens.iter().peekable();
-        toplevel::parse_toplevel_function_definition(
+        if let ToplevelDefinition::Func(entry) = toplevel::parse_toplevel_definition(
             &[(
                 "main".to_string(),
                 FunctionSignature {
@@ -110,7 +112,11 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
             .collect(),
             &mut tokens,
             input,
-        )?
+        )? {
+            entry
+        } else {
+            panic!("スタートアップ処理が関数定義の形で書かれていません")
+        }
     };
     let entry_pos = codegen::関数をコード生成しメインバッファとグローバル関数テーブルに挿入(
         &mut global_function_table,
