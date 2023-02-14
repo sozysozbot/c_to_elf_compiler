@@ -8,8 +8,11 @@ use crate::{
 use super::toplevel::Type;
 
 pub fn parse_type(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Type, AppError> {
-    let mut typ = match tokens.next().unwrap() {
-        Token { tok: Tok::Int, .. } => Type::Int,
+    let mut typ = match tokens.peek().unwrap() {
+        Token { tok: Tok::Int, .. } => {
+            tokens.next().unwrap();
+            Type::Int
+        }
         Token { pos, .. } => {
             return Err(AppError {
                 message: "型名でありません".to_string(),
