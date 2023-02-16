@@ -443,14 +443,9 @@ fn after_param_list(
     params: Vec<(Type, String)>,
     pos: usize,
     return_type: Type,
-    ident: &str,
+    func_name: &str,
     global_var_declarations: &HashMap<String, Type>,
 ) -> Result<FunctionDefinition, AppError> {
-    let signature = FunctionSignature {
-        params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
-        pos,
-        return_type: return_type.clone(),
-    };
     match tokens.peek().unwrap() {
         Token {
             tok: Tok::開き波括弧,
@@ -458,22 +453,14 @@ fn after_param_list(
         } => {
             tokens.next();
             let mut local_var_declarations = HashMap::new();
-            #[allow(clippy::while_let_loop)]
-            loop {
-                let (local_var_type, local_var_name) = if let Some(typ) =
-                    recover(tokens, |tokens| parse_type_and_identifier(tokens, input))?
-                {
-                    typ
-                } else {
-                    break;
-                };
-
+            while let Some((local_var_type, local_var_name)) = recover(tokens, |tokens| parse_type_and_identifier(tokens, input))? {
                 match tokens.peek().unwrap() {
                     Token {
                         tok: Tok::Semicolon,
                         ..
                     } => {
                         tokens.next();
+                        local_var_declarations.insert(local_var_name, local_var_type);
                     }
                     Token { pos, .. } => {
                         return Err(AppError {
@@ -485,7 +472,6 @@ fn after_param_list(
                         })
                     }
                 }
-                local_var_declarations.insert(local_var_name, local_var_type);
             }
 
             let mut statements = vec![];
@@ -503,7 +489,6 @@ fn after_param_list(
                         ..
                     }) => {
                         tokens.next();
-
                         break;
                     }
                     _ => {
@@ -516,9 +501,13 @@ fn after_param_list(
 
                         let mut function_declarations = previous_function_declarations.clone();
 
+                        let signature = FunctionSignature {
+                            params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
+                            pos,
+                            return_type: return_type.clone(),
+                        };
                         // 今読んでる関数の定義も足さないと再帰呼び出しができない
-                        function_declarations.insert(ident.to_string(), signature.clone());
-
+                        function_declarations.insert(func_name.to_string(), signature.clone());
                         statements.push(parse_statement(
                             &Context {
                                 local_var_and_param_declarations,
@@ -532,15 +521,14 @@ fn after_param_list(
                 }
             }
 
-            let func_def = FunctionDefinition {
-                func_name: ident.to_string(),
+            Ok(FunctionDefinition {
+                func_name: func_name.to_string(),
                 params,
                 pos,
                 statements,
                 return_type,
                 local_var_declarations,
-            };
-            Ok(func_def)
+            })
         }
         Token { pos, .. } => Err(AppError {
             message: "仮引数リストの後に、開き波括弧以外のトークンが来ました".to_string(),
