@@ -7,6 +7,7 @@ use c_to_elf_compiler::codegen;
 use c_to_elf_compiler::parse::toplevel;
 use c_to_elf_compiler::parse::toplevel::FunctionDefinition;
 use c_to_elf_compiler::parse::toplevel::FunctionSignature;
+use c_to_elf_compiler::parse::toplevel::SymbolDeclaration;
 use c_to_elf_compiler::parse::toplevel::ToplevelDefinition;
 use c_to_elf_compiler::parse::toplevel::Type;
 use c_to_elf_compiler::token::Token;
@@ -64,11 +65,10 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     .into_iter()
     .collect();
 
-    let mut global_var_declarations = HashMap::new();
+    let mut global_declarations = HashMap::new();
 
     let function_definitions = toplevel::parse(
-        &mut function_declarations,
-        &mut global_var_declarations,
+        &mut global_declarations,
         &mut tokens,
         input,
     )?;
@@ -108,15 +108,14 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
         if let ToplevelDefinition::Func(entry) = toplevel::parse_toplevel_definition(
             &[(
                 "main".to_string(),
-                FunctionSignature {
+                SymbolDeclaration::Func(FunctionSignature {
                     params: vec![],
                     pos: 0,
                     return_type: Type::Int,
-                },
+                }),
             )]
             .into_iter()
             .collect(),
-            &HashMap::new(),
             &mut tokens,
             input,
         )? {
