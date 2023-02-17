@@ -6,6 +6,7 @@ use std::{iter::Peekable, slice::Iter};
 use super::combinator::recover;
 use super::combinator::satisfy;
 use super::toplevel::Context;
+use super::toplevel::SymbolDeclaration;
 use super::toplevel::Type;
 use super::typ::parse_type;
 fn parse_primary(
@@ -52,18 +53,32 @@ fn parse_primary(
                         "閉じ丸括弧ではありません",
                     )
                 })? {
-                    let func_decl = context.function_declarations.get(ident).ok_or(AppError {
-                        message: format!(
-                            "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
-                        ),
-                        input: input.to_string(),
-                        pos: *ident_pos,
-                    })?;
+                    let func_decl = match context.global_symbol_declarations.get(ident) {
+                        Some(SymbolDeclaration::Func(f)) => f.clone(),
+                        Some(SymbolDeclaration::GVar(_)) => {
+                            return Err(AppError {
+                                message: format!(
+                                    "{ident} は関数ではなくグローバル変数であり、呼び出せません",
+                                ),
+                                input: input.to_string(),
+                                pos: *ident_pos,
+                            })
+                        }
+                        None => {
+                            return Err(AppError {
+                                message: format!(
+                                    "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
+                                ),
+                                input: input.to_string(),
+                                pos: *ident_pos,
+                            })
+                        }
+                    };
                     let expr = Expr::Call {
                         ident: ident.clone(),
                         args,
                         pos: *ident_pos,
-                        typ: func_decl.return_type.clone(),
+                        typ: func_decl.return_type,
                     };
                     return Ok(expr);
                 } else {
@@ -80,19 +95,32 @@ fn parse_primary(
                             "閉じ丸括弧ではありません",
                         )
                     })? {
-                        let func_decl =
-                            context.function_declarations.get(ident).ok_or(AppError {
-                                message: format!(
-                                    "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
+                        let func_decl = match context.global_symbol_declarations.get(ident) {
+                            Some(SymbolDeclaration::Func(f)) => f.clone(),
+                            Some(SymbolDeclaration::GVar(_)) => {
+                                return Err(AppError {
+                                    message: format!(
+                                    "{ident} は関数ではなくグローバル変数であり、呼び出せません",
                                 ),
-                                input: input.to_string(),
-                                pos: *ident_pos,
-                            })?;
+                                    input: input.to_string(),
+                                    pos: *ident_pos,
+                                })
+                            }
+                            None => {
+                                return Err(AppError {
+                                    message: format!(
+                                        "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
+                                    ),
+                                    input: input.to_string(),
+                                    pos: *ident_pos,
+                                })
+                            }
+                        };
                         let expr = Expr::Call {
                             ident: ident.clone(),
                             args,
                             pos: *ident_pos,
-                            typ: func_decl.return_type.clone(),
+                            typ: func_decl.return_type,
                         };
                         break Ok(expr);
                     } else if let Some(_) = recover(tokens, |tokens| {
@@ -114,21 +142,28 @@ fn parse_primary(
                     }
                 }
             } else {
+                let typ = match context.local_var_and_param_declarations.get(ident) {
+                    Some(t) => t.clone(),
+                    None => match context.global_symbol_declarations.get(ident) {
+                        Some(SymbolDeclaration::GVar(t)) => t.clone(),
+                        Some(SymbolDeclaration::Func(u)) => Err(AppError {
+                            message: format!(
+                                "識別子 {ident} は関数であり、現在関数ポインタは実装されていません",
+                            ),
+                            input: input.to_string(),
+                            pos: *ident_pos,
+                        })?,
+                        None => Err(AppError {
+                            message: format!("識別子 {ident} は定義されておらず、型が分かりません",),
+                            input: input.to_string(),
+                            pos: *ident_pos,
+                        })?,
+                    },
+                };
                 let expr = Expr::Identifier {
                     ident: ident.clone(),
                     pos: *ident_pos,
-                    typ:
-                        context
-                            .local_var_and_param_declarations
-                            .get(ident)
-                            .ok_or(AppError {
-                                message: format!(
-                                    "識別子 {ident} は定義されておらず、型が分かりません",
-                                ),
-                                input: input.to_string(),
-                                pos: *ident_pos,
-                            })?
-                            .clone(),
+                    typ,
                 };
                 Ok(expr)
             }
@@ -190,10 +225,10 @@ fn parse_suffix_op(
                 }
             };
             expr = Expr::UnaryExpr {
-                op_pos: op_pos,
+                op_pos,
                 op: UnaryOp::Deref,
                 expr: Box::new(Expr::BinaryExpr {
-                    op_pos: op_pos,
+                    op_pos,
                     op: BinaryOp::Add,
                     左辺: arr,
                     右辺: decay_if_arr(index),

@@ -19,7 +19,7 @@ fn parse_test() {
         parse_statement(
             &Context {
                 local_var_and_param_declarations: HashMap::new(),
-                function_declarations: HashMap::new()
+                global_symbol_declarations: HashMap::new(),
             },
             &mut tokens,
             input
@@ -307,6 +307,36 @@ fn consume_num(tokens: &mut Peekable<Iter<Token>>, input: &str, msg: &str) -> Re
     }
 }
 
+fn parse_角括弧に包まれた数の列(
+    tokens: &mut Peekable<Iter<Token>>,
+    input: &str,
+    typ: &mut Type,
+) -> Result<(), AppError> {
+    let mut sizes = vec![];
+    while let Token {
+        tok: Tok::開き角括弧,
+        ..
+    } = tokens.peek().unwrap()
+    {
+        tokens.next();
+        let s = consume_num(tokens, input, "開き角括弧の後に数がない")?;
+        satisfy(
+            tokens,
+            input,
+            |tok| tok == &Tok::閉じ角括弧,
+            "数の後に閉じ角括弧がない",
+        )?;
+        sizes.push(s);
+    }
+
+    for s in sizes.into_iter().rev() {
+        let t = std::mem::replace(typ, Type::Int);
+        *typ = Type::Arr(Box::new(t), s);
+    }
+
+    Ok(())
+}
+
 fn parse_type_and_identifier(
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
@@ -317,27 +347,7 @@ fn parse_type_and_identifier(
             tok: Tok::Identifier(ident),
             ..
         } => {
-            let mut sizes = vec![];
-            while let Token {
-                tok: Tok::開き角括弧,
-                ..
-            } = tokens.peek().unwrap()
-            {
-                tokens.next();
-                let s = consume_num(tokens, input, "開き角括弧の後に数がない")?;
-                satisfy(
-                    tokens,
-                    input,
-                    |tok| tok == &Tok::閉じ角括弧,
-                    "数の後に閉じ角括弧がない",
-                )?;
-                sizes.push(s);
-            }
-
-            for s in sizes.into_iter().rev() {
-                typ = Type::Arr(Box::new(typ), s);
-            }
-
+            parse_角括弧に包まれた数の列(tokens, input, &mut typ)?;
             Ok((typ, ident.clone()))
         }
         Token { pos, .. } => Err(AppError {
@@ -376,6 +386,18 @@ impl Type {
 }
 
 #[derive(Debug, Clone)]
+pub enum ToplevelDefinition {
+    Func(FunctionDefinition),
+    GVar(GlobalVariableDefinition),
+}
+
+#[derive(Debug, Clone)]
+pub struct GlobalVariableDefinition {
+    pub name: String,
+    pub typ: Type,
+}
+
+#[derive(Debug, Clone)]
 pub struct FunctionDefinition {
     pub func_name: String,
     pub params: Vec<(Type, String)>,
@@ -385,8 +407,8 @@ pub struct FunctionDefinition {
     pub local_var_declarations: HashMap<String, Type>,
 }
 
-impl From<FunctionDefinition> for FunctionDeclaration {
-    fn from(s: FunctionDefinition) -> FunctionDeclaration {
+impl From<FunctionDefinition> for (String, FunctionSignature) {
+    fn from(s: FunctionDefinition) -> (String, FunctionSignature) {
         (
             s.func_name,
             FunctionSignature {
@@ -405,27 +427,25 @@ pub struct FunctionSignature {
     pub return_type: Type,
 }
 
-pub type FunctionDeclaration = (String, FunctionSignature);
-
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum SymbolDeclaration {
+    Func(FunctionSignature),
+    GVar(Type),
+}
 pub struct Context {
     pub local_var_and_param_declarations: HashMap<String, Type>,
-    pub function_declarations: HashMap<String, FunctionSignature>,
+    pub global_symbol_declarations: HashMap<String, SymbolDeclaration>,
 }
 
 fn after_param_list(
-    previous_function_declarations: &HashMap<String, FunctionSignature>,
+    previous_global_symbol_declarations: &HashMap<String, SymbolDeclaration>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
     params: Vec<(Type, String)>,
     pos: usize,
     return_type: Type,
-    ident: &str,
+    func_name: &str,
 ) -> Result<FunctionDefinition, AppError> {
-    let signature = FunctionSignature {
-        params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
-        pos,
-        return_type: return_type.clone(),
-    };
     match tokens.peek().unwrap() {
         Token {
             tok: Tok::開き波括弧,
@@ -433,22 +453,16 @@ fn after_param_list(
         } => {
             tokens.next();
             let mut local_var_declarations = HashMap::new();
-            #[allow(clippy::while_let_loop)]
-            loop {
-                let (local_var_type, local_var_name) = if let Some(typ) =
-                    recover(tokens, |tokens| parse_type_and_identifier(tokens, input))?
-                {
-                    typ
-                } else {
-                    break;
-                };
-
+            while let Some((local_var_type, local_var_name)) =
+                recover(tokens, |tokens| parse_type_and_identifier(tokens, input))?
+            {
                 match tokens.peek().unwrap() {
                     Token {
                         tok: Tok::Semicolon,
                         ..
                     } => {
                         tokens.next();
+                        local_var_declarations.insert(local_var_name, local_var_type);
                     }
                     Token { pos, .. } => {
                         return Err(AppError {
@@ -460,7 +474,6 @@ fn after_param_list(
                         })
                     }
                 }
-                local_var_declarations.insert(local_var_name, local_var_type);
             }
 
             let mut statements = vec![];
@@ -478,7 +491,6 @@ fn after_param_list(
                         ..
                     }) => {
                         tokens.next();
-
                         break;
                     }
                     _ => {
@@ -489,15 +501,23 @@ fn after_param_list(
                                 .map(|(typ, ident)| (ident.clone(), (*typ).clone())),
                         );
 
-                        let mut function_declarations = previous_function_declarations.clone();
+                        let mut global_symbol_declarations =
+                            (*previous_global_symbol_declarations).clone();
 
+                        let signature = FunctionSignature {
+                            params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
+                            pos,
+                            return_type: return_type.clone(),
+                        };
                         // 今読んでる関数の定義も足さないと再帰呼び出しができない
-                        function_declarations.insert(ident.to_string(), signature.clone());
-
+                        global_symbol_declarations.insert(
+                            func_name.to_string(),
+                            SymbolDeclaration::Func(signature.clone()),
+                        );
                         statements.push(parse_statement(
                             &Context {
                                 local_var_and_param_declarations,
-                                function_declarations,
+                                global_symbol_declarations,
                             },
                             tokens,
                             input,
@@ -506,15 +526,14 @@ fn after_param_list(
                 }
             }
 
-            let func_def = FunctionDefinition {
-                func_name: ident.to_string(),
+            Ok(FunctionDefinition {
+                func_name: func_name.to_string(),
                 params,
                 pos,
                 statements,
                 return_type,
                 local_var_declarations,
-            };
-            Ok(func_def)
+            })
         }
         Token { pos, .. } => Err(AppError {
             message: "仮引数リストの後に、開き波括弧以外のトークンが来ました".to_string(),
@@ -524,12 +543,12 @@ fn after_param_list(
     }
 }
 
-pub fn parse_toplevel_function_definition(
-    previous_declarations: &HashMap<String, FunctionSignature>,
+pub fn parse_toplevel_definition(
+    previous_declarations: &HashMap<String, SymbolDeclaration>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
-) -> Result<FunctionDefinition, AppError> {
-    let return_type = parse_type(tokens, input)?;
+) -> Result<ToplevelDefinition, AppError> {
+    let mut return_type = parse_type(tokens, input)?;
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Identifier(ident),
@@ -549,7 +568,7 @@ pub fn parse_toplevel_function_definition(
                         ..
                     } => {
                         tokens.next();
-                        return after_param_list(
+                        return Ok(ToplevelDefinition::Func(after_param_list(
                             previous_declarations,
                             tokens,
                             input,
@@ -557,7 +576,7 @@ pub fn parse_toplevel_function_definition(
                             *pos,
                             return_type,
                             ident,
-                        );
+                        )?));
                     }
                     _ => {
                         let param = parse_type_and_identifier(tokens, input)?;
@@ -572,7 +591,7 @@ pub fn parse_toplevel_function_definition(
                             ..
                         } => {
                             tokens.next();
-                            return after_param_list(
+                            return Ok(ToplevelDefinition::Func(after_param_list(
                                 previous_declarations,
                                 tokens,
                                 input,
@@ -580,7 +599,7 @@ pub fn parse_toplevel_function_definition(
                                 *pos,
                                 return_type,
                                 ident,
-                            );
+                            )?));
                         }
                         Token {
                             tok: Tok::Comma, ..
@@ -599,8 +618,23 @@ pub fn parse_toplevel_function_definition(
                     }
                 }
             }
+            Token {
+                tok: Tok::Semicolon,
+                ..
+            } => {
+                tokens.next();
+                Ok(ToplevelDefinition::GVar(GlobalVariableDefinition { name: ident.to_string(), typ: return_type }))
+            }
+            Token {
+                tok: Tok::開き角括弧,
+                ..
+            } => {
+                parse_角括弧に包まれた数の列(tokens, input, &mut return_type)?;
+                satisfy(tokens, input, |t| *t == Tok::Semicolon, "グローバルな配列宣言の後のセミコロンが期待されていました")?;
+                Ok(ToplevelDefinition::GVar(GlobalVariableDefinition { name: ident.to_string(), typ: return_type }))
+            }
             _ => Err(AppError {
-                message: "トップレベルに識別子がありますが、その後に関数引数の丸括弧がありません"
+                message: "トップレベルに識別子がありますが、その後に来たものが「関数引数の丸括弧」でも「グローバル変数定義を終わらせるセミコロン」でも「グローバル変数として配列を定義するための開き角括弧」でもありません"
                     .to_string(),
                 input: input.to_string(),
                 pos: *pos + 1,
@@ -615,16 +649,23 @@ pub fn parse_toplevel_function_definition(
 }
 
 pub fn parse(
-    function_declarations: &mut HashMap<String, FunctionSignature>,
+    global_declarations: &mut HashMap<String, SymbolDeclaration>,
     tokens: &mut Peekable<Iter<Token>>,
     input: &str,
 ) -> Result<Vec<FunctionDefinition>, AppError> {
     let mut function_definitions: Vec<FunctionDefinition> = vec![];
     while tokens.peek().is_some() {
-        let new_def = parse_toplevel_function_definition(function_declarations, tokens, input)?;
-        let (name, signature) = new_def.clone().into();
-        function_declarations.insert(name, signature);
-        function_definitions.push(new_def);
+        let new_def = parse_toplevel_definition(global_declarations, tokens, input)?;
+        match new_def {
+            ToplevelDefinition::Func(new_def) => {
+                let (name, signature) = new_def.clone().into();
+                global_declarations.insert(name, SymbolDeclaration::Func(signature));
+                function_definitions.push(new_def);
+            }
+            ToplevelDefinition::GVar(gvar) => {
+                global_declarations.insert(gvar.name, SymbolDeclaration::GVar(gvar.typ));
+            }
+        }
     }
     Ok(function_definitions)
 }
