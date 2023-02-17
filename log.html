@@ -3231,6 +3231,56 @@ pub fn no_decay_even_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
 		<div class="content">配列のインデックス構文はパーサ書き直すだけ。関数呼び出しも後置演算子の仲間にしたかったが意味解析も同時に行ってる現状では厳しそうなので諦め</div>
 	</div>
 </div>
+<h3 class="date">2023年2月15日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_04921f52ad1f35f62a2333c059909c48').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_04921f52ad1f35f62a2333c059909c48').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_04921f52ad1f35f62a2333c059909c48" href="#permalink_04921f52ad1f35f62a2333c059909c48" class="permalink">¶</a>
+		<div class="content">パーサーのリファクタリングもちょっとやってもらったし、そろそろステップ23（グローバル変数）の実装をやる必要がある</div>
+		<div class="content">さてこれどうしたもんかね。流石にこれは ELF の中身を見ないことには回らないのかな。どうなんだろ</div>
+		<div class="content">いやまあ、『グローバル変数はスタートアップ時にヒープに確保され、ゼロクリアされる』って処理系にしても規格には準拠するんだが</div>
+		<div class="content">ん〜〜〜とはいえ、実際の処理系では『ゼロクリアされるような場所にグローバル変数を確保』するのはローダの仕事のはず</div>
+		<div class="content">つまり！これは『いまローダがないから、それの代用として Linux システムコールに頼ってヒープに確保しているだけ』と主張することができる（ふむ〜？）</div>
+		<div class="content">Q.『外部リンケージどうするの？』</div>
+		<div class="content">A.『いままだリンカないから。リンカできたらそのときに初めて考えよう』</div>
+		<div class="content">まあなにはともあれパースできないと始まらない</div>
+		<div class="content">いまは parse_toplevel_function_definition しかないので、これを『関数定義かグローバル変数定義』へとすり替える必要がある</div>
+		<div class="content">とりあえずハリボテして……</div>
+		<div class="content">パーサーを書いた。動く。</div>
+		<div class="content">さて、さっき実行時確保の案を出したが、グローバル変数のアドレスってコンパイル時に定数である必要があったりしなかったっけ</div>
+		<div class="content">なんかそこらへんを考えると、規格に想定されていない曲芸をやるのはやめて、普通に策を練ったほうがいい気がしてくるな</div>
+		<div class="content">よし、決めた、これは後回しにしよう。</div>
+		<blockquote>予定変更！ @すーぱーてけらには引き続き 24 と 26 もやってもらいますが、私は 23 と 25 の実装をサボります
+
+理由：グローバル変数は外部リンケージを持つ存在なので、「幕間」のあとにやるのが自然
+
+「幕間」と呼んでいるのは、「今回の縛り特有」でどうしても必要になってくる要素をいくつか導入するフェーズ
+
+幕間 1: プロトタイプ宣言と相互再帰
+ - 現状の Buf を改造して、「名前付き穴」みたいなものを書けるようにし、.to_vec() で最終的に書き込むときにその「名前付き穴」を解決するようにする
+
+幕間 2: 初めての依存ライブラリ、初めての中間ファイル
+ - cargo add serde して、「名前付き穴」のある Buf を JSON として出力してしまう
+ - その出力ファイルを読み、「名前付き穴」を解決し、ELF として吐く仕組みを作る
+
+幕間 3: Yet Another Linkable Format.json
+ - 複数の出力ファイルを読み、「名前付き穴」を解決し、ELF として吐く仕組みを作る
+ - 分割コンパイルのテストケースを書く
+
+ということで、私の step 23 は「グローバル変数が定義できるが、sizeof しか取ることができず、読み書きしようとするとコンパイルエラー」で一旦完成とします。同様に step 25 の文字列リテラルも「sizeof しか取ることができない定数」にします
+</blockquote>
+		<div class="content">sizeof のオペランドとしては正しく動くようにした。ということでこれで一旦完成とする</div>
+	</div>
+</div>
+<h3 class="date">2023年2月16日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_a81b28ad92f9bfd4a5143f865904ced7').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_a81b28ad92f9bfd4a5143f865904ced7').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_a81b28ad92f9bfd4a5143f865904ced7" href="#permalink_a81b28ad92f9bfd4a5143f865904ced7" class="permalink">¶</a>
+		<div class="content">あー、グローバル変数と関数が同じ名前空間に入るようにするか</div>
+		<div class="content">名前空間をくっつけた</div>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>
