@@ -453,7 +453,9 @@ fn after_param_list(
         } => {
             tokens.next();
             let mut local_var_declarations = HashMap::new();
-            while let Some((local_var_type, local_var_name)) = recover(tokens, |tokens| parse_type_and_identifier(tokens, input))? {
+            while let Some((local_var_type, local_var_name)) =
+                recover(tokens, |tokens| parse_type_and_identifier(tokens, input))?
+            {
                 match tokens.peek().unwrap() {
                     Token {
                         tok: Tok::Semicolon,
@@ -499,7 +501,8 @@ fn after_param_list(
                                 .map(|(typ, ident)| (ident.clone(), (*typ).clone())),
                         );
 
-                        let mut global_symbol_declarations = (*previous_global_symbol_declarations).clone();
+                        let mut global_symbol_declarations =
+                            (*previous_global_symbol_declarations).clone();
 
                         let signature = FunctionSignature {
                             params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
@@ -507,7 +510,10 @@ fn after_param_list(
                             return_type: return_type.clone(),
                         };
                         // 今読んでる関数の定義も足さないと再帰呼び出しができない
-                        global_symbol_declarations.insert(func_name.to_string(), SymbolDeclaration::Func(signature.clone()));
+                        global_symbol_declarations.insert(
+                            func_name.to_string(),
+                            SymbolDeclaration::Func(signature.clone()),
+                        );
                         statements.push(parse_statement(
                             &Context {
                                 local_var_and_param_declarations,
@@ -649,11 +655,7 @@ pub fn parse(
 ) -> Result<Vec<FunctionDefinition>, AppError> {
     let mut function_definitions: Vec<FunctionDefinition> = vec![];
     while tokens.peek().is_some() {
-        let new_def = parse_toplevel_definition(
-            global_declarations,
-            tokens,
-            input,
-        )?;
+        let new_def = parse_toplevel_definition(global_declarations, tokens, input)?;
         match new_def {
             ToplevelDefinition::Func(new_def) => {
                 let (name, signature) = new_def.clone().into();

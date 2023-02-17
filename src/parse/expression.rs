@@ -55,20 +55,24 @@ fn parse_primary(
                 })? {
                     let func_decl = match context.global_symbol_declarations.get(ident) {
                         Some(SymbolDeclaration::Func(f)) => f.clone(),
-                        Some(SymbolDeclaration::GVar(_)) => return Err(AppError {
-                            message: format!(
-                                "{ident} は関数ではなくグローバル変数であり、呼び出せません",
-                            ),
-                            input: input.to_string(),
-                            pos: *ident_pos,
-                        }),
-                            None => return Err(AppError {
-                            message: format!(
-                                "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
-                            ),
-                            input: input.to_string(),
-                            pos: *ident_pos,
-                        }),
+                        Some(SymbolDeclaration::GVar(_)) => {
+                            return Err(AppError {
+                                message: format!(
+                                    "{ident} は関数ではなくグローバル変数であり、呼び出せません",
+                                ),
+                                input: input.to_string(),
+                                pos: *ident_pos,
+                            })
+                        }
+                        None => {
+                            return Err(AppError {
+                                message: format!(
+                                    "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
+                                ),
+                                input: input.to_string(),
+                                pos: *ident_pos,
+                            })
+                        }
                     };
                     let expr = Expr::Call {
                         ident: ident.clone(),
@@ -93,20 +97,24 @@ fn parse_primary(
                     })? {
                         let func_decl = match context.global_symbol_declarations.get(ident) {
                             Some(SymbolDeclaration::Func(f)) => f.clone(),
-                            Some(SymbolDeclaration::GVar(_)) => return Err(AppError {
-                                message: format!(
+                            Some(SymbolDeclaration::GVar(_)) => {
+                                return Err(AppError {
+                                    message: format!(
                                     "{ident} は関数ではなくグローバル変数であり、呼び出せません",
                                 ),
-                                input: input.to_string(),
-                                pos: *ident_pos,
-                            }),
-                                None => return Err(AppError {
-                                message: format!(
-                                    "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
-                                ),
-                                input: input.to_string(),
-                                pos: *ident_pos,
-                            }),
+                                    input: input.to_string(),
+                                    pos: *ident_pos,
+                                })
+                            }
+                            None => {
+                                return Err(AppError {
+                                    message: format!(
+                                        "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
+                                    ),
+                                    input: input.to_string(),
+                                    pos: *ident_pos,
+                                })
+                            }
                         };
                         let expr = Expr::Call {
                             ident: ident.clone(),
@@ -139,7 +147,9 @@ fn parse_primary(
                     None => match context.global_symbol_declarations.get(ident) {
                         Some(SymbolDeclaration::GVar(t)) => t.clone(),
                         Some(SymbolDeclaration::Func(u)) => Err(AppError {
-                            message: format!("識別子 {ident} は関数であり、現在関数ポインタは実装されていません",),
+                            message: format!(
+                                "識別子 {ident} は関数であり、現在関数ポインタは実装されていません",
+                            ),
                             input: input.to_string(),
                             pos: *ident_pos,
                         })?,
