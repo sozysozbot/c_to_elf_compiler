@@ -13,6 +13,10 @@ pub fn parse_type(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Typ
             tokens.next().unwrap();
             Type::Int
         }
+        Token { tok: Tok::Char, .. } => {
+            tokens.next().unwrap();
+            Type::Char
+        }
         Token { pos, .. } => {
             return Err(AppError {
                 message: "型名でありません".to_string(),
