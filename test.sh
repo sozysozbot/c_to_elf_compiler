@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 cd $(dirname $0)
 cargo build
 
@@ -7,12 +9,16 @@ check_inner() {
   TMPDIR=$(mktemp -d testwork/XXXXXX)
   expected="$1"
   input="$2"
+  set +u
   stdout_expected="$3"
+  set -u
 
   (cd $TMPDIR && ../../target/debug/c_to_elf_compiler "$input")
   chmod 755 $TMPDIR/a.out
+  set +e
   stdout_actual=$(./run-on-linux.sh $TMPDIR/a.out)
   actual="$?"
+  set -e
   
   if [ "$actual" != "$expected" ]; then
     printf "\033[31m[FAIL]\033[m %s => %s expected, but got %s\n" "$input" "$expected" "$actual"
@@ -39,10 +45,17 @@ check() {
   check_inner "$@" &
 }
 
+fail_count=0
+
 wait_jobs() {
   for job in `jobs -p`
   do
+    set +e
     wait $job
+    if [ "$?" != "0" ]; then
+      fail_count=$((fail_count + 1))
+    fi
+    set -e
   done
 }
 
@@ -166,3 +179,7 @@ check 20 "int arr[7]; int main() { int arr[5]; return sizeof arr; }"
 check 3 "int main() { char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y; }"
 
 wait_jobs
+if [ $fail_count -gt 0 ]; then
+  echo "$fail_count tests failed"
+  exit 1
+fi
