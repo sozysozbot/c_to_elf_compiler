@@ -179,7 +179,7 @@ check 20 "int arr[5]; int main() { return sizeof arr; }"
 check 48 "int *arr[3][2]; int main() { return sizeof arr; }"
 check 20 "int arr[7]; int main() { int arr[5]; return sizeof arr; }"
 
-check 3 "int main() { char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y; }"
+check 3 "int main() { char x[3]; int y; x[0] = -1; x[1] = 2; y = 4; return x[0] + y; }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then
