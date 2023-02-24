@@ -36,7 +36,7 @@ fn main() -> std::io::Result<()> {
 
 fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError> {
     let mut tokens = tokens.iter().peekable();
-    let mut function_declarations: HashMap<String, FunctionSignature> = [
+    let function_declarations: HashMap<String, FunctionSignature> = [
         (
             "__builtin_three".to_string(),
             FunctionSignature {
@@ -66,6 +66,12 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     .collect();
 
     let mut global_declarations = HashMap::new();
+    global_declarations.extend(
+        function_declarations
+            .clone()
+            .into_iter()
+            .map(|(name, signature)| (name, SymbolDeclaration::Func(signature))),
+    );
 
     let function_definitions = toplevel::parse(&mut global_declarations, &mut tokens, input)?;
 
