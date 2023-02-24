@@ -4,6 +4,7 @@ set -eu
 
 cd $(dirname $0)
 cargo build
+jobs=()
 
 check_inner() {
   TMPDIR=$(mktemp -d testwork/XXXXXX)
@@ -38,17 +39,18 @@ check_inner() {
 }
 
 check() {
-  jobs_count=`jobs -p | wc -l`
+  jobs_count=${#jobs[@]}
   if [ $jobs_count -gt 5 ]; then
     wait_jobs
   fi
   check_inner "$@" &
+  jobs+=($!)
 }
 
 fail_count=0
 
 wait_jobs() {
-  for job in `jobs -p`
+  for job in ${jobs[@]};
   do
     set +e
     wait $job
@@ -57,6 +59,7 @@ wait_jobs() {
     fi
     set -e
   done
+  jobs=()
 }
 
 check 8 "int main() { return 8; }"
