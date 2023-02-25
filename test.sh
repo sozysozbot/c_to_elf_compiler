@@ -182,6 +182,10 @@ check 20 "int arr[7]; int main() { int arr[5]; return sizeof arr; }"
 check 3 "int main() { char x[3]; int y; x[0] = -1; x[1] = 2; y = 4; return x[0] + y; }"
 check 3 "int main() { char x; char y; x = 1; y = 2; x = x + y; return x; }"
 
+# integral promotion
+check 4 "int main() { char a; return sizeof((a+a)); }"
+check 4 "int main() { char a; return sizeof((+a)); }"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"
