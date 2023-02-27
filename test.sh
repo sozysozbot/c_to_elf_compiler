@@ -185,6 +185,7 @@ check 3 "int main() { char x; char y; x = 1; y = 2; x = x + y; return x; }"
 # integral promotion
 check 4 "int main() { char a; return sizeof((a+a)); }"
 check 4 "int main() { char a; return sizeof((+a)); }"
+check 4 "int main() { char a; return sizeof(a+a); }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then
