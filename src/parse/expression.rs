@@ -325,7 +325,7 @@ fn parse_unary(
                 let typ = if let Some(typ) = recover(tokens, |tokens| parse_type(tokens, input))? {
                     typ
                 } else {
-                    parse_unary(context, tokens, input)?.typ()
+                    parse_expr(context, tokens, input)?.typ()
                 };
                 satisfy(
                     tokens,
