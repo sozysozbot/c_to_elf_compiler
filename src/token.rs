@@ -27,6 +27,7 @@ pub enum Tok {
     Comma,
     Ampersand,
     Int,
+    Char,
     Sizeof,
     開き角括弧,
     閉じ角括弧,

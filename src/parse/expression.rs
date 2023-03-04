@@ -248,9 +248,20 @@ fn parse_unary(
     input: &str,
 ) -> Result<Expr, AppError> {
     match tokens.peek() {
-        Some(Token { tok: Tok::Add, .. }) => {
+        Some(Token { tok: Tok::Add, pos }) => {
             tokens.next();
-            parse_suffix_op(context, tokens, input)
+            let expr = parse_suffix_op(context, tokens, input)?;
+            Ok(Expr::BinaryExpr {
+                op: BinaryOp::Add,
+                op_pos: *pos,
+                typ: Type::Int,
+                左辺: decay_if_arr(Expr::Numeric {
+                    val: 0,
+                    pos: *pos,
+                    typ: Type::Int,
+                }),
+                右辺: decay_if_arr(expr),
+            })
         }
         Some(Token { tok: Tok::Sub, pos }) => {
             tokens.next();
@@ -314,7 +325,7 @@ fn parse_unary(
                 let typ = if let Some(typ) = recover(tokens, |tokens| parse_type(tokens, input))? {
                     typ
                 } else {
-                    parse_unary(context, tokens, input)?.typ()
+                    parse_expr(context, tokens, input)?.typ()
                 };
                 satisfy(
                     tokens,
@@ -385,7 +396,7 @@ fn parse_multiplicative(
 
 fn add(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
-        (Type::Int, Type::Int) => Some(Expr::BinaryExpr {
+        (Type::Int | Type::Char, Type::Int | Type::Char) => Some(Expr::BinaryExpr {
             op: BinaryOp::Add,
             op_pos,
             typ: Type::Int,
@@ -416,7 +427,7 @@ fn add(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
 
 fn subtract(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
-        (Type::Int, Type::Int) => Some(Expr::BinaryExpr {
+        (Type::Int | Type::Char, Type::Int | Type::Char) => Some(Expr::BinaryExpr {
             op: BinaryOp::Sub,
             op_pos,
             typ: Type::Int,

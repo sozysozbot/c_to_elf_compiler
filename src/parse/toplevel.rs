@@ -361,6 +361,7 @@ fn parse_type_and_identifier(
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Type {
     Int,
+    Char,
     Ptr(Box<Type>),
     Arr(Box<Type>, u8),
 }
@@ -368,7 +369,7 @@ pub enum Type {
 impl Type {
     pub fn deref(&self) -> Option<Self> {
         match self {
-            Type::Int => None,
+            Type::Int | Type::Char => None,
             Type::Ptr(x) | Type::Arr(x, _) => Some((**x).clone()),
         }
     }
@@ -376,6 +377,7 @@ impl Type {
     pub fn sizeof(&self) -> u8 {
         match self {
             Type::Int => 4,
+            Type::Char => 1,
             Type::Ptr(_) => 8,
             Type::Arr(t, len) => t
                 .sizeof()

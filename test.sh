@@ -1,18 +1,25 @@
 #!/bin/bash
 
+set -eu
+
 cd $(dirname $0)
 cargo build
+jobs=()
 
 check_inner() {
   TMPDIR=$(mktemp -d testwork/XXXXXX)
   expected="$1"
   input="$2"
+  set +u
   stdout_expected="$3"
+  set -u
 
   (cd $TMPDIR && ../../target/debug/c_to_elf_compiler "$input")
   chmod 755 $TMPDIR/a.out
+  set +e
   stdout_actual=$(./run-on-linux.sh $TMPDIR/a.out)
   actual="$?"
+  set -e
   
   if [ "$actual" != "$expected" ]; then
     printf "\033[31m[FAIL]\033[m %s => %s expected, but got %s\n" "$input" "$expected" "$actual"
@@ -32,18 +39,27 @@ check_inner() {
 }
 
 check() {
-  jobs_count=`jobs -p | wc -l`
+  jobs_count=${#jobs[@]}
   if [ $jobs_count -gt 5 ]; then
     wait_jobs
   fi
   check_inner "$@" &
+  jobs+=($!)
 }
 
+fail_count=0
+
 wait_jobs() {
-  for job in `jobs -p`
+  for job in ${jobs[@]};
   do
+    set +e
     wait $job
+    if [ "$?" != "0" ]; then
+      fail_count=$((fail_count + 1))
+    fi
+    set -e
   done
+  jobs=()
 }
 
 check 8 "int main() { return 8; }"
@@ -163,5 +179,16 @@ check 20 "int arr[5]; int main() { return sizeof arr; }"
 check 48 "int *arr[3][2]; int main() { return sizeof arr; }"
 check 20 "int arr[7]; int main() { int arr[5]; return sizeof arr; }"
 
+check 3 "int main() { char x[3]; int y; x[0] = -1; x[1] = 2; y = 4; return x[0] + y; }"
+check 3 "int main() { char x; char y; x = 1; y = 2; x = x + y; return x; }"
+
+# integral promotion
+check 4 "int main() { char a; return sizeof((a+a)); }"
+check 4 "int main() { char a; return sizeof((+a)); }"
+check 4 "int main() { char a; return sizeof(a+a); }"
 
 wait_jobs
+if [ $fail_count -gt 0 ]; then
+  echo "$fail_count tests failed"
+  exit 1
+fi
