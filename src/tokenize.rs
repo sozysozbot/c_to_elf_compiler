@@ -28,6 +28,21 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
     let mut iter = input.chars().enumerate().peekable();
     while let Some(&(pos, c)) = iter.peek() {
         match c {
+            '"' => {
+                iter.next();
+                let mut string_content = String::new();
+                loop {
+                    let (_, c) = iter.next().unwrap_or_else(|| panic!("文字列リテラルが終了する前にEOFが来ました"));
+                    if c == '"' {
+                        break;
+                    } else if c == '\\' {
+                        panic!("エスケープシーケンスは未対応です");
+                    } else {
+                        string_content.push(c);
+                    }
+                }
+                ans.push(Token { tok: Tok::StringLiteral(string_content), pos });
+            }
             ' ' => {
                 iter.next();
                 continue;

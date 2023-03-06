@@ -34,6 +34,11 @@ pub enum Expr {
         pos: usize,
         typ: Type,
     },
+    StringLiteral {
+        val: String,
+        pos: usize,
+        typ: Type,
+    },
     Identifier {
         ident: String,
         pos: usize,
@@ -76,6 +81,7 @@ impl Expr {
         match self {
             Expr::BinaryExpr { typ, .. }
             | Expr::Numeric { typ, .. }
+            | Expr::StringLiteral { typ, .. }
             | Expr::Identifier { typ, .. }
             | Expr::Call { typ, .. }
             | Expr::DecayedArr { typ, .. }
