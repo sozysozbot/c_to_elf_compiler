@@ -32,7 +32,9 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 iter.next();
                 let mut string_content = String::new();
                 loop {
-                    let (_, c) = iter.next().unwrap_or_else(|| panic!("文字列リテラルが終了する前にEOFが来ました"));
+                    let (_, c) = iter
+                        .next()
+                        .unwrap_or_else(|| panic!("文字列リテラルが終了する前にEOFが来ました"));
                     if c == '"' {
                         break;
                     } else if c == '\\' {
@@ -41,7 +43,10 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                         string_content.push(c);
                     }
                 }
-                ans.push(Token { tok: Tok::StringLiteral(string_content), pos });
+                ans.push(Token {
+                    tok: Tok::StringLiteral(string_content),
+                    pos,
+                });
             }
             ' ' => {
                 iter.next();
