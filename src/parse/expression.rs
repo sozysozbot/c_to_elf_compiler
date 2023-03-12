@@ -27,6 +27,17 @@ fn parse_primary(
             Ok(expr)
         }
         Token {
+            tok: Tok::StringLiteral(val),
+            pos,
+        } => {
+            let expr = Expr::StringLiteral {
+                val: val.clone(),
+                pos: *pos,
+                typ: Type::Arr(Box::new(Type::Char), (val.len() + 1).try_into().unwrap()),
+            };
+            Ok(expr)
+        }
+        Token {
             tok: Tok::Identifier(ident),
             pos: ident_pos,
         } => {

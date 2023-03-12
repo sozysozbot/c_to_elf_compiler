@@ -16,6 +16,7 @@ pub enum Tok {
     Assign,
     Semicolon,
     Identifier(String),
+    StringLiteral(String),
     Throw,
     Return,
     If,

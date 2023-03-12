@@ -68,7 +68,6 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
     let mut global_declarations = HashMap::new();
     global_declarations.extend(
         function_declarations
-            .clone()
             .into_iter()
             .map(|(name, signature)| (name, SymbolDeclaration::Func(signature))),
     );

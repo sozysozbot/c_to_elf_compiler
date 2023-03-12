@@ -723,6 +723,13 @@ impl<'a> FunctionGen<'a> {
             } => {
                 buf.append(ediに代入(*val));
             }
+            Expr::StringLiteral {
+                val: _,
+                pos: _,
+                typ: _,
+            } => {
+                unimplemented!("文字列リテラルを値として扱うのは未実装です（必ず sizeof のオペランドにしてください）");
+            }
             Expr::Call {
                 ident,
                 args,
