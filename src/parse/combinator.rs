@@ -4,6 +4,7 @@ use std::{iter::Peekable, slice::Iter};
 
 pub fn satisfy(
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
     cond: impl FnOnce(&Tok) -> bool,
     msg: &str,
@@ -16,6 +17,7 @@ pub fn satisfy(
         Token { pos, .. } => Err(AppError {
             message: msg.to_string(),
             input: input.to_string(),
+            filename: filename.to_string(),
             pos: *pos,
         }),
     }

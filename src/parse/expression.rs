@@ -12,6 +12,7 @@ use super::typ::parse_type;
 fn parse_primary(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
     match tokens.next().unwrap() {
@@ -49,6 +50,7 @@ fn parse_primary(
             if let Some(_) = recover(tokens, |tokens| {
                 satisfy(
                     tokens,
+                    filename,
                     input,
                     |tok| tok == &Tok::開き丸括弧,
                     "開き丸括弧ではありません",
@@ -59,6 +61,7 @@ fn parse_primary(
                 if let Some(_) = recover(tokens, |tokens| {
                     satisfy(
                         tokens,
+                        filename,
                         input,
                         |tok| tok == &Tok::閉じ丸括弧,
                         "閉じ丸括弧ではありません",
@@ -72,6 +75,7 @@ fn parse_primary(
                                     "{ident} は関数ではなくグローバル変数であり、呼び出せません",
                                 ),
                                 input: input.to_string(),
+                                filename: filename.to_string(),
                                 pos: *ident_pos,
                             })
                         }
@@ -81,6 +85,7 @@ fn parse_primary(
                                     "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
                                 ),
                                 input: input.to_string(),
+                                filename: filename.to_string(),
                                 pos: *ident_pos,
                             })
                         }
@@ -93,7 +98,7 @@ fn parse_primary(
                     };
                     return Ok(expr);
                 } else {
-                    let expr = parse_expr(context, tokens, input)?;
+                    let expr = parse_expr(context, tokens, filename, input)?;
                     args.push(*decay_if_arr(expr));
                 }
 
@@ -101,6 +106,7 @@ fn parse_primary(
                     if let Some(_) = recover(tokens, |tokens| {
                         satisfy(
                             tokens,
+                            filename,
                             input,
                             |tok| tok == &Tok::閉じ丸括弧,
                             "閉じ丸括弧ではありません",
@@ -114,6 +120,7 @@ fn parse_primary(
                                     "{ident} は関数ではなくグローバル変数であり、呼び出せません",
                                 ),
                                     input: input.to_string(),
+                                    filename: filename.to_string(),
                                     pos: *ident_pos,
                                 })
                             }
@@ -123,6 +130,7 @@ fn parse_primary(
                                         "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
                                     ),
                                     input: input.to_string(),
+                                    filename: filename.to_string(),
                                     pos: *ident_pos,
                                 })
                             }
@@ -137,17 +145,19 @@ fn parse_primary(
                     } else if let Some(_) = recover(tokens, |tokens| {
                         satisfy(
                             tokens,
+                            filename,
                             input,
                             |tok| tok == &Tok::Comma,
                             "カンマではありません",
                         )
                     })? {
-                        let expr = parse_expr(context, tokens, input)?;
+                        let expr = parse_expr(context, tokens, filename, input)?;
                         args.push(*decay_if_arr(expr));
                     } else {
                         break Err(AppError {
                             message: "閉じ丸括弧かカンマが期待されていました".to_string(),
                             input: input.to_string(),
+                            filename: filename.to_string(),
                             pos: open_pos + 1,
                         });
                     }
@@ -162,11 +172,13 @@ fn parse_primary(
                                 "識別子 {ident} は関数であり、現在関数ポインタは実装されていません",
                             ),
                             input: input.to_string(),
+                            filename: filename.to_string(),
                             pos: *ident_pos,
                         })?,
                         None => Err(AppError {
                             message: format!("識別子 {ident} は定義されておらず、型が分かりません",),
                             input: input.to_string(),
+                            filename: filename.to_string(),
                             pos: *ident_pos,
                         })?,
                     },
@@ -183,9 +195,10 @@ fn parse_primary(
             tok: Tok::開き丸括弧,
             ..
         } => {
-            let expr = parse_expr(context, tokens, input)?;
+            let expr = parse_expr(context, tokens, filename, input)?;
             satisfy(
                 tokens,
+                filename,
                 input,
                 |tok| tok == &Tok::閉じ丸括弧,
                 "この開き丸括弧に対応する閉じ丸括弧がありません",
@@ -195,6 +208,7 @@ fn parse_primary(
         tok => Err(AppError {
             message: "数値リテラルでも開き丸括弧でもないものが来ました".to_string(),
             input: input.to_string(),
+            filename: filename.to_string(),
             pos: tok.pos,
         }),
     }
@@ -203,23 +217,26 @@ fn parse_primary(
 fn parse_suffix_op(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_primary(context, tokens, input)?;
+    let mut expr = parse_primary(context, tokens, filename, input)?;
 
     loop {
         if let Some(_) = recover(tokens, |tokens| {
             satisfy(
                 tokens,
+                filename,
                 input,
                 |tok| tok == &Tok::開き角括弧,
                 "開き角括弧ではありません",
             )
         })? {
-            let index = parse_expr(context, tokens, input)?;
+            let index = parse_expr(context, tokens, filename, input)?;
             let op_pos = tokens.peek().unwrap().pos;
             satisfy(
                 tokens,
+                filename,
                 input,
                 |tok| tok == &Tok::閉じ角括弧,
                 "この開き角括弧に対応する閉じ角括弧がありません",
@@ -231,6 +248,7 @@ fn parse_suffix_op(
                     return Err(AppError {
                         message: "ポインタではありません".to_string(),
                         input: input.to_string(),
+                        filename: filename.to_string(),
                         pos: op_pos,
                     })
                 }
@@ -256,12 +274,13 @@ fn parse_suffix_op(
 fn parse_unary(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
     match tokens.peek() {
         Some(Token { tok: Tok::Add, pos }) => {
             tokens.next();
-            let expr = parse_suffix_op(context, tokens, input)?;
+            let expr = parse_suffix_op(context, tokens, filename, input)?;
             Ok(Expr::BinaryExpr {
                 op: BinaryOp::Add,
                 op_pos: *pos,
@@ -276,7 +295,7 @@ fn parse_unary(
         }
         Some(Token { tok: Tok::Sub, pos }) => {
             tokens.next();
-            let expr = parse_suffix_op(context, tokens, input)?;
+            let expr = parse_suffix_op(context, tokens, filename, input)?;
             Ok(Expr::BinaryExpr {
                 op: BinaryOp::Sub,
                 op_pos: *pos,
@@ -294,13 +313,14 @@ fn parse_unary(
             pos,
         }) => {
             tokens.next();
-            let expr = parse_unary(context, tokens, input)?;
+            let expr = parse_unary(context, tokens, filename, input)?;
             Ok(Expr::UnaryExpr {
                 op: UnaryOp::Deref,
                 op_pos: *pos,
                 typ: expr.typ().deref().ok_or(AppError {
                     message: "deref できない型を deref しようとしました".to_string(),
                     input: input.to_string(),
+                    filename: filename.to_string(),
                     pos: *pos,
                 })?,
                 expr: decay_if_arr(expr),
@@ -311,7 +331,7 @@ fn parse_unary(
             pos,
         }) => {
             tokens.next();
-            let expr = parse_unary(context, tokens, input)?;
+            let expr = parse_unary(context, tokens, filename, input)?;
             Ok(Expr::UnaryExpr {
                 op: UnaryOp::Addr,
                 op_pos: *pos,
@@ -328,25 +348,29 @@ fn parse_unary(
             let typ = if let Some(_) = recover(tokens, |tokens| {
                 satisfy(
                     tokens,
+                    filename,
                     input,
                     |tok| tok == &Tok::開き丸括弧,
                     "開き丸括弧ではありません",
                 )
             })? {
-                let typ = if let Some(typ) = recover(tokens, |tokens| parse_type(tokens, input))? {
+                let typ = if let Some(typ) =
+                    recover(tokens, |tokens| parse_type(tokens, filename, input))?
+                {
                     typ
                 } else {
-                    parse_expr(context, tokens, input)?.typ()
+                    parse_expr(context, tokens, filename, input)?.typ()
                 };
                 satisfy(
                     tokens,
+                    filename,
                     input,
                     |tok| tok == &Tok::閉じ丸括弧,
                     "開き丸括弧に対応する閉じ丸括弧がありません",
                 )?;
                 typ
             } else {
-                parse_unary(context, tokens, input)?.typ()
+                parse_unary(context, tokens, filename, input)?.typ()
             };
 
             Ok(Expr::Numeric {
@@ -355,16 +379,17 @@ fn parse_unary(
                 typ: Type::Int,
             })
         }
-        _ => parse_suffix_op(context, tokens, input),
+        _ => parse_suffix_op(context, tokens, filename, input),
     }
 }
 
 fn parse_multiplicative(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_unary(context, tokens, input)?;
+    let mut expr = parse_unary(context, tokens, filename, input)?;
     loop {
         match tokens.peek() {
             Some(Token {
@@ -373,7 +398,7 @@ fn parse_multiplicative(
             }) => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_unary(context, tokens, input)?);
+                let 右辺 = decay_if_arr(parse_unary(context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Mul,
                     op_pos: *op_pos,
@@ -388,7 +413,7 @@ fn parse_multiplicative(
             }) => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_unary(context, tokens, input)?);
+                let 右辺 = decay_if_arr(parse_unary(context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Div,
                     op_pos: *op_pos,
@@ -486,9 +511,10 @@ fn subtract(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr>
 fn parse_additive(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_multiplicative(context, tokens, input)?;
+    let mut expr = parse_multiplicative(context, tokens, filename, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -498,7 +524,7 @@ fn parse_additive(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_multiplicative(context, tokens, input)?);
+                let 右辺 = decay_if_arr(parse_multiplicative(context, tokens, filename, input)?);
                 let message = format!(
                     "左辺の型が {:?}、右辺の型が {:?} なので、足し合わせることができません",
                     左辺.typ(),
@@ -507,6 +533,7 @@ fn parse_additive(
                 expr = add(左辺, 右辺, *op_pos).ok_or(AppError {
                     message,
                     input: input.to_string(),
+                    filename: filename.to_string(),
                     pos: *op_pos,
                 })?;
             }
@@ -516,7 +543,7 @@ fn parse_additive(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_multiplicative(context, tokens, input)?);
+                let 右辺 = decay_if_arr(parse_multiplicative(context, tokens, filename, input)?);
                 let message = format!(
                     "左辺の型が {:?}、右辺の型が {:?} なので、引き算できません",
                     左辺.typ(),
@@ -526,6 +553,7 @@ fn parse_additive(
                 expr = subtract(左辺, 右辺, *op_pos).ok_or(AppError {
                     message,
                     input: input.to_string(),
+                    filename: filename.to_string(),
                     pos: *op_pos,
                 })?;
             }
@@ -539,9 +567,10 @@ fn parse_additive(
 fn parse_relational(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_additive(context, tokens, input)?;
+    let mut expr = parse_additive(context, tokens, filename, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -551,7 +580,7 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(context, tokens, input)?);
+                let 右辺 = decay_if_arr(parse_additive(context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThan,
                     op_pos: *op_pos,
@@ -566,7 +595,7 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(context, tokens, input)?);
+                let 右辺 = decay_if_arr(parse_additive(context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThanOrEqual,
                     op_pos: *op_pos,
@@ -581,7 +610,7 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(context, tokens, input)?);
+                let 右辺 = decay_if_arr(parse_additive(context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThan, // ここを逆転させ、
                     op_pos: *op_pos,
@@ -596,7 +625,7 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(context, tokens, input)?);
+                let 右辺 = decay_if_arr(parse_additive(context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThanOrEqual, // ここを逆転させ、
                     op_pos: *op_pos,
@@ -615,9 +644,10 @@ fn parse_relational(
 fn parse_equality(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_relational(context, tokens, input)?;
+    let mut expr = parse_relational(context, tokens, filename, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -627,7 +657,7 @@ fn parse_equality(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_relational(context, tokens, input)?);
+                let 右辺 = decay_if_arr(parse_relational(context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Equal,
                     op_pos: *op_pos,
@@ -642,7 +672,7 @@ fn parse_equality(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_relational(context, tokens, input)?);
+                let 右辺 = decay_if_arr(parse_relational(context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::NotEqual,
                     op_pos: *op_pos,
@@ -661,9 +691,10 @@ fn parse_equality(
 pub fn parse_expr(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let expr = parse_equality(context, tokens, input)?;
+    let expr = parse_equality(context, tokens, filename, input)?;
     let tok = tokens.peek().unwrap();
     match tok {
         Token {
@@ -672,7 +703,7 @@ pub fn parse_expr(
         } => {
             tokens.next();
             let 左辺 = decay_if_arr(expr);
-            let 右辺 = decay_if_arr(parse_expr(context, tokens, input)?);
+            let 右辺 = decay_if_arr(parse_expr(context, tokens, filename, input)?);
             Ok(Expr::BinaryExpr {
                 op: BinaryOp::Assign,
                 op_pos: *op_pos,
