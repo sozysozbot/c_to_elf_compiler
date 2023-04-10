@@ -189,6 +189,9 @@ check 4 "int main() { char a; return sizeof(a+a); }"
 
 check 2 "int main() { return sizeof(\"a\"); }"
 
+# comment
+check 8 "int main() { return 8; } // foo bar"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

@@ -133,7 +133,23 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
             }
             '/' => {
                 iter.next();
-                ans.push(Token { tok: Tok::Div, pos });
+                match iter.peek() {
+                    Some((_, '*')) => todo!("block comment"),
+                    Some((_, '/')) => {
+                        iter.next();
+                        while let Some(&(_, c)) = iter.peek() {
+                            match c {
+                                '\n' => break,
+                                _ => {
+                                    iter.next();
+                                }
+                            }
+                        }
+                    }
+                    _ => {
+                        ans.push(Token { tok: Tok::Div, pos });
+                    }
+                }
             }
             '(' => {
                 iter.next();
