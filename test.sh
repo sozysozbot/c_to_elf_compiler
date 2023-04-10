@@ -189,8 +189,11 @@ check 4 "int main() { char a; return sizeof(a+a); }"
 
 check 2 "int main() { return sizeof(\"a\"); }"
 
-# comment
+# single-line comment
 check 8 "int main() { return 8; } // foo bar"
+MULTI=$'int main() // foo\n{ // bar\n  return 8; // baz\n} // quux\n'
+echo "$MULTI"
+check 8 "$MULTI"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then
