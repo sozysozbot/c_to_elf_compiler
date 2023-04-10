@@ -15,13 +15,19 @@ use c_to_elf_compiler::tokenize;
 use c_to_elf_compiler::Buf;
 
 fn main() -> std::io::Result<()> {
-    let input = std::env::args().nth(1).expect("入力が与えられていません");
+    let filename = std::env::args()
+        .nth(1)
+        .expect("ファイル名が与えられていません");
+    let mut input = std::fs::read_to_string(&filename)?;
+    if !input.ends_with('\n') {
+        input.push('\n');
+    }
 
-    let tokens = tokenize::tokenize(&input).unwrap();
+    let tokens = tokenize::tokenize(&input, &filename).unwrap();
 
     let file = std::fs::File::create("a.out")?;
     let mut writer = std::io::BufWriter::new(file);
-    match parse_and_codegen(&tokens, &input) {
+    match parse_and_codegen(&tokens, &input, &filename) {
         Ok(buf) => {
             writer.write_all(&buf)?;
         }
@@ -34,7 +40,7 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError> {
+fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Vec<u8>, AppError> {
     let mut tokens = tokens.iter().peekable();
     let function_declarations: HashMap<String, FunctionSignature> = [
         (
@@ -72,7 +78,8 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
             .map(|(name, signature)| (name, SymbolDeclaration::Func(signature))),
     );
 
-    let function_definitions = toplevel::parse(&mut global_declarations, &mut tokens, input)?;
+    let function_definitions =
+        toplevel::parse(&mut global_declarations, &mut tokens, filename, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let mut buf = Buf::from(&tiny[0..0x78]);
@@ -104,7 +111,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
 
     let entry: FunctionDefinition = {
         // スタートアップ処理はここに C のソースコードとして実装
-        let tokens = tokenize::tokenize("int __start() { __throw main(); }").unwrap();
+        let tokens = tokenize::tokenize("int __start() { __throw main(); }", filename).unwrap();
         let mut tokens = tokens.iter().peekable();
         if let ToplevelDefinition::Func(entry) = toplevel::parse_toplevel_definition(
             &[(
@@ -118,6 +125,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str) -> Result<Vec<u8>, AppError>
             .into_iter()
             .collect(),
             &mut tokens,
+            filename,
             input,
         )? {
             entry

@@ -7,7 +7,11 @@ use crate::{
 
 use super::toplevel::Type;
 
-pub fn parse_type(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Type, AppError> {
+pub fn parse_type(
+    tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
+    input: &str,
+) -> Result<Type, AppError> {
     let mut typ = match tokens.peek().unwrap() {
         Token { tok: Tok::Int, .. } => {
             tokens.next().unwrap();
@@ -21,6 +25,7 @@ pub fn parse_type(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Typ
             return Err(AppError {
                 message: "型名でありません".to_string(),
                 input: input.to_string(),
+                filename: filename.to_string(),
                 pos: *pos,
             })
         }

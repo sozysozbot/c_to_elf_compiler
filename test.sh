@@ -14,7 +14,7 @@ check_inner() {
   stdout_expected="$3"
   set -u
 
-  (cd $TMPDIR && ../../target/debug/c_to_elf_compiler "$input")
+  (cd $TMPDIR && ../../target/debug/c_to_elf_compiler <(echo "$input"))
   chmod 755 $TMPDIR/a.out
   set +e
   stdout_actual=$(./run-on-linux.sh $TMPDIR/a.out)

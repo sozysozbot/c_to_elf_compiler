@@ -13,7 +13,7 @@ use super::typ::parse_type;
 fn parse_test() {
     use crate::tokenize::tokenize;
     let input = "5 - 3;";
-    let tokens = tokenize(input).unwrap();
+    let tokens = tokenize(input, "test.c").unwrap();
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
         parse_statement(
@@ -22,6 +22,7 @@ fn parse_test() {
                 global_symbol_declarations: HashMap::new(),
             },
             &mut tokens,
+            "test.c",
             input
         )
         .unwrap(),
@@ -48,6 +49,7 @@ fn parse_test() {
 fn parse_statement(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<Statement, AppError> {
     let tok = tokens.peek().unwrap();
@@ -56,7 +58,7 @@ fn parse_statement(
             tok: Tok::Throw, ..
         } => {
             tokens.next();
-            let expr = Box::new(parse_expr(context, tokens, input)?);
+            let expr = Box::new(parse_expr(context, tokens, filename, input)?);
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {
                 Token {
@@ -70,6 +72,7 @@ fn parse_statement(
                     return Err(AppError {
                         message: "期待されたセミコロンが来ませんでした".to_string(),
                         input: input.to_string(),
+                        filename: filename.to_string(),
                         pos: tok.pos,
                     })
                 }
@@ -83,7 +86,7 @@ fn parse_statement(
             tok: Tok::Return, ..
         } => {
             tokens.next();
-            let expr = Box::new(parse_expr(context, tokens, input)?);
+            let expr = Box::new(parse_expr(context, tokens, filename, input)?);
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {
                 Token {
@@ -97,6 +100,7 @@ fn parse_statement(
                     return Err(AppError {
                         message: "期待されたセミコロンが来ませんでした".to_string(),
                         input: input.to_string(),
+                        filename: filename.to_string(),
                         pos: tok.pos,
                     })
                 }
@@ -120,11 +124,12 @@ fn parse_statement(
                     return Err(AppError {
                         message: "期待された開き括弧が来ませんでした".to_string(),
                         input: input.to_string(),
+                        filename: filename.to_string(),
                         pos: tok.pos,
                     })
                 }
             }
-            let cond = Box::new(parse_expr(context, tokens, input)?);
+            let cond = Box::new(parse_expr(context, tokens, filename, input)?);
 
             let tok = tokens.peek().unwrap();
             match tok {
@@ -138,16 +143,17 @@ fn parse_statement(
                     return Err(AppError {
                         message: "期待された閉じ括弧が来ませんでした".to_string(),
                         input: input.to_string(),
+                        filename: filename.to_string(),
                         pos: tok.pos,
                     })
                 }
             }
-            let then = Box::new(parse_statement(context, tokens, input)?);
+            let then = Box::new(parse_statement(context, tokens, filename, input)?);
             let tok = tokens.peek().unwrap();
             let else_ = match tok {
                 Token { tok: Tok::Else, .. } => {
                     tokens.next();
-                    Some(Box::new(parse_statement(context, tokens, input)?))
+                    Some(Box::new(parse_statement(context, tokens, filename, input)?))
                 }
                 _ => None,
             };
@@ -165,19 +171,21 @@ fn parse_statement(
             tokens.next();
             satisfy(
                 tokens,
+                filename,
                 input,
                 |tok| tok == &Tok::開き丸括弧,
                 "期待された開き括弧が来ませんでした",
             )?;
-            let cond = Box::new(parse_expr(context, tokens, input)?);
+            let cond = Box::new(parse_expr(context, tokens, filename, input)?);
 
             satisfy(
                 tokens,
+                filename,
                 input,
                 |tok| tok == &Tok::閉じ丸括弧,
                 "期待された閉じ括弧が来ませんでした",
             )?;
-            let body = Box::new(parse_statement(context, tokens, input)?);
+            let body = Box::new(parse_statement(context, tokens, filename, input)?);
             Ok(Statement::While {
                 cond,
                 body,
@@ -188,6 +196,7 @@ fn parse_statement(
             tokens.next();
             satisfy(
                 tokens,
+                filename,
                 input,
                 |tok| tok == &Tok::開き丸括弧,
                 "期待された開き括弧が来ませんでした",
@@ -198,10 +207,11 @@ fn parse_statement(
                     tok: Tok::Semicolon,
                     ..
                 } => None,
-                _ => Some(Box::new(parse_expr(context, tokens, input)?)),
+                _ => Some(Box::new(parse_expr(context, tokens, filename, input)?)),
             };
             satisfy(
                 tokens,
+                filename,
                 input,
                 |tok| tok == &Tok::Semicolon,
                 "期待されたセミコロンが来ませんでした",
@@ -212,10 +222,11 @@ fn parse_statement(
                     tok: Tok::Semicolon,
                     ..
                 } => None,
-                _ => Some(Box::new(parse_expr(context, tokens, input)?)),
+                _ => Some(Box::new(parse_expr(context, tokens, filename, input)?)),
             };
             satisfy(
                 tokens,
+                filename,
                 input,
                 |tok| tok == &Tok::Semicolon,
                 "期待されたセミコロンが来ませんでした",
@@ -226,15 +237,16 @@ fn parse_statement(
                     tok: Tok::閉じ丸括弧,
                     ..
                 } => None,
-                _ => Some(Box::new(parse_expr(context, tokens, input)?)),
+                _ => Some(Box::new(parse_expr(context, tokens, filename, input)?)),
             };
             satisfy(
                 tokens,
+                filename,
                 input,
                 |tok| tok == &Tok::閉じ丸括弧,
                 "期待された閉じ括弧が来ませんでした",
             )?;
-            let body = Box::new(parse_statement(context, tokens, input)?);
+            let body = Box::new(parse_statement(context, tokens, filename, input)?);
             Ok(Statement::For {
                 init,
                 cond,
@@ -255,6 +267,7 @@ fn parse_statement(
                         return Err(AppError {
                             message: "期待された閉じ波括弧が来ませんでした".to_string(),
                             input: input.to_string(),
+                            filename: filename.to_string(),
                             pos: input.len(),
                         })
                     }
@@ -266,7 +279,7 @@ fn parse_statement(
 
                         break;
                     }
-                    _ => statements.push(parse_statement(context, tokens, input)?),
+                    _ => statements.push(parse_statement(context, tokens, filename, input)?),
                 }
             }
             Ok(Statement::Block {
@@ -275,10 +288,11 @@ fn parse_statement(
             })
         }
         _ => {
-            let expr = Box::new(parse_expr(context, tokens, input)?);
+            let expr = Box::new(parse_expr(context, tokens, filename, input)?);
             let semicolon_pos = tokens.peek().unwrap().pos;
             satisfy(
                 tokens,
+                filename,
                 input,
                 |tok| tok == &Tok::Semicolon,
                 "期待されたセミコロンが来ませんでした",
@@ -291,7 +305,12 @@ fn parse_statement(
     }
 }
 
-fn consume_num(tokens: &mut Peekable<Iter<Token>>, input: &str, msg: &str) -> Result<u8, AppError> {
+fn consume_num(
+    tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
+    input: &str,
+    msg: &str,
+) -> Result<u8, AppError> {
     match tokens.peek().unwrap() {
         Token {
             tok: Tok::Num(n), ..
@@ -302,6 +321,7 @@ fn consume_num(tokens: &mut Peekable<Iter<Token>>, input: &str, msg: &str) -> Re
         Token { pos, .. } => Err(AppError {
             message: msg.to_string(),
             input: input.to_string(),
+            filename: filename.to_string(),
             pos: *pos,
         }),
     }
@@ -309,6 +329,7 @@ fn consume_num(tokens: &mut Peekable<Iter<Token>>, input: &str, msg: &str) -> Re
 
 fn parse_角括弧に包まれた数の列(
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
     typ: &mut Type,
 ) -> Result<(), AppError> {
@@ -319,9 +340,10 @@ fn parse_角括弧に包まれた数の列(
     } = tokens.peek().unwrap()
     {
         tokens.next();
-        let s = consume_num(tokens, input, "開き角括弧の後に数がない")?;
+        let s = consume_num(tokens, filename, input, "開き角括弧の後に数がない")?;
         satisfy(
             tokens,
+            filename,
             input,
             |tok| tok == &Tok::閉じ角括弧,
             "数の後に閉じ角括弧がない",
@@ -339,20 +361,22 @@ fn parse_角括弧に包まれた数の列(
 
 fn parse_type_and_identifier(
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<(Type, String), AppError> {
-    let mut typ = parse_type(tokens, input)?;
+    let mut typ = parse_type(tokens, filename, input)?;
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Identifier(ident),
             ..
         } => {
-            parse_角括弧に包まれた数の列(tokens, input, &mut typ)?;
+            parse_角括弧に包まれた数の列(tokens, filename, input, &mut typ)?;
             Ok((typ, ident.clone()))
         }
         Token { pos, .. } => Err(AppError {
             message: "「型と識別子」をパースできません".to_string(),
             input: input.to_string(),
+            filename: filename.to_string(),
             pos: *pos,
         }),
     }
@@ -442,6 +466,7 @@ pub struct Context {
 fn after_param_list(
     previous_global_symbol_declarations: &HashMap<String, SymbolDeclaration>,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
     params: Vec<(Type, String)>,
     pos: usize,
@@ -455,9 +480,9 @@ fn after_param_list(
         } => {
             tokens.next();
             let mut local_var_declarations = HashMap::new();
-            while let Some((local_var_type, local_var_name)) =
-                recover(tokens, |tokens| parse_type_and_identifier(tokens, input))?
-            {
+            while let Some((local_var_type, local_var_name)) = recover(tokens, |tokens| {
+                parse_type_and_identifier(tokens, filename, input)
+            })? {
                 match tokens.peek().unwrap() {
                     Token {
                         tok: Tok::Semicolon,
@@ -472,6 +497,7 @@ fn after_param_list(
                                 "関数内の変数宣言で、型名と識別子の後にセミコロン以外が来ました"
                                     .to_string(),
                             input: input.to_string(),
+                            filename: filename.to_string(),
                             pos: *pos,
                         })
                     }
@@ -485,6 +511,7 @@ fn after_param_list(
                         return Err(AppError {
                             message: "期待された閉じ波括弧が来ませんでした".to_string(),
                             input: input.to_string(),
+                            filename: filename.to_string(),
                             pos: input.len(),
                         })
                     }
@@ -522,6 +549,7 @@ fn after_param_list(
                                 global_symbol_declarations,
                             },
                             tokens,
+                            filename,
                             input,
                         )?)
                     }
@@ -540,6 +568,7 @@ fn after_param_list(
         Token { pos, .. } => Err(AppError {
             message: "仮引数リストの後に、開き波括弧以外のトークンが来ました".to_string(),
             input: input.to_string(),
+            filename: filename.to_string(),
             pos: *pos,
         }),
     }
@@ -548,9 +577,10 @@ fn after_param_list(
 pub fn parse_toplevel_definition(
     previous_declarations: &HashMap<String, SymbolDeclaration>,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<ToplevelDefinition, AppError> {
-    let mut return_type = parse_type(tokens, input)?;
+    let mut return_type = parse_type(tokens, filename, input)?;
     match tokens.next().unwrap() {
         Token {
             tok: Tok::Identifier(ident),
@@ -573,6 +603,7 @@ pub fn parse_toplevel_definition(
                         return Ok(ToplevelDefinition::Func(after_param_list(
                             previous_declarations,
                             tokens,
+                            filename,
                             input,
                             params,
                             *pos,
@@ -581,7 +612,7 @@ pub fn parse_toplevel_definition(
                         )?));
                     }
                     _ => {
-                        let param = parse_type_and_identifier(tokens, input)?;
+                        let param = parse_type_and_identifier(tokens,filename, input)?;
                         params.push(param);
                     }
                 }
@@ -596,6 +627,7 @@ pub fn parse_toplevel_definition(
                             return Ok(ToplevelDefinition::Func(after_param_list(
                                 previous_declarations,
                                 tokens,
+                                filename,
                                 input,
                                 params,
                                 *pos,
@@ -607,13 +639,14 @@ pub fn parse_toplevel_definition(
                             tok: Tok::Comma, ..
                         } => {
                             tokens.next();
-                            let param = parse_type_and_identifier(tokens, input)?;
+                            let param = parse_type_and_identifier(tokens, filename, input)?;
                             params.push(param);
                         }
                         _ => {
                             break Err(AppError {
                                 message: "閉じ丸括弧かカンマが期待されていました".to_string(),
                                 input: input.to_string(),
+                                filename: filename.to_string(),
                                 pos: *open_pos + 1,
                             })
                         }
@@ -631,20 +664,22 @@ pub fn parse_toplevel_definition(
                 tok: Tok::開き角括弧,
                 ..
             } => {
-                parse_角括弧に包まれた数の列(tokens, input, &mut return_type)?;
-                satisfy(tokens, input, |t| *t == Tok::Semicolon, "グローバルな配列宣言の後のセミコロンが期待されていました")?;
+                parse_角括弧に包まれた数の列(tokens, filename,input, &mut return_type)?;
+                satisfy(tokens,filename, input, |t| *t == Tok::Semicolon, "グローバルな配列宣言の後のセミコロンが期待されていました")?;
                 Ok(ToplevelDefinition::GVar(GlobalVariableDefinition { name: ident.to_string(), typ: return_type }))
             }
             _ => Err(AppError {
                 message: "トップレベルに識別子がありますが、その後に来たものが「関数引数の丸括弧」でも「グローバル変数定義を終わらせるセミコロン」でも「グローバル変数として配列を定義するための開き角括弧」でもありません"
                     .to_string(),
                 input: input.to_string(),
+                filename: filename.to_string(),
                 pos: *pos + 1,
             }),
         },
         Token { pos, .. } => Err(AppError {
             message: "トップレベルが識別子でないもので始まっています".to_string(),
             input: input.to_string(),
+            filename: filename.to_string(),
             pos: *pos + 1,
         }),
     }
@@ -653,11 +688,12 @@ pub fn parse_toplevel_definition(
 pub fn parse(
     global_declarations: &mut HashMap<String, SymbolDeclaration>,
     tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
     input: &str,
 ) -> Result<Vec<FunctionDefinition>, AppError> {
     let mut function_definitions: Vec<FunctionDefinition> = vec![];
     while tokens.peek().is_some() {
-        let new_def = parse_toplevel_definition(global_declarations, tokens, input)?;
+        let new_def = parse_toplevel_definition(global_declarations, tokens, filename, input)?;
         match new_def {
             ToplevelDefinition::Func(new_def) => {
                 let (name, signature) = new_def.clone().into();

@@ -4,7 +4,7 @@ use crate::token::*;
 #[test]
 fn tokenize_test() {
     assert_eq!(
-        tokenize("5 - 3").unwrap(),
+        tokenize("5 - 3", "test.c").unwrap(),
         vec![
             Token {
                 tok: Tok::Num(5),
@@ -23,7 +23,7 @@ fn tokenize_test() {
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
+pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
     let mut ans = vec![];
     let mut iter = input.chars().enumerate().peekable();
     while let Some(&(pos, c)) = iter.peek() {
@@ -48,7 +48,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                     pos,
                 });
             }
-            ' ' => {
+            ' ' | '\n' | '\r' | '\t' => {
                 iter.next();
                 continue;
             }
@@ -181,6 +181,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                         return Err(AppError {
                             message: "`!`演算子はありません".to_string(),
                             input: input.to_string(),
+                            filename: filename.to_string(),
                             pos,
                         })
                     }
@@ -222,6 +223,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                 tok: Tok::Num(parse_num(&mut iter).map_err(|message| AppError {
                     message,
                     input: input.to_string(),
+                    filename: filename.to_string(),
                     pos,
                 })?),
                 pos,
@@ -247,6 +249,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
                         u32::from(c)
                     ),
                     input: input.to_string(),
+                    filename: filename.to_string(),
                     pos,
                 })
             }
