@@ -134,7 +134,23 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
             '/' => {
                 iter.next();
                 match iter.peek() {
-                    Some((_, '*')) => todo!("block comment"),
+                    Some((_, '*')) => {
+                        iter.next();
+                        loop {
+                            match iter.peek() {
+                                Some((_, '*')) => {
+                                    iter.next();
+                                    if let Some((_, '/')) = iter.peek() {
+                                        iter.next();
+                                        break;
+                                    }
+                                }
+                                _ => {
+                                    iter.next();
+                                }
+                            }
+                        }
+                    }
                     Some((_, '/')) => {
                         iter.next();
                         while let Some(&(_, c)) = iter.peek() {
