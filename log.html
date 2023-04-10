@@ -3302,6 +3302,27 @@ pub fn no_decay_even_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
 		<div class="content">じゃあもうこれで終わりでいいか。まあ一応『バックスラッシュを見たらエラーを吐く』ぐらいはやってもいい</div>
 	</div>
 </div>
+<h3 class="date">2023年4月3日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer"><img alt="tkr" class="icon" src="icons/tkr.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_2db73c819b5c8c2b0df7f84b2cbe9ef4').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_2db73c819b5c8c2b0df7f84b2cbe9ef4').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/kgtkr" target="_blank" rel="noopener noreferrer">tkr</a></span><a id="permalink_2db73c819b5c8c2b0df7f84b2cbe9ef4" href="#permalink_2db73c819b5c8c2b0df7f84b2cbe9ef4" class="permalink">¶</a>
+		<div class="content">さすがにそろそろ再開します</div>
+		<div class="content">複数行入力、雑に実装してテストケース修正するだけかな</div>
+		<div class="content">テストケースはプロセス置換で修正、トークナイザで改行などを無視するようにした</div>
+		<div class="content">エラー位置の表示は filename:line:col の方がVSCodeのサポートとか考えると便利なのでこっちでいきます</div>
+		<div class="content">filenameのバケツリレー大変だ</div>
+		<div class="content">ちゃんと動いていそう</div>
+		<pre><code class="language-c">int main() {
+    b = 1;
+}
+</code></pre>
+		<pre><code class="language-">test.c:2:5
+    b = 1;
+    ^ 識別子 b は定義されておらず、型が分かりません
+</code></pre>
+	</div>
+</div>
 
 <div style="font-size: 70%; display: flex; justify-content: center;">
 	<div>
