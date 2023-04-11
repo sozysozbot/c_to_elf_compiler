@@ -189,6 +189,19 @@ check 4 "int main() { char a; return sizeof(a+a); }"
 
 check 2 "int main() { return sizeof(\"a\"); }"
 
+# single-line comment
+check 8 "int main() { return 8; } // foo bar"
+TESTCASE=$'int main() // foo\n{ // bar\n  return 8; // baz\n} // quux\n'
+echo "$TESTCASE"
+check 8 "$TESTCASE"
+
+# multi-line comment
+check 8 "int main() { return /*foo*/ 8; }"
+check 8 "int main() { return /*/ */ 8; }"
+TESTCASE2=$'int main() /* foo\n */ { // bar\n  return 8; // baz\n} // quux\n'
+echo "$TESTCASE2"
+check 8 "$TESTCASE2"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

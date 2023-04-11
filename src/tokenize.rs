@@ -133,7 +133,47 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
             }
             '/' => {
                 iter.next();
-                ans.push(Token { tok: Tok::Div, pos });
+                match iter.peek() {
+                    Some((_, '*')) => {
+                        iter.next();
+                        loop {
+                            match iter.peek() {
+                                Some((_, '*')) => {
+                                    iter.next();
+                                    if let Some((_, '/')) = iter.peek() {
+                                        iter.next();
+                                        break;
+                                    }
+                                }
+                                Some(_) => {
+                                    iter.next();
+                                }
+                                None => {
+                                    return Err(AppError {
+                                        message: "コメントが終了する前にEOFが来ました".to_string(),
+                                        input: input.to_string(),
+                                        filename: filename.to_string(),
+                                        pos,
+                                    })
+                                }
+                            }
+                        }
+                    }
+                    Some((_, '/')) => {
+                        iter.next();
+                        while let Some(&(_, c)) = iter.peek() {
+                            match c {
+                                '\n' => break,
+                                _ => {
+                                    iter.next();
+                                }
+                            }
+                        }
+                    }
+                    _ => {
+                        ans.push(Token { tok: Tok::Div, pos });
+                    }
+                }
             }
             '(' => {
                 iter.next();
