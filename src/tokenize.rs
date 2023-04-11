@@ -145,8 +145,16 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                                         break;
                                     }
                                 }
-                                _ => {
+                                Some(_) => {
                                     iter.next();
+                                }
+                                None => {
+                                    return Err(AppError {
+                                        message: "コメントが終了する前にEOFが来ました".to_string(),
+                                        input: input.to_string(),
+                                        filename: filename.to_string(),
+                                        pos,
+                                    })
                                 }
                             }
                         }
