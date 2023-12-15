@@ -1,335 +1,149 @@
 #![warn(clippy::pedantic)]
-use std::{io::Write, iter::Peekable, slice::Iter};
+use std::collections::HashMap;
+use std::io::Write;
 
-use apperror::AppError;
-use tokenize::{Token, TokenPayload};
+use c_to_elf_compiler::apperror::AppError;
+use c_to_elf_compiler::codegen;
+use c_to_elf_compiler::parse::toplevel;
+use c_to_elf_compiler::parse::toplevel::FunctionDefinition;
+use c_to_elf_compiler::parse::toplevel::FunctionSignature;
+use c_to_elf_compiler::parse::toplevel::SymbolDeclaration;
+use c_to_elf_compiler::parse::toplevel::ToplevelDefinition;
+use c_to_elf_compiler::parse::toplevel::Type;
+use c_to_elf_compiler::token::Token;
+use c_to_elf_compiler::tokenize;
+use c_to_elf_compiler::Buf;
 
 fn main() -> std::io::Result<()> {
-    let input = std::env::args().nth(1).expect("入力が与えられていません");
+    let filename = std::env::args()
+        .nth(1)
+        .expect("ファイル名が与えられていません");
+    let mut input = std::fs::read_to_string(&filename)?;
+    if !input.ends_with('\n') {
+        input.push('\n');
+    }
 
-    let tokens = tokenize::tokenize(&input).unwrap();
+    let tokens = tokenize::tokenize(&input, &filename).unwrap();
 
     let file = std::fs::File::create("a.out")?;
     let mut writer = std::io::BufWriter::new(file);
-    if let Err(e) = parse_and_codegen(&mut writer, &tokens, &input) {
-        eprintln!("{}", e);
-        std::process::exit(1);
+    match parse_and_codegen(&tokens, &input, &filename) {
+        Ok(buf) => {
+            writer.write_all(&buf)?;
+        }
+        Err(e) => {
+            eprintln!("{e}");
+            std::process::exit(1);
+        }
     }
+
     Ok(())
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-enum BinaryOp {
-    Add,
-    Sub,
-    Mul,
-    Div,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-enum Expr {
-    BinaryExpr {
-        op: BinaryOp,
-        op_pos: usize,
-        左辺: Box<Expr>,
-        右辺: Box<Expr>,
-    },
-    Numeric {
-        val: u8,
-        pos: usize,
-    },
-}
-
-#[test]
-fn parse_test() {
-    use crate::tokenize::tokenize;
-    let input = "5 - 3";
-    let tokens = tokenize(input).unwrap();
+fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Vec<u8>, AppError> {
     let mut tokens = tokens.iter().peekable();
-    assert_eq!(
-        parse(&mut tokens, input).unwrap(),
-        Expr::BinaryExpr {
-            op: BinaryOp::Sub,
-            op_pos: 2,
-            左辺: Box::new(Expr::Numeric { val: 5, pos: 0 }),
-            右辺: Box::new(Expr::Numeric { val: 3, pos: 4 })
-        }
+    let function_declarations: HashMap<String, FunctionSignature> = [
+        (
+            "__builtin_three".to_string(),
+            FunctionSignature {
+                params: Vec::new(),
+                pos: 0,
+                return_type: Type::Int,
+            },
+        ),
+        (
+            "__builtin_putchar".to_string(),
+            FunctionSignature {
+                params: vec![Type::Int],
+                pos: 0,
+                return_type: Type::Int,
+            },
+        ),
+        (
+            "__builtin_alloc4".to_string(),
+            FunctionSignature {
+                params: vec![Type::Int, Type::Int, Type::Int, Type::Int],
+                pos: 0,
+                return_type: Type::Ptr(Box::new(Type::Int)),
+            },
+        ),
+    ]
+    .into_iter()
+    .collect();
+
+    let mut global_declarations = HashMap::new();
+    global_declarations.extend(
+        function_declarations
+            .into_iter()
+            .map(|(name, signature)| (name, SymbolDeclaration::Func(signature))),
     );
-}
 
-fn parse_primary(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
-    match tokens.next().unwrap() {
-        Token {
-            payload: TokenPayload::Num(first),
-            pos,
-        } => {
-            let expr = Expr::Numeric {
-                val: *first,
-                pos: *pos,
-            };
-            Ok(expr)
-        }
-        Token {
-            payload: TokenPayload::開き丸括弧,
-            pos,
-        } => {
-            let expr = parse_additive(tokens, input)?;
-            match tokens.next().unwrap() {
-                Token {
-                    payload: TokenPayload::閉じ丸括弧,
-                    ..
-                } => Ok(expr),
-                _ => Err(AppError {
-                    message: "この開き丸括弧に対応する閉じ丸括弧がありません".to_string(),
-                    input: input.to_string(),
-                    pos: *pos,
-                }),
-            }
-        }
-        tok => Err(AppError {
-            message: "数値リテラルでも開き丸括弧でもないものが来ました".to_string(),
-            input: input.to_string(),
-            pos: tok.pos,
-        }),
-    }
-}
-
-fn parse_multiplicative(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
-    let mut expr = parse_primary(tokens, input)?;
-    loop {
-        match tokens.peek() {
-            Some(Token {
-                payload: TokenPayload::Mul,
-                pos: op_pos,
-            }) => {
-                tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_primary(tokens, input)?);
-                expr = Expr::BinaryExpr {
-                    op: BinaryOp::Mul,
-                    op_pos: *op_pos,
-                    左辺,
-                    右辺,
-                };
-            }
-            Some(Token {
-                payload: TokenPayload::Div,
-                pos: op_pos,
-            }) => {
-                tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_primary(tokens, input)?);
-                expr = Expr::BinaryExpr {
-                    op: BinaryOp::Div,
-                    op_pos: *op_pos,
-                    左辺,
-                    右辺,
-                };
-            }
-
-            _ => {
-                return Ok(expr);
-            }
-        }
-    }
-}
-
-fn parse_additive(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
-    let mut expr = parse_multiplicative(tokens, input)?;
-    loop {
-        let tok = tokens.peek().unwrap();
-        match tok {
-            Token {
-                payload: TokenPayload::Add,
-                pos: op_pos,
-            } => {
-                tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_multiplicative(tokens, input)?);
-                expr = Expr::BinaryExpr {
-                    op: BinaryOp::Add,
-                    op_pos: *op_pos,
-                    左辺,
-                    右辺,
-                }
-            }
-            Token {
-                payload: TokenPayload::Sub,
-                pos: op_pos,
-            } => {
-                tokens.next();
-                let 左辺 = Box::new(expr);
-                let 右辺 = Box::new(parse_multiplicative(tokens, input)?);
-                expr = Expr::BinaryExpr {
-                    op: BinaryOp::Sub,
-                    op_pos: *op_pos,
-                    左辺,
-                    右辺,
-                }
-            }
-            _ => {
-                return Ok(expr);
-            }
-        }
-    }
-}
-
-fn parse(tokens: &mut Peekable<Iter<Token>>, input: &str) -> Result<Expr, AppError> {
-    let expr = parse_additive(tokens, input)?;
-    let tok = tokens.peek().unwrap();
-    if tok.payload == TokenPayload::Eof {
-        Ok(expr)
-    } else {
-        Err(AppError {
-            message: "期待されたeofが来ませんでした".to_string(),
-            input: input.to_string(),
-            pos: tok.pos,
-        })
-    }
-}
-
-/*
-fn edi増加(n: u8) -> [u8; 3] {
-    [0x83, 0xc7, n]
-}
-
-fn edi減少(n: u8) -> [u8; 3] {
-    [0x83, 0xef, n]
-}
-
-fn 即値をプッシュ(n: u8) -> [u8; 2] {
-    [0x6a, n]
-}
-*/
-
-fn ediに代入(n: u8) -> [u8; 5] {
-    [0xbf, n, 0x00, 0x00, 0x00]
-}
-
-fn ediをプッシュ() -> [u8; 1] {
-    [0x57]
-}
-
-fn ediへとポップ() -> [u8; 1] {
-    [0x5f]
-}
-
-fn eaxへとポップ() -> [u8; 1] {
-    [0x58]
-}
-
-fn ediにeaxを足し合わせる() -> [u8; 2] {
-    [0x01, 0xc7]
-}
-
-fn ediからeaxを減じる() -> [u8; 2] {
-    [0x29, 0xc7]
-}
-
-fn ediをeax倍にする() -> [u8; 3] {
-    [0x0f, 0xaf, 0xf8]
-}
-
-fn eaxの符号ビットをedxへ拡張() -> [u8; 1] {
-    [0x99]
-}
-
-fn edx_eaxをediで割る_商はeaxに_余りはedxに() -> [u8; 2] {
-    [0xf7, 0xff]
-}
-
-fn eaxをプッシュ() -> [u8; 1] {
-    [0x50]
-}
-
-fn exprを評価してediレジスタへ(writer: &mut impl Write, expr: &Expr) {
-    match expr {
-        Expr::BinaryExpr {
-            op: BinaryOp::Add,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            exprを評価してediレジスタへ(writer, 左辺);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            writer.write_all(&eaxへとポップ()).unwrap();
-            writer.write_all(&ediへとポップ()).unwrap();
-            writer.write_all(&ediにeaxを足し合わせる()).unwrap();
-        }
-        Expr::BinaryExpr {
-            op: BinaryOp::Sub,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            exprを評価してediレジスタへ(writer, 左辺);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            writer.write_all(&eaxへとポップ()).unwrap();
-            writer.write_all(&ediへとポップ()).unwrap();
-            writer.write_all(&ediからeaxを減じる()).unwrap();
-        }
-        Expr::BinaryExpr {
-            op: BinaryOp::Mul,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            exprを評価してediレジスタへ(writer, 左辺);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            writer.write_all(&eaxへとポップ()).unwrap();
-            writer.write_all(&ediへとポップ()).unwrap();
-            writer.write_all(&ediをeax倍にする()).unwrap();
-        }
-
-        Expr::BinaryExpr {
-            op: BinaryOp::Div,
-            op_pos: _,
-            左辺,
-            右辺,
-        } => {
-            exprを評価してediレジスタへ(writer, 左辺);
-            writer.write_all(&ediをプッシュ()).unwrap();
-            exprを評価してediレジスタへ(writer, 右辺);
-            writer.write_all(&ediをプッシュ()).unwrap();
-
-            // 右辺を edi に、左辺を eax に入れる必要がある
-            writer.write_all(&ediへとポップ()).unwrap();
-            writer.write_all(&eaxへとポップ()).unwrap();
-
-            writer.write_all(&eaxの符号ビットをedxへ拡張()).unwrap();
-            writer.write_all(&edx_eaxをediで割る_商はeaxに_余りはedxに()).unwrap();
-
-            // 結果は eax レジスタに入るので、ediに移し替える
-            writer.write_all(&eaxをプッシュ()).unwrap();
-            writer.write_all(&ediへとポップ()).unwrap();
-        }
-        Expr::Numeric { val, pos: _ } => {
-            writer.write_all(&ediに代入(*val)).unwrap();
-        }
-    }
-}
-
-fn parse_and_codegen(
-    mut writer: &mut impl Write,
-    tokens: &[Token],
-    input: &str,
-) -> Result<(), AppError> {
-    let mut tokens = tokens.iter().peekable();
-    let expr = parse(&mut tokens, input)?;
+    let function_definitions =
+        toplevel::parse(&mut global_declarations, &mut tokens, filename, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
-    writer.write_all(&tiny[0..0x78]).unwrap();
-    exprを評価してediレジスタへ(&mut writer, &expr);
-    writer.write_all(&[0xb8, 0x3c, 0x00, 0x00, 0x00]).unwrap();
-    writer.write_all(&[0x0f, 0x05]).unwrap();
-    Ok(())
-}
-mod apperror;
+    let mut buf = Buf::from(&tiny[0..0x78]);
 
-mod tokenize;
+    let mut global_function_table: HashMap<String, u32> = HashMap::new();
+
+    let builtin_three_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
+    buf.append(codegen::builtin_three関数を生成());
+    global_function_table.insert("__builtin_three".to_string(), builtin_three_pos);
+
+    let builtin_putchar_pos =
+        u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
+    buf.append(codegen::builtin_putchar関数を生成());
+    global_function_table.insert("__builtin_putchar".to_string(), builtin_putchar_pos);
+
+    let builtin_alloc4_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
+    buf.append(codegen::builtin_alloc4関数を生成());
+    global_function_table.insert("__builtin_alloc4".to_string(), builtin_alloc4_pos);
+
+    let mut buf = buf;
+
+    for definition in function_definitions {
+        codegen::関数をコード生成しメインバッファとグローバル関数テーブルに挿入(
+            &mut global_function_table,
+            &mut buf,
+            &definition,
+        );
+    }
+
+    let entry: FunctionDefinition = {
+        // スタートアップ処理はここに C のソースコードとして実装
+        let tokens = tokenize::tokenize("int __start() { __throw main(); }", filename).unwrap();
+        let mut tokens = tokens.iter().peekable();
+        if let ToplevelDefinition::Func(entry) = toplevel::parse_toplevel_definition(
+            &[(
+                "main".to_string(),
+                SymbolDeclaration::Func(FunctionSignature {
+                    params: vec![],
+                    pos: 0,
+                    return_type: Type::Int,
+                }),
+            )]
+            .into_iter()
+            .collect(),
+            &mut tokens,
+            filename,
+            input,
+        )? {
+            entry
+        } else {
+            panic!("スタートアップ処理が関数定義の形で書かれていません")
+        }
+    };
+    let entry_pos = codegen::関数をコード生成しメインバッファとグローバル関数テーブルに挿入(
+        &mut global_function_table,
+        &mut buf,
+        &entry,
+    );
+
+    let mut buf = buf.to_vec();
+    // エントリポイント書き換え
+    let entry_pos_buf = entry_pos.to_le_bytes();
+    buf[0x18] = entry_pos_buf[0];
+    buf[0x19] = entry_pos_buf[1];
+
+    Ok(buf)
+}

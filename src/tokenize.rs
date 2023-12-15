@@ -1,120 +1,300 @@
 use crate::apperror::AppError;
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum TokenPayload {
-    Num(u8),
-    Add,
-    Sub,
-    Mul,
-    Div,
-    開き丸括弧,
-    閉じ丸括弧,
-    Eof,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Token {
-    pub payload: TokenPayload,
-    pub pos: usize,
-}
+use crate::token::*;
 
 #[test]
 fn tokenize_test() {
     assert_eq!(
-        tokenize("5 - 3").unwrap(),
+        tokenize("5 - 3", "test.c").unwrap(),
         vec![
             Token {
-                payload: TokenPayload::Num(5),
+                tok: Tok::Num(5),
                 pos: 0
             },
             Token {
-                payload: TokenPayload::Sub,
+                tok: Tok::Sub,
                 pos: 2
             },
             Token {
-                payload: TokenPayload::Num(3),
+                tok: Tok::Num(3),
                 pos: 4
-            },
-            Token {
-                payload: TokenPayload::Eof,
-                pos: 5
             }
         ]
     );
 }
 
-pub fn tokenize(input: &str) -> Result<Vec<Token>, AppError> {
+#[allow(clippy::too_many_lines)]
+pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
     let mut ans = vec![];
     let mut iter = input.chars().enumerate().peekable();
     while let Some(&(pos, c)) = iter.peek() {
         match c {
-            ' ' => {
+            '"' => {
+                iter.next();
+                let mut string_content = String::new();
+                loop {
+                    let (_, c) = iter
+                        .next()
+                        .unwrap_or_else(|| panic!("文字列リテラルが終了する前にEOFが来ました"));
+                    if c == '"' {
+                        break;
+                    } else if c == '\\' {
+                        panic!("エスケープシーケンスは未対応です");
+                    } else {
+                        string_content.push(c);
+                    }
+                }
+                ans.push(Token {
+                    tok: Tok::StringLiteral(string_content),
+                    pos,
+                });
+            }
+            ' ' | '\n' | '\r' | '\t' => {
                 iter.next();
                 continue;
             }
-            '+' => {
+            'a'..='z' | '_' => {
+                iter.next();
+                let mut ident = String::new();
+                ident.push(c);
+                while let Some(&(_, c)) = iter.peek() {
+                    match c {
+                        'a'..='z' | '0'..='9' | '_' => {
+                            iter.next();
+                            ident.push(c);
+                        }
+                        _ => break,
+                    }
+                }
+
+                let payload = match ident.as_str() {
+                    "__throw" => Tok::Throw,
+                    "return" => Tok::Return,
+                    "if" => Tok::If,
+                    "else" => Tok::Else,
+                    "while" => Tok::While,
+                    "for" => Tok::For,
+                    "int" => Tok::Int,
+                    "char" => Tok::Char,
+                    "sizeof" => Tok::Sizeof,
+                    _ => Tok::Identifier(ident),
+                };
+
+                ans.push(Token { tok: payload, pos });
+            }
+            ';' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::Add,
+                    tok: Tok::Semicolon,
                     pos,
                 });
             }
-            '-' => {
+            '{' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::Sub,
+                    tok: Tok::開き波括弧,
                     pos,
                 });
+            }
+            '}' => {
+                iter.next();
+                ans.push(Token {
+                    tok: Tok::閉じ波括弧,
+                    pos,
+                });
+            }
+            '[' => {
+                iter.next();
+                ans.push(Token {
+                    tok: Tok::開き角括弧,
+                    pos,
+                });
+            }
+            ']' => {
+                iter.next();
+                ans.push(Token {
+                    tok: Tok::閉じ角括弧,
+                    pos,
+                });
+            }
+            '+' => {
+                iter.next();
+                ans.push(Token { tok: Tok::Add, pos });
+            }
+            '-' => {
+                iter.next();
+                ans.push(Token { tok: Tok::Sub, pos });
             }
             '*' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::Mul,
+                    tok: Tok::Asterisk,
                     pos,
                 });
             }
             '/' => {
                 iter.next();
-                ans.push(Token {
-                    payload: TokenPayload::Div,
-                    pos,
-                });
+                match iter.peek() {
+                    Some((_, '*')) => {
+                        iter.next();
+                        loop {
+                            match iter.peek() {
+                                Some((_, '*')) => {
+                                    iter.next();
+                                    if let Some((_, '/')) = iter.peek() {
+                                        iter.next();
+                                        break;
+                                    }
+                                }
+                                Some(_) => {
+                                    iter.next();
+                                }
+                                None => {
+                                    return Err(AppError {
+                                        message: "コメントが終了する前にEOFが来ました".to_string(),
+                                        input: input.to_string(),
+                                        filename: filename.to_string(),
+                                        pos,
+                                    })
+                                }
+                            }
+                        }
+                    }
+                    Some((_, '/')) => {
+                        iter.next();
+                        while let Some(&(_, c)) = iter.peek() {
+                            match c {
+                                '\n' => break,
+                                _ => {
+                                    iter.next();
+                                }
+                            }
+                        }
+                    }
+                    _ => {
+                        ans.push(Token { tok: Tok::Div, pos });
+                    }
+                }
             }
             '(' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::開き丸括弧,
+                    tok: Tok::開き丸括弧,
                     pos,
                 });
             }
             ')' => {
                 iter.next();
                 ans.push(Token {
-                    payload: TokenPayload::閉じ丸括弧,
+                    tok: Tok::閉じ丸括弧,
                     pos,
                 });
             }
+            '=' => {
+                iter.next();
+                match iter.peek() {
+                    Some(&(pos, '=')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::Equal,
+                            pos,
+                        });
+                    }
+                    _ => {
+                        ans.push(Token {
+                            tok: Tok::Assign,
+                            pos,
+                        });
+                    }
+                }
+            }
+            '!' => {
+                iter.next();
+                match iter.peek() {
+                    Some(&(pos, '=')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::NotEqual,
+                            pos,
+                        });
+                    }
+                    _ => {
+                        return Err(AppError {
+                            message: "`!`演算子はありません".to_string(),
+                            input: input.to_string(),
+                            filename: filename.to_string(),
+                            pos,
+                        })
+                    }
+                }
+            }
+            '<' => {
+                iter.next();
+                match iter.peek() {
+                    Some(&(pos, '=')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::LessThanOrEqual,
+                            pos,
+                        });
+                    }
+                    _ => ans.push(Token {
+                        tok: Tok::LessThan,
+                        pos,
+                    }),
+                }
+            }
+            '>' => {
+                iter.next();
+                match iter.peek() {
+                    Some(&(pos, '=')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::GreaterThanOrEqual,
+                            pos,
+                        });
+                    }
+                    _ => ans.push(Token {
+                        tok: Tok::GreaterThan,
+                        pos,
+                    }),
+                }
+            }
             '0'..='9' => ans.push(Token {
-                payload: TokenPayload::Num(parse_num(&mut iter).map_err(|message| AppError {
+                tok: Tok::Num(parse_num(&mut iter).map_err(|message| AppError {
                     message,
                     input: input.to_string(),
+                    filename: filename.to_string(),
                     pos,
                 })?),
                 pos,
             }),
-            _ => {
+            ',' => {
+                iter.next();
+                ans.push(Token {
+                    tok: Tok::Comma,
+                    pos,
+                });
+            }
+            '&' => {
+                iter.next();
+                ans.push(Token {
+                    tok: Tok::Ampersand,
+                    pos,
+                });
+            }
+            c => {
                 return Err(AppError {
-                    message: "トークナイズできない不正な文字です".to_string(),
+                    message: format!(
+                        "{c} (U+{:04X}) はトークナイズできない不正な文字です",
+                        u32::from(c)
+                    ),
                     input: input.to_string(),
+                    filename: filename.to_string(),
                     pos,
                 })
             }
         }
     }
-    ans.push(Token {
-        payload: TokenPayload::Eof,
-        pos: input.len(),
-    });
     Ok(ans)
 }
 

@@ -558,3 +558,1484 @@ fn eaxをプッシュ() -> [u8; 1] {
 }
 ```
 hsjoihs「テストケースも足したし、これで『ステップ5：四則演算のできる言語の作成』が完了」
+
+$DATE「2022年10月31日（Discordにて）」
+hsjoihs「コードレビューお願いします」
+tkr「diff がでかくて見るのが大変で放置してた」
+hsjoihs「まあ再帰下降にする過程で全部書き直す羽目になりますからねぇ」
+tkr「わかるなぁ」
+tkr「そういえば、ログのページを生成するのも CI にしたい。えーと今は master ブランチの上の GitHub Pages を直に公開してるのか」
+hsjoihs「じゃあ step 8 の代わりに CI の整備とかお願いしていいですかね。本来の step 8 はコンパイラのソースコードをファイル分割して Makefile をセットアップするプロセスなんですけど、Rust で書いている我々にとっては既にそれは解決されているので」
+
+$DATE「2022年10月31日（GitHubにて）」
+tkr「これposどこにするか迷う 🤔」
+tkr「エラーメッセージ的にはここが正しそうだけど「unexpected token」的なエラーメッセージとどっちが分かりやすいんだろう」
+$source
+```rust
+                _ => Err(AppError {
+                    message: "この開き丸括弧に対応する閉じ丸括弧がありません".to_string(),
+                    input: input.to_string(),
+                    pos: *pos,
+```
+tkr「というのが気になったけど、大体よさそう」
+hsjoihs「まあ理想的には Rust みたいに「範囲」でエラーを持つ方がきれいですよね。まあ Rui 本はあんまりエラーに凝らない設計なので、あんま深く考えなくていいでしょう」
+tkr「あとは Peekable 使うかスライス使うかとか迷うなぁ」
+tkr「パーサのファイル分割とかはstep8？でやるかー」
+
+$DATE「2022年11月7日」
+tkr「そろそろやらなければ」
+tkr「単項演算子の実装はパーサー少し変更するだけっぽいので一瞬で終わった」
+tkr「色々テスト書いて終わり」
+tkr「今後 `-"x"` みたいな型エラー発生するコードを書いたときにエラーメッセージが微妙に分かりにくくなるのが気になるが」
+
+$DATE「2022年11月9日」
+hsjoihs「やるぞ」
+hsjoihs「比較演算子を実装。ここら辺は本当にやるだけだな」
+hsjoihs「関数が長くなりすぎて clippy が文句を言ってきているな。でもこれ過剰に分割しても読みやすくならないだろうし、#[allow(clippy::too_many_lines)] でお茶を濁そう」
+
+$DATE「2022年11月10日」
+tkr「CIの整備をします」
+tkr「github pagesの設定を修正してactionsからのアップロードみたいなのに変更する必要があるけど権限ないのでお願いします」
+tkr「やったことはコミットメッセージに」
+
+$DATE「2022年11月11日（CIの修正）」
+hsjoihs「tkr からプルリクが来ておるな」
+hsjoihs「CIの整備と、ファイル分割がされている。ありがたい。まずマージして、」
+hsjoihs「設定を変更して、えっと」
+hsjoihs「あーあれか、マージしてから設定を変更したせいで、この版まではデフォルトのgithub-pages アクションに基づいて生成されているのか」
+hsjoihs「じゃあ、もう一回コミットしたら tkr の書いた GitHub Action が走ってくれる？」
+hsjoihs「んー、Workflow details will appear here once your site has been deployed. と言われる」
+hsjoihs「Your site was last deployed to the github-pages environment by the pages build and deployment workflow. とのことだから、設定できてないな」
+hsjoihs「https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site 曰く、」
+$blockquote
+```
+If you already have a workflow to publish your site, you can skip this step. 
+
+GitHub Pages does not associate a specific workflow to the GitHub Pages settings. However, the GitHub Pages settings will link to the workflow run that most recently deployed your site.
+```
+hsjoihs「とのこと。つまり、Source: GitHub Actions とだけ出てそれ以上設定する画面がないという現状で問題ないっぽい」
+hsjoihs「次に、https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#creating-a-custom-github-actions-workflow-to-publish-your-site を見ると、」
+
+$blockquote
+```
+The general flow of a workflow is to:
+
+1. Trigger whenever there is a push to the default branch of the repository or whenever the workflow is run manually from the Actions tab.
+
+2. Use the actions/checkout action to check out the repository contents.
+    
+3. If required by your site, build any static site files.
+
+4. Use the actions/upload-pages-artifact action to upload the static files as an artifact.
+    
+5. If the workflow was triggered by a push to the default branch, use the actions/deploy-pages action to deploy the artifact. This step is skipped if the workflow was triggered by a pull request.
+```
+hsjoihs「と書いてある。tkr の書いてくれた workflows/docs.yaml には actions/checkout と actions/upload-pages-artifact が言及されている」
+
+hsjoihs「ふむ、The starter workflows use a deployment environment called github-pages. If your repository does not already include an environment called github-pages, the environment will be created automatically. と書いてある。名前を変えてみるか」
+hsjoihs「うまくいかない。 actions/deploy-pages action を足してみるか」
+hsjoihs「CI が落ちた。https://github.com/sozysozbot/c_to_elf_compiler/actions/runs/3438529083/jobs/5734705044 」
+$blockquote
+```
+Error: Error message: Unable to get ACTIONS_ID_TOKEN_REQUEST_URL env variable
+    at Function.<anonymous> (/home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/oidc-utils.js:71:1)
+    at Generator.next (<anonymous>)
+    at /home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/oidc-utils.js:8:1
+    at new Promise (<anonymous>)
+    at __webpack_modules__.8041.__awaiter (/home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/oidc-utils.js:4:1)
+    at Function.getIDToken (/home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/oidc-utils.js:57:1)
+    at Object.<anonymous> (/home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/core.js:315:1)
+    at Generator.next (<anonymous>)
+    at /home/runner/work/_actions/actions/deploy-pages/v1/webpack:/deploy-pages/node_modules/@actions/core/lib/core.js:27:1
+    at new Promise (<anonymous>)
+Error: Ensure GITHUB_TOKEN has permission "idToken: write".
+```
+hsjoihs「うーむ。とりあえず上手くいっていないので、せっかくバージョン管理されていることだし、上手くいっていたところまで強引に世界を差し戻すか？」
+hsjoihs「いや、https://github.com/jurliyuuri/cerke_online_alpha/blob/master/.github/workflows/deploy.yml のを転用して、gh-pages ブランチからページを生やすようにしよう」
+hsjoihs「えーと、https://github.com/sozysozbot/c_to_elf_compiler/actions/runs/3438695080/workflow 曰く、」
+$blockquote
+```
+The workflow is not valid. .github/workflows/docs.yaml (Line: 35, Col: 14): Unexpected value '' .github/workflows/docs.yaml (Line: 36, Col: 9): Unexpected value 'github_token'
+```
+hsjoihs「それはそう。え、でも cerke_online_alpha には secret が設定されていないと書いてあるけど」
+hsjoihs「https://github.com/peaceiris/actions-gh-pages 曰く、」
+$blockquote
+```
+For newbies of GitHub Actions: Note that the GITHUB_TOKEN is NOT a personal access token. A GitHub Actions runner automatically creates a GITHUB_TOKEN secret to authenticate in your workflow. So, you can start to deploy immediately without any configuration.
+```
+hsjoihs「あ、そうなの。じゃあなんで落ちてるんだろうか」
+
+hsjoihs「https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-first-deployment-with-github_token を読む。なるほど、初回は失敗することが想定されているのか。へー」
+hsjoihs「とりあえず git checkout --orphan gh-pages をして push することで gh-pages ブランチを作るか」
+hsjoihs「えーとインデントが壊れている。直そう」
+hsjoihs「ジョブは走っているが、ページが出力されない。.nojekyll ってファイルだけが生えておる」
+hsjoihs「ああ、publish_dir がミスってるのか」
+hsjoihs「直したら直った！URL も今までと変わらず提供できている。勝利ですね。リポジトリの README も直しておくか」
+
+$DATE「2022年11月11日（一文字変数）」
+hsjoihs「さて、次は複文と一文字変数」
+hsjoihs「そういえば、compilerbook では『一番最後の式の結果をプログラム全体の計算結果とすることにします』として、構文定義がこうなってるけど、」
+$blockquote
+```
+program    = stmt*
+stmt       = expr ";"
+expr       = assign
+assign     = equality ("=" assign)?
+equality   = relational ("==" relational | "!=" relational)*
+relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+add        = mul ("+" mul | "-" mul)*
+mul        = unary ("*" unary | "/" unary)*
+unary      = ("+" | "-")? primary
+primary    = num | ident | "(" expr ")"
+```
+hsjoihs「このプロジェクトは Rust で書いてるんだし、Rust と同様に『文の列の最後に式を書くと、それが戻り値になる』で組もうかな」
+hsjoihs「こうすることの利点としては、」
+$HTML「<ul><li>今までのテストケースに手を入れなくて済む</li><li>スタック操作をミスってバグが出たときに、より早期に気づきやすい（Cコンパイラ班の受講生で、ここの周りで混乱してバグらせた人を見た）</li><li>実はセミコロンを中置演算子として見ることができ、既存の再帰下降のコピペで実装が終わる</li></ul>」
+hsjoihs「などが挙げられそう」
+hsjoihs「ところで、関係ないけど、このログを生成する自作ツール PseudoRoku に箇条書き機能欲しくなってきたな。$HTML コマンドに <ul> を食わせて1行ずつで書かなきゃいけないのが面倒になってきた」
+hsjoihs「さて、とりあえずトークナイザに一文字変数を足さねば。あと Assign 演算子も足そう。右結合だから、ループにせずとも再帰で十分」
+hsjoihs「いや、まずは最小限の変更で動かしたいから、最初はセミコロンだけだな。AndThenという二項演算子として処理して、」
+$source
+```rust
+        Expr::BinaryExpr {
+            op: BinaryOp::AndThen,
+            op_pos: _,
+            左辺,
+            右辺,
+        } => {
+            exprを評価してediレジスタへ(writer, 左辺); // 左辺は push せずに捨てる
+            exprを評価してediレジスタへ(writer, 右辺);
+        }
+```
+hsjoihs「これだけで動くはず。便利」
+hsjoihs「次に、一文字変数と代入が必要。'a' から 'z' および '=' をトークナイズし、パーサーを増やす。parse_primary で識別子を読むコードも必要」
+hsjoihs「あとはコード生成を書くだけ。今回の実装では return しないので、エピローグは不要で、プロローグで変数 26 個分の領域を確保すれば十分」
+hsjoihs「おや、パースが通らない。なるほど、再帰下降のコピペミスか。直した。しかし Mac だとテストケースごとに docker run するから遅いな。しょうがないけど」
+hsjoihs「直したらパースが通るようになったが、`a = 3; b = 4; a + b` で `7 expected, but got 139` が出ている。なんかミスっておるな」
+hsjoihs「`a = 7; a` でも同じ。ところで、この手のミスをすると毎回 139 が来る気がするけど、これなんなんだろう」
+hsjoihs「あーわかった。コメントアウトしてた『ediから即値を引く』関数をそのまま使ってたけど、これは『edi から即値を引く』から、rdi の上位 32 ビットがクリアされちゃってるんだな」
+hsjoihs「ということで、」
+$source
+```rust
+fn rdiから即値を引く(n: u8) -> [u8; 4] {
+    [0x48, 0x83, 0xef, n]
+}
+```
+hsjoihs「にしたら……動いた！」
+hsjoihs「今までは意図的に 32 ビットレジスタと 64 ビットレジスタを混同するような書き方をしてきたけど、そろそろちゃんと分ける必要が出てきますわね」
+hsjoihs「あ、CI で cargo fmt が要求されてる。掛けておくか」
+hsjoihs「そういえば、せっかく `a = b = 7` みたいなやつに対応してあるんだから、テストケースに足しておこう」
+
+$DATE「2022年11月21日」
+hsjoihs「そういやこの 139 ってなんなんですかね。SIGSEGV のシグナル自体は 139 ではなかった気がするんですけど」
+hsjoihs「あー、シグナルが 11 で exit code が 139 か」
+hiromi_mi「『なんらかの異常値である』必要はそりゃあると思いますけど、具体的になんで 139 なんですかね」
+hsjoihs「あ、128 + 11 ってことなのかな」
+
+$DATE「2022年11月24日」
+tkr「複数文字のローカル変数」
+tkr「Rustなので `HashMap` 使ってまあ適当に」
+tkr「変数にアンダースコアとか数値も使えるように」
+tkr「ローカル変数情報のバケツリレーつらいからそろそろcodegenをstructにしてもいいかもな」
+tkr「compilerbookだとこのステップ終わっても26個しか変数使えなくない？この制限解除しようとすると `rspから即値を引く` の段階では変数の数決まらないからきついな。とりあえず `Write + Seek` にするか」
+
+hsjoihs「tkr からのプルリクを読みます」
+hsjoihs「読んだ。マージした。」
+hsjoihs「さて、今回は return 文なわけで、これによって既存のテストケースを変更する必要がある」
+$source
+```diff
+-   a = b = 7; a 
++   a = b = 7; return a;
+```
+hsjoihs「みたいな変更を全部に入れる必要があり、とりあえずそれのコンパイルを通す必要がある」
+hsjoihs「まあ、とりあえずは return キーワードをトークナイザに足すところからですな」
+hsjoihs「一瞬で足せた。payload をすり替えるだけだな。で、次にパーサーに手を加える必要がある。今まではセミコロンを 2 項演算子として扱っていたので、それを修正する必要がある」
+hsjoihs「まず、Expr と Program を分離していく。定義を複製してすり替えることで、とりあえず動くものを作る」
+hsjoihs「次に、Statement 型を立てていく。parse_statement を立て、それの繰り返しにより parse_program を定義する。Program は Vec<Statement> とする」
+hsjoihs「えーっと、今回は return してるわけじゃないんだよな。とはいえ syscall したら帰ってこないから、普通にエピローグを出力すればいいのか」
+hsjoihs「これはテストケースにもう return を足して、return 文も実装してしまおう」
+hsjoihs「えーと通らない。『数値リテラルでも開き丸括弧でもないものが来ました』というメッセージ。多分再帰下降のどこかで「エラーを出さずにスルー」を忘れている」
+hsjoihs「いや違うな。eof トークンがあるから while tokens.peek().is_some() ではダメなんだ。」
+hsjoihs「直したら動いた」
+hsjoihs「よしプルリクエストを作成。あ、テストケースを増やした方がいいな」
+
+$DATE「2022年12月3日」
+tkr「とりあえずトークナイザ実装」
+tkr「jmp/jeのバイナリ表現を調べたら0xEB バイト数/0x74 バイト数であることが分かった。前方ジャンプは負の数かつジャンプ命令自体のサイズを含むので-2となることに注意。」
+
+$DATE「2022年12月4日」
+tkr「コード生成のインターフェイスをもう少し整備したい。jmp命令という中間の命令列のバイト数情報が必要なコードの生成を考えるとWrite + Seekを持ち回すのは限界を感じる。RopeっぽいBufを実装する」
+tkr「parser実装。forの初期化部はint i = 0のような変数定義が許されるので厳密には式ではないけど今の仕様だと定義なしで代入すると変数が作られる仕様なのでとりあえず式でいいか」
+tkr「前回書いたSeekを使う汚いコードをBufを使って書き直した」
+
+$DATE「2022年12月5日」
+tkr「ifとwhileのコード生成は前回の調査結果から実装。forはwhileのsyntax sugarとして実装」
+hsjoihs「見ていくか」
+hsjoihs「statement が statment になってる誤字があるのと、そもそも関数「statementを評価してediレジスタへ」って値を「ediレジスタへ」確実に書いてくれるんでしたっけ？」
+$HTML「<ul><li>まずediレジスタへ確実に書いてくれるかわからん</li><li>書いてくれていたとしても、「edi レジスタに書きこんでいる」を前提としたコードは文のレベルでは不存在っぽそう？</li></ul>」
+hsjoihs「ということで、関数名だけ変更してマージしておきますね」
+hsjoihs「あ、clippy が Buf に Default とか is_empty を足せと言ってくるので一応足しておく」
+
+hsjoihs「マージしたので、step 13 をやっていく。ブロックか。簡単だ」
+hsjoihs「波括弧をトークナイザに追加し、パーサで読み、ああコードジェネレータにはもう既にあるのか（for を while に書き換える際に必要であったため）。」
+hsjoihs「ということで、かなり少ない作業量でブロックの実装が完了。dangling else のテストケースも追加しておこう。よし通った」
+
+$DATE「2022年12月7日」
+tkr「step14のテストどうしましょう。本だとオブジェクトファイルを生成して自作関数とリンクすることになっていますが、、 」
+hsjoihs「リンカ実装は明らかに荷が重いので、なんらかの syscall を呼ぶ関数を最初の魔法の 78 バイト付近に埋め込んで、__builtin() でその関数をコールできるようにする、でどうでしょう？」
+tkr「たーしかに…とりあえずビルドイン関数でなんとかしますかー。グローバル変数はまだまだ先だったしそれが楽そう」
+hsjoihs「まず __builtin_three()（3 を rax に入れて ret するだけ）を実装し、次に __builtin_putchar(int char) を実装、といった感じかなぁ」
+
+
+$DATE「2022年12月30日」
+tkr「トークナイザは変更しなくていい。パーサーは」
+hsjoihs「primary_expression の定義を変えるんだっけ」
+tkr「compilerbook はそうしてますね。まずは引数のないやつだけ組むのか」
+hsjoihs「__builtin_three がちょうどいいですね」
+tkr「パーサーの実装の入れ子が深くなっちゃうな」
+hsjoihs「まあ後で浅くなるので気にしなくてよいのでは」
+tkr「パーサーはこれでいい。codegen 面倒だなぁ」
+hsjoihs「まあね」
+
+hsjoihs「関数名が __builtin_three じゃなかったらエラー吐いて落ちればいいでしょ」
+tkr「codegen ではエラーを吐かない方がいいのでは？」
+hsjoihs「関数の不存在はリンクエラーの領分だし、codegen が落ちてもいいでしょ」
+tkr「たしかにそうか」
+tkr「えーと jmp が必要で」
+hsjoihs「いえ、call です」
+tkr「名前では呼べませんよね」
+hsjoihs「そりゃあね」 
+tkr「とりあえずアセンブリを書いてビルドしてみて実践するしかないか」
+
+$source
+```
+GLOBAL _start
+SECTION .text
+_test:
+        ;mov rax, 3
+        ret
+_start:
+            mov     eax, 1
+            call    _test
+            mov     ebx, eax
+            int     0x80
+```
+
+tkr「なんで 0 を返して正常終了するんだろう。3 が返ってきてほしいのに」
+hsjoihs「./tiny ではなく ./tiny3 を走らせる必要がありませんか？」
+tkr「ほんとだ。そうすると……セグフォ？なぜ」
+tkr「rsp の操作が要りそうだな」
+hsjoihs「ん、call はそこら辺ちゃんとやってくれるから要らないのでは」
+tkr「pop が要るんじゃね？」
+hsjoihs「いや、要らないと思うけどなぁ。gcc で return 3; をコンパイルしたアセンブリはどうなります？」
+
+hsjoihs「セグフォなんですが、ありそうだと思ってるのが、実はビルドが完成していなくて、本来はリンカが call の対象を直して実行ファイルにするんですけど、その直すのがされていないままの、リンカを通っていないやつを実行してセグフォしているのでは？という気もします」
+tkr「Makefile の中で ld 通ってますよ」
+hsjoihs「たしかに〜」
+tkr「call を jmp にすり替えたらセグフォせずに無限ループになっているので、そこの問題はないと思われますが」
+hsjoihs「もう gdb で攻める以外の方法思いつかない」
+tkr「使ったことない〜。でも使わないと今後きつそう。まあとりあえず gcc でコンパイルしてみよう」 
+
+tkr「ベースポインタの退避とかしなくていいんですかね。call 命令はやってくれる？」
+hsjoihs「call 命令は退避はしてくれないので、呼ぶ側はプロローグ書かないとですね。呼ばれる方の builtin_three は要らない」
+tkr「あーじゃあそれのせいだな」
+hsjoihs「プロローグは compilerbook にあるのでそれを使えばいいでしょう」
+tkr「でも compilerbook はプロローグ無しで call できてそうだけど」
+hsjoihs「具体的にどこの？」
+tkr「ここですね」
+$blockquote
+```
+このCコードに対応するアセンブリは次のようになります。
+
+.intel_syntax noprefix
+.globl plus, main
+
+plus:
+        add rsi, rdi
+        mov rax, rsi
+        ret
+
+main:
+        mov rdi, 3
+        mov rsi, 4
+        call plus
+        ret
+```
+hsjoihs「たしかにね。このコードを標準的な gcc でビルドすることによってまず動かして、どこを nasm にすり替えるとこれがこわれるのかを調べるのが近道かな？」 
+
+tkr「call 終わった時点ではセグフォ起きてない。これ↓がセグフォせず無限ループしてるので」
+$source
+```
+GLOBAL _start
+SECTION .text
+_test:
+        mov eax, 3
+        ret
+_start:
+            call    _test
+a:
+            jmp a
+            mov     ebx, eax
+            int     0x80
+```
+tkr「なんでこれがセグフォしないんだ？」
+tkr「あ、もしかして int 0x80 が eax に 1 を必要とする？」
+hsjoihs「可能性がある。int 0x80 の直前に mov eax, 1 書いたらどうなります？」
+tkr「いけた。call のせいじゃなくて syscall の使い方間違えてるだけだったわ」
+tkr「あーそうか、syscall 番号が eax か。0x80 がシステムコール番号なのではなくて」 
+hsjoihs「私も一時期その勘違いしてた気がするな」 
+tkr「syscall 命令みたいなのなかったっけ」
+hsjoihs「とりあえず動いたのでヨシ」
+hsjoihs「で、結局バイナリを見て call がどう翻訳されてるかを確認したかったんですよね？」
+$source
+```
+GLOBAL _start
+SECTION .text
+_test:
+        mov eax, 3
+        ret
+_start:
+        call    _test
+        mov     ebx, eax
+        mov     eax, 1
+        int     0x80
+```
+hsjoihs「とりあえずその前に、動いたアセンブリとバイナリをコミットし、」
+hsjoihs「私が書いてるログも入れるとよさそう」
+tkr「Makefile いじろう」
+tkr「既存のファイルが .out に変わるけどとりあえず今のところは影響ないか」
+tkr「てかコミットしてるなら clean 自体が要らない気がするな」
+tkr「あ、Makefile のルールをそもそも拡張子なしにできるからそれでいいのか」
+
+$DATE「2023年1月1日」
+tkr「Macだとasm->elfの実験ができなかったりテスト遅かったりして開発しにくかったので改善」
+tkr「call命令も相対アドレスなのかなりめんどくさい。jmpは文を先に生成してサイズ見てでよかったけどcallは今まで生成したコードサイズを記録しないといけないからかなり大変」
+tkr「call レジスタ名 と指定すれば絶対アドレスでいけるらしいのでとりあえずこれでいいかな。多分ダイナミックディスパッチと同じで遅いけど」
+tkr「またセグフォー、多分これ__builtin_threeがエントリポイントになってるなうげ〜。出力バイナリの0x18から2バイト(?)をエントリポイントのアドレスに書き換えたらいけるかも」
+tkr「そろそろLEB128の実装が必要そう」
+tkr「mov rax, 120; call rax; (120は__builtin_threeのアドレス)しても必ずraxに120が入ってる。そもそも__builtin_threeが実行されていなさそう。謎」
+tkr「eaxに即値をセットする命令は4byte指定しないといけなかったのと、call命令は0x00400000をelf内のアドレスに足さないといけなかったらしい。gdbの使い方少し覚えた。0x00400000がベースアドレスだったのか」
+
+$DATE「2023年1月2日」
+hsjoihs「お、できておる。すごい。えーと clippy が通っていない」
+hsjoihs「なるほど、i32 じゃなくて i8 の to_le_bytes してるところがあるのか。でも呼ばれてないから今の所問題が露呈していない、と」
+hsjoihs「それを直していただいたら、とりあえずこれでマージしちゃって、__builtin_putchar は step14-2 ってブランチでやっちゃいましょう」
+hsjoihs「しかしなんとか突破できて本当によかった。ステップ 14 はだいぶ苦しくなるだろうと思ってたし、クリアがなされたのはめちゃめちゃえらいんだよな」
+tkr「そもそもアセンブリもよく知らない状況だったから大変だった」
+tkr「どこらへんでぶっ壊れてるかもわからんから gdb の使い方から調べて。思ったよりハードコアだった。x64 のバイナリフォーマット相当複雑じゃないですか？」
+hsjoihs「実はね」
+tkr「wasm は本当にラクだったけど、x64 やばすぎる」
+
+hsjoihs「ところで、この追加されてる .nix とか .lock とかについて知るには何を読めばいいですか？」
+tkr「Mac での開発用に足しただけなので、Linux でやってるなら気にしなくていいです」
+hsjoihs「Mac で使えるのはうれしいので、これがなんであってどううれしいのか、みたいな話をお教えいただけると」
+tkr「なにしてたっけな。えっと、bintools とかを使えるようにした。Makefile で、Mac だと x64-linux 向けのリンカや strip コマンドが入っていないので、それを自動で入れて、Mac だったら自動でそれを使ってくれるように。experiment の中の Makefiles で BINTOOLS_PREFIX って書いてあるじゃないですか。ここに Mac だった場合に適切な prefix が入って、これがどこで定義されているかというと、break.nix の下の方に、x64-Linux だったら空、そうじゃない場合に適切な文字列を入れることで、Linux の ld とかが使えるようになって、それらをどこで開発環境にインストールしているかというと、24 行目を見ていただくと、開発用のシェルみたいなのを定義できるので、ここでインストールされている。この Linux パッケージというのは、ARM のだと用意されていなかったので、ARM の場合は x64 用のツールチェーンを使うように 18 行目で設定していて、そこら辺によって Linux 向けのリンカとかが簡単に使えるようになった」
+hsjoihs「つまりこれは experiments 用のみであって、コンパイラをビルドしたりテストしたりするのには使ってない？」
+tkr「今のところは使ってない」
+hsjoihs「分かりました」
+tkr「で、これを使う場合には nix とか direnv ってのを入れなきゃいけなくて、入れると use flake ってのでさっき定義してた develop 用の環境が勝手にロードされるという仕組みになっている。使う場合はいろいろインストールが必要」
+hsjoihs「なるほどなるほど」
+hsjoihs「しかしまあ、なんとか突破できてよかった。いやまあギリギリ突破できそうで勉強になりそうだからこのテーマ設定にしたというのもあるけど。元の『低レイヤを知りたい人のためのCコンパイラ作成入門』は親切であるがゆえに『書いてあることをこなすとできる』って作業になってしまうのよね」
+tkr「実は自分ひとりで元のもやってるんだけど、」
+hsjoihs「あ、そうなの」
+tkr「やっぱり元のほうが圧倒的にラク」
+hsjoihs「そりゃそうよね。かなり多くをアセンブラとリンカに押し付けることができるし」
+tkr「リンカはともかく、アセンブラなんて大したことやってないっしょって思ってたら、そんなことなかった。アセンブラって思った以上に複雑なことしてたんだな、こんな複雑だったんだ、っていう気持ちになった」
+
+$DATE「2023年1月3日」
+tkr「__builtin_putchar を書いたが動かない」
+hsjoihs「int 0x80 は 32 bit 用の ABI であって、64 bit のポインタを渡しても上位 32 bit は無視されるそうです」
+hsjoihs「exit システムコールはポインタを用いなかったのでこの問題が露呈しなかったが、write システムコールはポインタを要求するので int 0x80 ではダメで syscall を使う必要があるとのこと」
+$URL「https://stackoverflow.com/questions/22503944/using-interrupt-0x80-on-64-bit-linux」
+tkr「そもそもこれって32bitバイナリを吐き出すプロジェクトですか？64bitバイナリを吐き出すプロジェクトですか？」
+tkr「今のところコンパイラは32bitバイナリを吐き出しているのにexperimentのtiny以外は64bitバイナリ(ただし64bitでは使えなさそうな int 0x80 を使っている)を吐き出しているように見えます」
+tkr「qemuでセグフォが起きるのでどっちかに統一したいです」
+tkr「と思ったけどバイナリ自体は64bitなのでintをsyscallに書き換えればよさそう？」
+hsjoihs「64 bit でも int 0x80 は使えるんですよね。exit は引数にポインタがないので int 0x80 をそのまま使って問題ないけど、write は引数にポインタがあるせいで困る」
+tkr「qemuの制限なんですかね？(qemuでエミュレーションしているm1 mac上のdockerだと死にました)」
+hsjoihs「qemu はいろんなものが動かなかったりするという噂を聞いています」
+tkr「コンパイラが出力するバイナリはsyscallを使っているのでexperimentの方も書き換えておきます」
+tkr「qemuだと int 0x80 が動かないので syscall に書き換えた」
+tkr「putcharをアセンブリで書けた。writeに渡すbufはポインタじゃないといけないからスタックに引数をpushしてrspを渡せばいいかな」
+tkr「スタック領域を16の倍数にアライメントとかを考えるとpush/popでネストした式の途中結果を保存するより全部ローカル変数に入れた方が楽なのでは 🤔」
+れもん「その概念を拡張したのがregister allocation」
+tkr「実装したことがない😿」
+
+$DATE「2023年1月4日」
+tkr「アセンブリ→バイナリの変換規則眺めてもなんもわからんって思ってたけど、hexじゃなくて2進数列にしたらなんとなく分かったわ。そういうこと？？？」
+れもん「x86は3bitでレジスタを表していたりする。64bit拡張命令(0x4_)とかも調べてみると面白いよ」
+tkr「やっぱ認識あってた。むずい」
+tkr「そういえば、標準出力のテストなんてものはいま無いので、追加するかどうか迷っています」
+hsjoihs「まあほしいですよねテスト」
+tkr「わかる〜。作らなくては」
+
+$DATE「2023年1月7日」
+hsjoihs「標準出力のテストどうするかね」
+tkr「あーそういやこれドラフトのままだった。完全に終わってた気になってた。今のインターフェース的に標準出力のテストめんどいよな」
+hsjoihs「リダイレクトするのではいかんの？」
+tkr「現状のシェルスクリプトが check って関数の形じゃないですか。あと、複数行コードが出てきたときに今のままだとつらい」
+hsjoihs「もっとも簡単な形で解決すればいいので、check_stdout を新造するという形でいいのでは」
+tkr「それか環境変数で」
+hsjoihs「関数分ければよくな〜い？」
+tkr「とりあえず、check の第三引数にオプショナルで与えるということで」
+hsjoihs「よさそう」
+
+$DATE「2023年1月8日」
+hsjoihs「さて step 15 は『関数の定義に対応する』だった。関数を用意する方法自体は前のステップとかで整備されているはずなので、それに乗っかればまあ実装できるでしょう」
+hsjoihs「とはいえ、ここからは main 関数が出てくるようになるという話もある。これをどうするか。」
+hsjoihs「まあ、普通に、main 関数を定義して、それを暗黙にスタートアップルーチンから call するようにすればいいか」
+hsjoihs「main を call するコードを出力するには、main(); というソースコードをそのまま解釈させればよかろう」
+hsjoihs「とりあえず、現状のテストケースを全て暗黙に main 関数の中に突っ込み、エントリーポイントの中では暗黙に main(); を呼び出す実装へと変更しよう」
+hsjoihs「先にコード生成部分をそう変更してから、その後にテストケース自体に main() { ... } を追加して、それをパースするようにと変更すればよさそうだな」
+hsjoihs「ちょっとリファクタリング。u16 とか u8 幅を超えていたら明示的にエラーメッセージを出して落とすようにし、現状の codegen は関数テーブルを変更しないので mutable で渡しているところを immutable にし、generate_startup 関数として切り出す」
+hsjoihs「ところで、エントリーポイントの実装は main(); じゃなくて return main(); にすべきだな。というか、現状の return は実は return ではなく exit を呼ぶ偽物なので、__builtin_exit みたいな名前に変更しちゃおうかな」
+hsjoihs「カッコを要求してないし、JavaScript に倣って __throw でいいや」
+hsjoihs「で、この __throw の実装を複製して return を作っていく」
+hsjoihs「非自明なのは codegen だけで、このときには edi の結果をコピーして leave; ret すればいいのかな」
+hsjoihs「よし、これで return が復活したはず。まだ試せないけど」
+hsjoihs「そうしたら、次に目指すべきは、テストケースの __throw を return に戻して、」
+$source
+```c
+__start() { __throw main(); }
+main() { ここにテストケースを貼る }
+```
+hsjoihs「といった感じへと改めていくことだな」
+hsjoihs「えーっと、__throw main(); をトークナイズして、さっき切り出した関数に渡せば、これでよさそう？やってみよう」
+hsjoihs「前述のとおり、テストケースの __throw を return に戻して、」
+hsjoihs「よし動いた！」
+hsjoihs「コード部分の変更ができたので、今度はテストケース自体を main() {} で囲うようにしよう」
+hsjoihs「これにより、toplevel の概念が新たに生まれるようになるはず」
+hsjoihs「えーと、とりあえず Program 型を FunctionContent とかに改名するか」
+hsjoihs「変数名とかも適宜改名した。さて、残るは parse_program 関数だけであって、これが FunctionContent を返すのではなくて関数定義のリストを返すように変更すればよい」
+hsjoihs「対応すべきは `foo(x, y) { ... }` という構文なので、とりあえず関数呼び出しの構文を定義している parse_primary をコピペして、実引数ではなく仮引数なので identifier だけを受理して、」
+hsjoihs「よし、parse_toplevel_function_definition が実装できた」
+hsjoihs「あとは、そうして読み込まれた関数定義ごとに、コード生成をしてやれば完成かな。まだ仮引数をレジスタから読みだすところを作ってないけど、とりあえずテストケースを main() { ... } で包んで実験しよう」
+hsjoihs「よし、単に main() で包んだだけのやつは動いた。じゃあ関数定義を複数にすると？」
+$source
+```c
+one() { return 1; } two() { return one() + 1; } main() { return one() + two() + __builtin_three(); }
+```
+hsjoihs「動きますね。やったぁ」
+hsjoihs「あとは仮引数をレジスタから読み出す処理を実装すれば、再帰でフィボナッチが呼べるはず」
+hsjoihs「その前に、ちょっとコードをきれいにして、codegen に住んでいてもよさそうな感じのコードにしておこう」
+hsjoihs「あー、std::mem::take ってこういうときに便利なのね。なるほどなぁ」
+hsjoihs「さて、本題の実装。 https://www.sigbus.info/compilerbook#%E3%82%B9%E3%83%86%E3%83%83%E3%83%9715-%E9%96%A2%E6%95%B0%E3%81%AE%E5%AE%9A%E7%BE%A9%E3%81%AB%E5%AF%BE%E5%BF%9C%E3%81%99%E3%82%8B には」
+$blockquote
+```
+xやyといったローカル変数が存在するものとしてコンパイルして、関数のプロローグの中で、レジスタの値をそのローカル変数のためのスタック上の領域に書き出してください。
+```
+hsjoihs「とあるのだから、その通りにすればよい」
+hsjoihs「えーと、引数自体が rdi に入っているから、計算をするのに rdi を使うことができなくて」
+hsjoihs「もう直に mov [rbp-12], r9d とかの命令を使っちゃおう。さて実験だ」
+hsjoihs「とりあえずフィボナッチ」
+hsjoihs「はい～動かない」
+hsjoihs「あ、Buf::new() に対して fold しておるな。『初期値代入』コードが入るべき場所はここだろ」
+hsjoihs「んー動かない」
+hsjoihs「……あっ、なるほどエラーメッセージが出てるけど他の成功メッセージで流れてしまってるのか」
+hsjoihs「どれどれ」
+$source
+```
+thread 'main' panicked at '関数 fib が見つかりません', src/codegen.rs:579:36
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+hsjoihs「あ～～なるほど、関数 fib の中ではまだ関数 fib が定義されていないから、再帰関数を呼び出すことができないのか」
+hsjoihs「これはしょうがないので、テストケースを変えよう」
+$source
+```
+[FAIL] add(x, y, z) { return x + y + z; } main() { return add(1, 2, __builtin_three()); } => 6 expected, but got 139
+```
+hsjoihs「はいはいセグフォセグフォ」
+hsjoihs「えーと失敗したときにも rm -rf してしまってるから調査対象物がない。成功時にのみ消すようにしよう」
+$source
+```
+[FAIL] id(x) { return x; } main() { return id(6); } => 6 expected, but got 139
+```
+hsjoihs「これでダメということは、まあなんかが根本的にダメなんだろうな。もうちょいソースを眺めるか」
+hsjoihs「変数はスタック上にあるのではなくてベースポインタからの差分なのだから、stack_size には影響を与えないはず。だから stack_size は 8 のままにしなきゃいけないな」
+hsjoihs「ところで、変数を読むところで落ちてる？変数を書き込むところで落ちてる？確認しよう」
+$source
+```
+[FAIL] three(x) { return 3; } main() { return three(6); } => 3 expected, but got 139
+```
+hsjoihs「まあそうよね」
+hsjoihs「tkr の書いていたコードと重複があったことがわかり、リファクタリングをしていたところ、多分オフセットが -4 とかじゃなくて 0 になってるのがよくなさそうという気持ちになった。」
+hsjoihs「しかし、謎がある。なぜ既存のコードではオフセットが 0 になることがなかったのだろうか」
+hsjoihs「なってたけどバグってなかったのかもしれない。まあいいや、とりあえずオフセットは一律で idents.len() * 4 + 4、というか idx * 4 + 4、になるということに決めてしまおうか」
+hsjoihs「というか idents じゃなくて lvar_table みたいな名前にしたいな。functions も function_table にしたいわね」
+hsjoihs「はい無事動いた。とはいえ、再帰呼び出しができていないので、」
+$blockquote
+```
+このステップが終わるとフィボナッチ数列を再帰で計算しつつ表示したりできるようになるのでグッと面白くなるはずです。
+```
+hsjoihs「が達成できていないな。じゃあ、せっかくなので、今回の機能を使ってフィボナッチをループで計算しつつ表示するテストケースを追加するか」
+$source
+```
+check 0 "if_non0(n) { __builtin_putchar(n ? n + 48 : 32); return 0; } print(n) { if_non0(n / 100); if_non0((n / 10) % 10); __builtin_putchar((n % 10) + 48); return 0; } main() { a = 0; b = 1; for(;a<255;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } return 0; }" "  0,  1,  1,  2,  3,  5,  8, 13, 21, 34, 55, 89,144,233,"
+```
+hsjoihs「えーと % 演算子が実装されておらず、かつ % が bash の printf と衝突する。了解」
+hsjoihs「とりあえず bash の printf と衝突するというのを直して、ループへと展開して、」
+hsjoihs「はいはい、 % だけじゃなくて ? と ++ と -= もない。それもほぐしてやる。」
+hsjoihs「255 が書けない。じゃあ、フィボナッチ数列ではなくリュカ数列にすればよい。すると」
+$source
+```
+check 0 "if_non0(n) { if (n) { __builtin_putchar(n + 48); } else { __builtin_putchar(32); } return 0; } print(n) { for(h=0;n>=100;h=h+1){n=n-100;} if_non0(h); for(t=0;n>=10;t=t+1){n=n-10;} if_non0(t); __builtin_putchar(n + 48); return 0; } main() { a = 2; b = 1; for(;a<127;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } return 0; }" "  2,  1,  3,  4,  7, 11, 18, 29, 47, 76,123,"
+
+thread 'main' panicked at 'while 文の中でジャンプするためのバッファの長さが i8 に収まりません: TryFromIntError(())', src/codegen.rs:326:65
+```
+hsjoihs「なるほどね」
+hsjoihs「バッファの中身を読んでみるか」
+$source
+```
+thread 'main' panicked at 'while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは 155、中身は 0x[55 5f 48 83 ef 04 48 8b 3f 57 bf 7f 00 00 00 57 5f 58 39 f8 0f 9c c0 0f b6 f8 83 ff 00 74 7e 48 83 ec 08 55 5f 48 83 ef 04 48 8b 3f 57 5f b8 0c 01 40 00 ff d0 89 c7 48 83 c4 08 48 83 ec 08 bf 2c 00 00 00 57 5f b8 87 00 40 00 ff d0 89 c7 48 83 c4 08 55 5f 48 83 ef 0c 57 55 5f 48 83 ef 04 48 8b 3f 57 55 5f 48 83 ef 08 48 8b 3f 57 58 5f 01 c7 58 89 38 55 5f 48 83 ef 04 57 55 5f 48 83 ef 08 48 8b 3f 58 89 38 55 5f 48 83 ef 08 57 55 5f 48 83 ef 0c 48 8b 3f 58 89 38] です', src/codegen.rs:327:21
+```
+hsjoihs「えーと disass して」
+$source
+```
+0:  55                      push   rbp
+1:  5f                      pop    rdi
+2:  48 83 ef 04             sub    rdi,0x4
+6:  48 8b 3f                mov    rdi,QWORD PTR [rdi]
+9:  57                      push   rdi
+a:  bf 7f 00 00 00          mov    edi,0x7f
+f:  57                      push   rdi
+10: 5f                      pop    rdi
+11: 58                      pop    rax
+12: 39 f8                   cmp    eax,edi
+14: 0f 9c c0                setl   al
+17: 0f b6 f8                movzx  edi,al
+1a: 83 ff 00                cmp    edi,0x0
+1d: 74 7e                   je     0x9d
+1f: 48 83 ec 08             sub    rsp,0x8
+23: 55                      push   rbp
+24: 5f                      pop    rdi
+25: 48 83 ef 04             sub    rdi,0x4
+29: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+2c: 57                      push   rdi
+2d: 5f                      pop    rdi
+2e: b8 0c 01 40 00          mov    eax,0x40010c
+33: ff d0                   call   rax
+35: 89 c7                   mov    edi,eax
+37: 48 83 c4 08             add    rsp,0x8
+3b: 48 83 ec 08             sub    rsp,0x8
+3f: bf 2c 00 00 00          mov    edi,0x2c
+44: 57                      push   rdi
+45: 5f                      pop    rdi
+46: b8 87 00 40 00          mov    eax,0x400087
+4b: ff d0                   call   rax
+4d: 89 c7                   mov    edi,eax
+4f: 48 83 c4 08             add    rsp,0x8
+53: 55                      push   rbp
+54: 5f                      pop    rdi
+55: 48 83 ef 0c             sub    rdi,0xc
+59: 57                      push   rdi
+5a: 55                      push   rbp
+5b: 5f                      pop    rdi
+5c: 48 83 ef 04             sub    rdi,0x4
+60: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+63: 57                      push   rdi
+64: 55                      push   rbp
+65: 5f                      pop    rdi
+66: 48 83 ef 08             sub    rdi,0x8
+6a: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+6d: 57                      push   rdi
+6e: 58                      pop    rax
+6f: 5f                      pop    rdi
+70: 01 c7                   add    edi,eax
+72: 58                      pop    rax
+73: 89 38                   mov    DWORD PTR [rax],edi
+75: 55                      push   rbp
+76: 5f                      pop    rdi
+77: 48 83 ef 04             sub    rdi,0x4
+7b: 57                      push   rdi
+7c: 55                      push   rbp
+7d: 5f                      pop    rdi
+7e: 48 83 ef 08             sub    rdi,0x8
+82: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+85: 58                      pop    rax
+86: 89 38                   mov    DWORD PTR [rax],edi
+88: 55                      push   rbp
+89: 5f                      pop    rdi
+8a: 48 83 ef 08             sub    rdi,0x8
+8e: 57                      push   rdi
+8f: 55                      push   rbp
+90: 5f                      pop    rdi
+91: 48 83 ef 0c             sub    rdi,0xc
+95: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+98: 58                      pop    rax
+99: 89 38                   mov    DWORD PTR [rax],edi
+```
+hsjoihs「はい、とりあえず for(;a<127;) { print(a); __builtin_putchar(44); c = a+b; a = b; b = c; } が書けないのね」
+hsjoihs「まあもうちょい削ったらいけるでしょ。削ります」
+hsjoihs「よし！！！！いけた！！！！！」
+hsjoihs「最終的なソースコードは以下の通り」
+$source
+```c
+if_non0(n)
+{
+	if (n) {
+		__builtin_putchar(n + 48);
+	}
+	else {
+		__builtin_putchar(32);
+	}
+	return 0;
+}
+
+print(n)
+{
+	for (h = 0; n >= 100; h = h + 1) {
+		n = n - 100;
+	}
+	if_non0(h);
+	for (t = 0; n >= 10; t = t + 1) {
+		n = n - 10;
+	}
+	if_non0(t);
+	__builtin_putchar(n + 48);
+	return 0;
+}
+
+printcomma(n)
+{
+	print(n);
+	__builtin_putchar(44);
+	return n;
+}
+main()
+{
+	a = 2;
+	b = 1;
+	while (a < 127) {
+		c = printcomma(a) + b;
+		a = b;
+		b = c;
+	}
+	return 0;
+}
+```
+hsjoihs「リュカ数列は知名度がないし、フィボナッチの例も足しておくか。上限を表すのに 255 とは書けないが、20*20などと書くことはできるので」
+$source
+```
+thread 'main' panicked at 'while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは 134、中身は 0x[55 5f 48 83 ef 04 48 8b 3f 57 bf 14 00 00 00 57 bf 14 00 00 00 57 58 5f 0f af f8 57 5f 58 39 f8 0f 9c c0 0f b6 f8 83 ff 00 74 5d 55 5f 48 83 ef 0c 57 48 83 ec 0c 55 5f 48 83 ef 04 48 8b 3f 57 5f b8 57 02 40 00 ff d0 89 c7 48 83 c4 0c 57 55 5f 48 83 ef 08 48 8b 3f 57 58 5f 01 c7 58 89 38 55 5f 48 83 ef 04 57 55 5f 48 83 ef 08 48 8b 3f 58 89 38 55 5f 48 83 ef 08 57 55 5f 48 83 ef 0c 48 8b 3f 58 89 38] です', src/codegen.rs:327:21
+```
+hsjoihs「そうでした～」
+hsjoihs「まあ 89 まででいいか。そうなるとコードももうちょいシンプルにできて、」
+$source
+```c
+print(n) { 
+    for (t = 0; n >= 10; t = t + 1) { 
+        n = n - 10; 
+    } 
+    if (t) { 
+        __builtin_putchar(t + 48); 
+    } 
+    else { 
+        __builtin_putchar(32); 
+    } 
+    __builtin_putchar(n + 48); 
+    return 0;
+}
+printcomma(n) {
+    print(n);
+    __builtin_putchar(44); 
+    return n; 
+} 
+main() { 
+    a = 0; b = 1; 
+    while (a < 100) { c = printcomma(a) + b; a = b; b = c; } 
+    return 0; 
+}
+```
+hsjoihs「とすればよい。」
+
+hsjoihs「終わらせたので、その旨をツイート」
+$URL「https://twitter.com/hsjoihs/status/1612090819871387648」
+tkr「はや」
+tkr「今再帰使えないっけ」
+tkr「あー関数のオフセットがいるのか」
+hsjoihs「再帰できるようにしてからマージします？」
+hsjoihs「そういえば、手元の非 M1 な Mac で試したら mktemp が illegal option で落ちましたね」
+
+$DATE「2023年1月9日」
+tkr「再帰大変そうーー」
+tkr「-dだめですっけ？」
+tkr「なんかオプション違ったようなー…」
+hsjoihs「再帰わりとできそうな気がしたのでやってみるか」
+
+hsjoihs「関数のオフセット自体は関数をコンパイルし始める直前に定まるので、その時点で関数テーブルに登録しておけば問題なく動くはずなんだよな」
+$source
+```
+'else でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは 130、中身は 0x[55 5f 48 83 ef 04 48 8b 3f 57 bf 01 00 00 00 57 5f 58 39 f8 0f 94 c0 0f b6 f8 83 ff 00 74 0b bf 01 00 00 00 89 f8 c9 c3 eb 58 48 83 ec 08 55 5f 48 83 ef 04 48 8b 3f 57 bf 01 00 00 00 57 58 5f 29 c7 57 5f b8 a9 00 40 00 ff d0 89 c7 48 83 c4 08 57 48 83 ec 0c 55 5f 48 83 ef 04 48 8b 3f 57 bf 02 00 00 00 57 58 5f 29 c7 57 5f b8 a9 00 40 00 ff d0 89 c7 48 83 c4 0c 57 58 5f 01 c7 89 f8 c9 c3] です', src/codegen.rs:303:41
+```
+hsjoihs「ギリ足らんか。とはいえ else { return fib(n-1) + fib(n-2); } がコンパイルできないのは厳しいな。」
+hsjoihs「まあ else の外に出してやればよく、はい普通に動いた」
+tkr「すご」
+tkr「定義時点のバイナリサイズをHashMapに突っ込めばいいのか」
+hsjoihs「そういうことです」
+tkr「確かに、宣言+後ろで定義してある関数に飛ぶのはめんどくさそう…」
+tkr「少なくともワンパスじゃ多分無理😢」
+hsjoihs「現状の Buf を改造して、「名前付き穴」みたいなものを書けるようにし、.to_vec() で最終的に書き込むときにその「名前付き穴」を解決する、といった実装が一番シンプルなのかな」
+tkr「そうなんよなあ」
+tkr「ジャンプ先って可変長整数だっけ、そうだとしんでしまう」
+hsjoihs「実はね～（ログを見てもらうと分かる通り、ジャンプ先が現在 8 bit 固定なのでかなりのショートコーディングを強いられています）」
+tkr「わかる…」
+tkr「多分jmp命令って7bitで収まるなら1byte、14bitで収まるなら2byteみたいな感じな気がする😇😇」
+hsjoihs「まあとりあえず、最後に「フィボナッチ数列を再帰で計算しつつ表示」を達成してからマージしてもらう、としようかな」
+hsjoihs「ジャンプ先を 127 以内に収めながらのコーディングをもう一回やってみるか」
+tkr「コードゴルフ」
+hsjoihs「ブロックの中をなるべく短くすることだけが必要なので、全体のコード長自体はむしろ増やす方向ですわね」
+hsjoihs「できた」
+$source
+```c
+if_non0(n) { if (n) { __builtin_putchar(n + 48); } else { __builtin_putchar(32); } return 0; } print(n) { for(h=0;n>=100;h=h+1){n=n-100;} if_non0(h); for(t=0;n>=10;t=t+1){n=n-10;} if_non0(t); __builtin_putchar(n + 48); return 0; } printcomma(n) { print(n); __builtin_putchar(44); return n; } fib(n) { if(n == 0){ return 0; } else if(n == 1) { return 1; } return fib(n-1) + fib(n-2); } main() { for(n=0;n<17;n=n+1) {printcomma(fib(n));} return 0; }
+```
+れもん「別に最適化しないなら2byteだけ使っていればよいと思います」
+tkr「あ、それできるのか」
+れもん「あてかどうせならオペランドに4byte入る0xe9をどうぞ」
+tkr「それでよさそう」
+
+$DATE「2023年1月14日」
+hsjoihs「さて次は単項&と単項*だからわりと簡単そう」
+hsjoihs「と思いきや、今まで 4 バイトと 8 バイトを雑に扱ってたのを直さないといけないからちょっとめんどいかもね」
+tkr「忘れてた。来週の予定までにそこまでは終わらせておこう」
+
+$DATE「2023年1月15日」
+tkr「とりあえず雑に実装」
+tkr「*がセグフォする」
+tkr「とりあえずcodegen系関数に引き回すstate多くなってきたので構造体にまとめた」
+tkr「word sizeを64bitにしたけどセグフォがなおらん〜〜〜」
+tkr「*&x はいけるけど y=&x の時 *y はセグフォになる、変数の値の読み書き死んでるなこれ」
+tkr「mov [rax], edi -> mov [rax], rdi にしたらなおった」
+tkr「add命令を64bit化したらテスト2も通るようになった。ついでにsub/mulも64bit化」
+
+$DATE「2023年1月16日」
+hsjoihs「レビューをしていくか」
+hsjoihs「mulにだけ0x48がついてませんね」
+tkr「あれ、ミスってた」
+hsjoihs「この U32_WORD_SIZE って変数名、u32 そのものの size っぽく読めてしまって紛らわしいので、WORD_SIZE_AS_U32 みたいな変数名にしたほうがよいと思います」
+hsjoihs「あと、トークンの方は Mul じゃなくて Asterisk にリネームしてもいいのかもですね。意味が 2 種類現れるようになったし。まあこのブランチをマージしたあとのリファクタリングとしてやってもいいか」
+tkr「ですよねー」
+
+$DATE「2023年1月17日」
+hsjoihs「step 17 さっさとやっちゃうか」
+hsjoihs「とりあえず、「関数はいままでfoo(x, y)といった形で書いていましたが、これをint foo(int x, int y)といった形になるように改造します。」が一番ラクなので、これをまずやる」
+hsjoihs「えーと FunctionDefinition を生成しているところをいじればいいんだから」
+hsjoihs「FunctionDefinition 型の定義を変更」
+$source
+```rust
+pub struct FunctionDefinition {
+    pub func_name: String,
+    pub params: Vec<(Type, ParameterIdentifier)>,
+    pub pos: usize,
+    pub content: FunctionContent,
+    pub return_type: Type
+}
+```
+hsjoihs「として型の情報を足せばよく、」
+hsjoihs「トークナイザに予約語 int を足す必要もある」
+hsjoihs「関数定義のパースに int をねじ込んだので、今度はテストケースに int を入れていく必要がある」
+hsjoihs「足したはずなのに「トップレベルが型名でないもので始まっています」で落ちる。なぜだろう」
+hsjoihs「あー理解。`Identifier("__start")` で始まってると言われている。つまり、__start を C で書いてるからそこも直さなきゃいけない」
+hsjoihs「直した。テストが全部通ったのでコミット」
+hsjoihs「あとは、「変数定義文」「未定義変数をエラー」の二つだな」
+hsjoihs「こうなると、idents って HashMap を local_var_table に、functions って HashMap を function_table にしたくなる。しておこう」
+hsjoihs「次に、パーサーに変数定義文を足す。「真にいにしえの C」と同様に、関数の頭でだけ変数定義ができるようにしておこう」
+hsjoihs「after_param_list で関数の中身を読んでるので、そこの冒頭で変数宣言を読めるようにしよう」
+hsjoihs「とりあえず local_var_definitions という HashMap に読み込んでおくか」
+hsjoihs「で、それを FunctionDefinition に仕込んでおいて、」
+hsjoihs「えーと未定義変数は Codegen で怒るか。えーっと local_var_table が Codegen にあるのは間違いで」
+hsjoihs「あー、ちゃんと tkr もその問題に気づいていて「TODO: FunctionGenみたいなのに分けたい」というコメントが書いてあるな」
+hsjoihs「まあとりあえず、先に変数宣言をちゃんと読めているかをテストしよう」
+hsjoihs「読めているのでコミット」
+hsjoihs「さてリファクタリングしたい。とりあえず、CodeGen 自体を FunctionGen へと改名し、必要に応じて FunctionGen から追い出していこう」
+hsjoihs「リファクタリングした。『関数をコード生成しメインバッファとグローバル関数テーブルに挿入』だけを FunctionGen から追い出すだけで済んだ」
+hsjoihs「そうしたら、今度は FunctionGen に『関数先頭で宣言されている変数の一覧』を渡して、それと照合してエラーを出せばよい」
+hsjoihs「走らせてみると……関数の仮引数についても『知らん』と言われる。それはそう。なのでそいつらも合わせてやろう」
+hsjoihs「ちなみに、関数の先頭で宣言された変数は、関数の仮引数と同じスコープを持ち、名前がかぶってはいけない、というのが C の仕様なので、本当に等価に扱えばよい」
+hsjoihs「よし、実装できた」
+hsjoihs「おや～未定義動作を含む x = 3; y = 5; z = &y + 8; return *z; が CI でだけ落ちる。もういいや、未定義動作だしこのテストケースはコメントアウトしよう」
+
+$DATE「2023年1月18日」
+tkr「FunctionGen の外側の Codegen は今のところ複雑じゃないしまだ分けなくていいか(グローバル変数の定義とか出てきたら考えましょう)」
+hsjoihs「そうね」
+
+
+hsjoihs「tkr 担当の step 18 は簡単で、その次の私がやる step 19 は alloc4(&p, 1, 2, 4, 8) ができるようにしなきゃいけないんだよな」
+tkr「とりあえず来週火曜まではお休みで…(発表あるので)」
+hsjoihs「了解です。私も授業が第二週に入ったのでそろそろ学業を真面目にやらんとあかん」
+tkr「あ、1.5年修士だからまだ忙しいのか」
+hsjoihs「そういうことです（てか今学期末で卒業予定なので）」
+hsjoihs「とりあえず brk() の使い方を雑に理解したので組めそうだな」
+hsjoihs「この二つのリンクを残しておけば 2 週間後のわたしがサクッと組んでくれるでしょう」
+$URL「https://github.com/ushitora-anqou/aqcc/blob/master/as/stdlib.c」
+$URL「https://stackoverflow.com/questions/6988487/what-does-the-brk-system-call-do」
+tkr「ポインタ+1確かに+1じゃないのかこれ」
+hsjoihs「そうなのよね」
+hsjoihs「とりあえず小さなリファクタリングだけ入れといたので一応 review を request しておく」
+$blockquote
+```
+パーサを式のとトップレベルのとに分ける
+いちいち std::mem::take するのが面倒なので Buf::append を実装する
+```
+tkr「approve」
+
+$DATE「2023年1月30日」
+tkr「パーサを修正してcodegenを少しいじるだけでよさそう」
+tkr「ポインタ型ではないものをderefしたらエラーとかは今のところは不要みたい」
+
+$DATE「2023年1月31日」
+hsjoihs「うわこの Addr と Deref の処理が対比的になってなくてかなり読みづらいな。バグあるんじゃないかと疑ってしまった。でも合ってはいるのでマージします」
+tkr「左辺値処理との一貫性を取ったらこっちが不一貫になっちゃった」
+tkr「新幹線の中でやったから酔ったけど、大した分量なかった」
+hsjoihs「ステップ 18 はね」
+tkr「ステップ 19 大変そう」
+hsjoihs「そうそう。型をつけて回んなきゃいけない」
+tkr「型をつけてそれに応じて分岐とか面倒そう」
+hsjoihs「UntypedExpr からなる構文木を元に、TypedExpr からなる構文木を再構築する手と、構文木に漸次的に型をつけていく方法がある」
+hsjoihs「私はどちらかというと前者が好み」
+tkr「そうよね。とはいえ面倒そう」
+hsjoihs「まあ、まず恒等変換を書いて、その後に TypedExpr に型フィールドを要求してエラーが出たところをどんどん直すだけ。そんなに難しくはない」
+
+hsjoihs「ということで、ステップ 19」
+hsjoihs「Expr を UntypedExpr に改名しようかと思ったが、Rust だしジェネリックパラメータに空タプル or 型情報でやればいいか」
+hsjoihs「空タプルを使うのもどうかと思うので、Any という名のゼロサイズ型を定義し、そいつをつけてまわることで、とりあえず UntypedExpr 化に成功」
+hsjoihs「で、次に local_var_declarations を Context という名前の中に突っ込み、そいつを parse_statement につけてまわる」
+hsjoihs「えーと関数定義から関数宣言を取り出してそいつも引き回さないといけない」
+hsjoihs「んー、C だし『構文木に漸次的に型をつけていく方法』で十分だな。もうそっちにしよう」
+
+hsjoihs「よし、一応一時間でできたな。スタートアップには main の定義を教えてやる必要があり、よしコンパイルが通った。実行じゃ」
+hsjoihs「えーーとはい、『ビルトイン関数の宣言がない』『仮引数の宣言を知らされていない』というエラーが。至極ごもっとも」
+hsjoihs「その二つの情報を教えると…『関数 fib は宣言されておらず、戻り値の型が分かりません』。あーはい。再帰のためには自身の戻り値の型をちゃんと教えないといけない」
+hsjoihs「教えてやると……よ〜しできたできた」
+hsjoihs「で、現状だと +933 -625 とあまりに diff が大きすぎる。しかしこれの大部分は式パーサーを impl Context にしたことによるインデントの変更なんだよな」
+hsjoihs「これは本質ではないので、ちょっと先に diff を小さくする作業をしていくか」
+hsjoihs「impl Context ではなく明示的に第一引数として引き回すようにする」
+hsjoihs「なんかパソコンが重い」
+hsjoihs「うおー Docker が変なエラーメッセージを吐いた。パソコン再起動」
+hsjoihs「よし、diff が +410 -95 にまで減った」
+hsjoihs「あとは、結局 Any を使わなかったので、それも削ろう」
+hsjoihs「そしてジェネリクスにする必要ももはやないので、削る」
+hsjoihs「これで +384 -70 で済んだ」
+hsjoihs「あと、定義が」
+$source
+```rust
+pub enum Expr {
+    BinaryExpr {
+        op: BinaryOp,
+        op_pos: usize,
+        左辺: Box<Expr>,
+        右辺: Box<Expr>,
+        typ: Type,
+    },
+    Numeric {
+        val: u8,
+        pos: usize,
+        typ: Type,
+    },
+    Identifier {
+        ident: String,
+        pos: usize,
+        typ: Type,
+    },
+    Call {
+        ident: String,
+        pos: usize,
+        args: Vec<Expr>,
+        typ: Type,
+    },
+    UnaryExpr {
+        op: UnaryOp,
+        op_pos: usize,
+        expr: Box<Expr>,
+        typ: Type,
+    },
+}
+```
+hsjoihs「になってて、全部に typ を書いているのもあんまり賢くないんだよな。とはいえこれを変えると diff が増えるので今は放置しよう（本末転倒）」
+hsjoihs「さて、じゃあ本題の『ポインタの加減算で sizeof を見る』を実装していきますか」
+hsjoihs「足し算のときの変換を実装」
+hsjoihs「引き算のときの変換を実装」
+hsjoihs「さて、問題はこれをどうテストするかで、compilerbook には」
+$blockquote
+```
+この段階ではまだ連続してメモリをアロケートする方法がないので（我々のコンパイラにはまだ配列がない）、テストを書くのはちょっと大変です。ここは単に外部のコンパイラの助けを借りて、そちらのほうでmallocすることにして、自分のコンパイラの出力ではそのヘルパー関数を使ってテストを書くようにしてみてください。
+```
+hsjoihs「とある。しかし我々は外部のコンパイラの生成したオブジェクトファイルとリンクできないので、これまたコンパイラディレクティブを新造しなければならない」
+hsjoihs「さて、ここでログを遡ると、『この二つのリンクを残しておけば 2 週間後のわたしがサクッと組んでくれるでしょう』と 2 週間前の私が以下の二つのリンクを書き残している。」
+$URL「https://github.com/ushitora-anqou/aqcc/blob/master/as/stdlib.c」
+$URL「https://stackoverflow.com/questions/6988487/what-does-the-brk-system-call-do」
+hsjoihs「これが伏線回収ってやつですね」
+hsjoihs「さて、これらのリンクを読んでいく限り、」
+$source
+```c
+#include <unistd.h>
+
+int brk(void* end_data_segment);
+void *sbrk(intptr_t increment);
+
+int alloc4(int **pp, int a, int b, int c, int d) {
+    int *p = sbrk(0);
+    brk(p + 4);
+    p[0] = a;
+    p[1] = b;
+    p[2] = c;
+    p[3] = d;
+    *pp = p;
+    return 0;
+}
+```
+hsjoihs「として alloc4 は実装できそうだ。wandbox でも試してみよう」
+$source
+```c
+#include <unistd.h>
+#include <stdio.h>
+
+int brk(void* end_data_segment);
+void *sbrk(intptr_t increment);
+
+int alloc4(int **pp, int a, int b, int c, int d) {
+    int *p = sbrk(0);
+    brk(p + 4);
+    p[0] = a;
+    p[1] = b;
+    p[2] = c;
+    p[3] = d;
+    *pp = p;
+    return 0;
+}
+
+int main() {
+    int *p;
+    alloc4(&p, 1, 2, 4, 8);
+    int *q;
+    q = p + 2;
+    printf("%d, ", *q); // 4
+    q = p + 3;
+    printf("%d\n", *q); // 8
+    return 0;
+}
+```
+$URL「https://wandbox.org/permlink/Z7DfkoQk7CX4QxVC」
+hsjoihs「ちゃんと動いてますね。もちろんたまたま動いているだけかもしれんけど」
+hsjoihs「ん？ ushitora-anqou 実装では最初にゼロ渡すのもその後に拡張するのも両方 syscall(12, addr) で実装しているけど、これでいいの？」
+hsjoihs「なるほど、 https://man7.org/linux/man-pages/man2/brk.2.html に書いてある。」
+$blockquote
+```
+However, the actual Linux system call returns the new program break on success.  On failure, the system call returns the current break.
+```
+hsjoihs「理解。なので、syscall(12, NULL) を最初に走らせて現在の break 位置を知り、その後にその現在の break 位置から必要量だけ増やした位置を syscall(12, new_break) すれば動くのか」
+hsjoihs「さて、こいつは 5 引数関数だから……あ、第一引数ポインタだから『rbpにoffsetを足した位置にediを代入』で事故りそう」
+hsjoihs「まあいいや、とりあえず戻り値にポインタ入れちゃおう」
+hsjoihs「あとはアセンブリプログラミングを頑張り、えーっとこうすればスタックを使わないからアラインメントも気にしなくてよくなって」
+hsjoihs「よし、実装できた。あとはこれをコンパイラに教え、呼ぶだけだ」
+hsjoihs「運命の時！」
+$blockquote
+```
+[FAIL] int main() { int *p; p = __builtin_alloc4(1, 2, 4, 8); return *p + *(p+1) + *(p+2) + *(p+3); } => 15 expected, but got 1
+```
+hsjoihs「おや～？」
+hsjoihs「えーと testwork フォルダ内に当該バイナリがあるはず。一旦 rm -rf testwork/* してから ./test.sh することにより ./a.out が手に入る」
+hsjoihs「とりあえず failing.out とかいう名前を付けて一旦コミットし、この検体を分析しよう」
+$source
+```
+hsjoihs@LAPTOP-BKHPSENK:~/c-compilers/c_to_elf_compiler$ gdb failing.out
+GNU gdb (Ubuntu 9.2-0ubuntu1~20.04.1) 9.2
+Copyright (C) 2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from failing.out...
+(No debugging symbols found in failing.out)
+(gdb) run
+Starting program: /home/hsjoihs/c-compilers/c_to_elf_compiler/failing.out 
+[Inferior 1 (process 10911) exited with code 01]
+(gdb) start
+No symbol table is loaded.  Use the "file" command.
+Make breakpoint pending on future shared library load? (y or [n]) y
+Temporary breakpoint 1 (-qualified main) pending.
+Starting program: /home/hsjoihs/c-compilers/c_to_elf_compiler/failing.out 
+[Inferior 1 (process 10945) exited with code 01]
+(gdb) file
+No executable file now.
+No symbol file now.
+(gdb) 
+```
+hsjoihs「え～っと run は動くが start も file も効かない。どうしようかな。あ、file failing.out なら動いた。そうするのか」
+hsjoihs「いや stepi できないな。もういい、objdump する」
+
+$source
+```
+hsjoihs@LAPTOP-BKHPSENK:~/c-compilers/c_to_elf_compiler$ objdump -d failing.out
+
+failing.out:     file format elf64-x86-64
+```
+hsjoihs「うお～ section が存在しないから disass されない」
+hsjoihs「もういいや、バイナリエディタを開いて、中身を https://defuse.ca/online-x86-assembler.htm に突っ込んで、」
+
+$source
+```
+えーとこれが __builtin_putchar よね。あれ？__builtin_three はどこ行った？
+0:  55                      push   rbp
+1:  48 89 e5                mov    rbp,rsp
+4:  48 83 ec 08             sub    rsp,0x8
+8:  89 7d f8                mov    DWORD PTR [rbp-0x8],edi
+b:  b8 01 00 00 00          mov    eax,0x1
+10: bf 01 00 00 00          mov    edi,0x1
+15: 48 8d 75 f8             lea    rsi,[rbp-0x8]
+19: ba 01 00 00 00          mov    edx,0x1
+1e: 0f 05                   syscall
+20: c9                      leave
+21: c3                      ret
+
+次にこれが __builtin_alloc4 だけど……あっプロローグでローカル変数の分の引き算をしていない！！これだ
+22: 55                      push   rbp
+23: 48 89 e5                mov    rbp,rsp
+26: 48 83 ec 08             sub    rsp,0x8
+2a: 89 7d f8                mov    DWORD PTR [rbp-0x8],edi
+2d: 89 75 f0                mov    DWORD PTR [rbp-0x10],esi
+30: 89 55 e8                mov    DWORD PTR [rbp-0x18],edx
+33: 89 4d e0                mov    DWORD PTR [rbp-0x20],ecx
+36: b8 0c 00 00 00          mov    eax,0xc
+3b: bf 00 00 00 00          mov    edi,0x0
+40: 0f 05                   syscall
+42: 50                      push   rax
+43: 5f                      pop    rdi
+44: b8 10 00 00 00          mov    eax,0x10
+49: 48 01 c7                add    rdi,rax
+4c: b8 0c 00 00 00          mov    eax,0xc
+51: 0f 05                   syscall
+53: 48 83 e8 04             sub    rax,0x4
+57: 48 8d 7d e0             lea    rdi,[rbp-0x20]
+5b: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+5e: 48 89 38                mov    QWORD PTR [rax],rdi
+61: 48 83 e8 04             sub    rax,0x4
+65: 48 8d 7d e8             lea    rdi,[rbp-0x18]
+69: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+6c: 48 89 38                mov    QWORD PTR [rax],rdi
+6f: 48 83 e8 04             sub    rax,0x4
+73: 48 8d 7d f0             lea    rdi,[rbp-0x10]
+77: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+7a: 48 89 38                mov    QWORD PTR [rax],rdi
+7d: 48 83 e8 04             sub    rax,0x4
+81: 48 8d 7d f8             lea    rdi,[rbp-0x8]
+85: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+88: 48 89 38                mov    QWORD PTR [rax],rdi
+8b: c9                      leave
+8c: c3                      ret
+```
+hsjoihs「はい～単純な凡ミス。これを直して………あれ？？？まだ通らない。なにゆえ～」
+hsjoihs「とりあえず、もう一回検体を生成しよう」
+$source
+```
+ああ普通に __builtin_three あるね。さっきはコピペ範囲をミスっただけか
+0:  55                      push   rbp
+1:  48 89 e5                mov    rbp,rsp
+4:  48 83 ec 00             sub    rsp,0x0
+8:  b8 03 00 00 00          mov    eax,0x3
+d:  c9                      leave
+e:  c3                      ret
+
+次にこれが __builtin_putchar で、
+f:  55                      push   rbp
+10: 48 89 e5                mov    rbp,rsp
+13: 48 83 ec 08             sub    rsp,0x8
+17: 89 7d f8                mov    DWORD PTR [rbp-0x8],edi
+1a: b8 01 00 00 00          mov    eax,0x1
+1f: bf 01 00 00 00          mov    edi,0x1
+24: 48 8d 75 f8             lea    rsi,[rbp-0x8]
+28: ba 01 00 00 00          mov    edx,0x1
+2d: 0f 05                   syscall
+2f: c9                      leave
+30: c3                      ret
+
+お次のこれが __builtin_alloc4 のはず。今度はちゃんと 0x20 を引いてるんだけどなぁ
+31: 55                      push   rbp
+32: 48 89 e5                mov    rbp,rsp
+35: 48 83 ec 20             sub    rsp,0x20
+39: 89 7d f8                mov    DWORD PTR [rbp-0x8],edi
+3c: 89 75 f0                mov    DWORD PTR [rbp-0x10],esi
+3f: 89 55 e8                mov    DWORD PTR [rbp-0x18],edx
+42: 89 4d e0                mov    DWORD PTR [rbp-0x20],ecx
+45: b8 0c 00 00 00          mov    eax,0xc
+4a: bf 00 00 00 00          mov    edi,0x0
+4f: 0f 05                   syscall
+51: 50                      push   rax
+52: 5f                      pop    rdi
+53: b8 10 00 00 00          mov    eax,0x10
+58: 48 01 c7                add    rdi,rax
+5b: b8 0c 00 00 00          mov    eax,0xc
+60: 0f 05                   syscall
+62: 48 83 e8 04             sub    rax,0x4
+66: 48 8d 7d e0             lea    rdi,[rbp-0x20]
+6a: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+6d: 48 89 38                mov    QWORD PTR [rax],rdi
+70: 48 83 e8 04             sub    rax,0x4
+74: 48 8d 7d e8             lea    rdi,[rbp-0x18]
+78: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+7b: 48 89 38                mov    QWORD PTR [rax],rdi
+7e: 48 83 e8 04             sub    rax,0x4
+82: 48 8d 7d f0             lea    rdi,[rbp-0x10]
+86: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+89: 48 89 38                mov    QWORD PTR [rax],rdi
+8c: 48 83 e8 04             sub    rax,0x4
+90: 48 8d 7d f8             lea    rdi,[rbp-0x8]
+94: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+97: 48 89 38                mov    QWORD PTR [rax],rdi
+9a: c9                      leave
+9b: c3                      ret
+
+で、こいつが今回試されるべき int main() { int *p; p = __builtin_alloc4(1, 2, 4, 8); return *p + *(p+1) + *(p+2) + *(p+3); }
+9c: 55                      push   rbp
+9d: 48 89 e5                mov    rbp,rsp
+a0: 48 83 ec 08             sub    rsp,0x8
+a4: 55                      push   rbp
+a5: 5f                      pop    rdi
+a6: 48 83 ef 08             sub    rdi,0x8
+aa: 57                      push   rdi
+ab: 48 83 ec 10             sub    rsp,0x10
+af: bf 08 00 00 00          mov    edi,0x8
+b4: 57                      push   rdi
+b5: bf 04 00 00 00          mov    edi,0x4
+ba: 57                      push   rdi
+bb: bf 02 00 00 00          mov    edi,0x2
+c0: 57                      push   rdi
+c1: bf 01 00 00 00          mov    edi,0x1
+c6: 57                      push   rdi
+c7: 5f                      pop    rdi
+c8: 5e                      pop    rsi
+c9: 5a                      pop    rdx
+ca: 59                      pop    rcx
+cb: b8 a9 00 40 00          mov    eax,0x4000a9
+d0: ff d0                   call   rax
+d2: 89 c7                   mov    edi,eax
+d4: 48 83 c4 10             add    rsp,0x10
+d8: 58                      pop    rax
+d9: 48 89 38                mov    QWORD PTR [rax],rdi
+dc: 55                      push   rbp
+dd: 5f                      pop    rdi
+de: 48 83 ef 08             sub    rdi,0x8
+e2: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+e5: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+e8: 57                      push   rdi
+e9: 55                      push   rbp
+ea: 5f                      pop    rdi
+eb: 48 83 ef 08             sub    rdi,0x8
+ef: 48 8b 3f                mov    rdi,QWORD PTR [rdi]
+f2: 57                      push   rdi
+f3: bf 04 00 00 00          mov    edi,0x4
+f8: 57                      push   rdi
+f9: bf 01 00 00 00          mov    edi,0x1
+fe: 57                      push   rdi
+ff: 58                      pop    rax
+100:    5f                      pop    rdi
+101:    48 0f af f8             imul   rdi,rax
+105:    57                      push   rdi
+106:    58                      pop    rax
+107:    5f                      pop    rdi
+108:    48 01 c7                add    rdi,rax
+10b:    48 8b 3f                mov    rdi,QWORD PTR [rdi]
+10e:    57                      push   rdi
+10f:    58                      pop    rax
+110:    5f                      pop    rdi
+111:    48 01 c7                add    rdi,rax
+114:    57                      push   rdi
+115:    55                      push   rbp
+116:    5f                      pop    rdi
+117:    48 83 ef 08             sub    rdi,0x8
+11b:    48 8b 3f                mov    rdi,QWORD PTR [rdi]
+11e:    57                      push   rdi
+11f:    bf 04 00 00 00          mov    edi,0x4
+124:    57                      push   rdi
+125:    bf 02 00 00 00          mov    edi,0x2
+12a:    57                      push   rdi
+12b:    58                      pop    rax
+12c:    5f                      pop    rdi
+12d:    48 0f af f8             imul   rdi,rax
+131:    57                      push   rdi
+132:    58                      pop    rax
+133:    5f                      pop    rdi
+134:    48 01 c7                add    rdi,rax
+137:    48 8b 3f                mov    rdi,QWORD PTR [rdi]
+13a:    57                      push   rdi
+13b:    58                      pop    rax
+13c:    5f                      pop    rdi
+13d:    48 01 c7                add    rdi,rax
+140:    57                      push   rdi
+141:    55                      push   rbp
+142:    5f                      pop    rdi
+143:    48 83 ef 08             sub    rdi,0x8
+147:    48 8b 3f                mov    rdi,QWORD PTR [rdi]
+14a:    57                      push   rdi
+14b:    bf 04 00 00 00          mov    edi,0x4
+150:    57                      push   rdi
+151:    bf 03 00 00 00          mov    edi,0x3
+156:    57                      push   rdi
+157:    58                      pop    rax
+158:    5f                      pop    rdi
+159:    48 0f af f8             imul   rdi,rax
+15d:    57                      push   rdi
+15e:    58                      pop    rax
+15f:    5f                      pop    rdi
+160:    48 01 c7                add    rdi,rax
+163:    48 8b 3f                mov    rdi,QWORD PTR [rdi]
+166:    57                      push   rdi
+167:    58                      pop    rax
+168:    5f                      pop    rdi
+169:    48 01 c7                add    rdi,rax
+16c:    89 f8                   mov    eax,edi
+16e:    c9                      leave
+16f:    c3                      ret
+170:    55                      push   rbp
+171:    48 89 e5                mov    rbp,rsp
+174:    48 83 ec 00             sub    rsp,0x0
+178:    48 83 ec 08             sub    rsp,0x8
+17c:    b8 14 01 40 00          mov    eax,0x400114
+181:    ff d0                   call   rax
+183:    89 c7                   mov    edi,eax
+185:    48 83 c4 08             add    rsp,0x8
+189:    b8 3c 00 00 00          mov    eax,0x3c
+18e:    0f 05                   syscall
+```
+hsjoihs「よし、わからん！」
+hsjoihs「とりあえず、困難を分割しよう。p[0] から p[3] のうち、格納に成功しているのはどこまでだろうか」
+$source
+```bash
+check 1 "int main() { int *p; p = __builtin_alloc4(1, 2, 4, 8); return *p; }"
+check 7 "int main() { int *p; p = __builtin_alloc4(7, 2, 4, 8); return *p; }"
+check 11 "int main() { int *p; p = __builtin_alloc4(11, 2, 4, 8); return *p; }"
+```
+hsjoihs「通る。p[0]は格納できているようだ」
+$source
+```
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 1, 4, 8); return *(p+1); } => 1 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 7, 4, 8); return *(p+1); } => 7 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 11, 4, 8); return *(p+1); } => 11 expected, but got 0
+```
+hsjoihs「はいはい」
+$source
+```
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 1, 8); return *(p+2); } => 1 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 7, 8); return *(p+2); } => 7 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 11, 8); return *(p+2); } => 11 expected, but got 0
+```
+hsjoihs「パターン見えてきたよ」
+$source
+```
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 8, 1); return *(p+3); } => 1 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 8, 7); return *(p+3); } => 7 expected, but got 0
+[FAIL] int main() { int *p; p = __builtin_alloc4(2, 4, 8, 11); return *(p+3); } => 11 expected, but got 0
+```
+hsjoihs「でしょうね」
+hsjoihs「ということで、先頭要素の格納にだけは成功しているが、残りの 3 つが格納できておらず、必ず 0 で埋まっている」
+hsjoihs「……あっ、分かったような気がするぞ」
+hsjoihs「これ 32 bit 配列に 64 bit 書き込みをしてるのが原因だわ」
+$IMAGE「64bit_assign.png」
+hsjoihs「なのでこれ直せば動くはず。まずは alloc4 の実装を直して、」
+hsjoihs「よ～し動いた。しかし現状だと『このビルトインで確保した配列に、自分で値を書き込む』をやると 64 bit 書き込みになってバグるはず。試そう」
+
+$source
+```
+[FAIL] int main() { int *p; p = __builtin_alloc4(3, 3, 3, 3); *(p+3) = 8; *(p+2) = 4; *(p+1) = 2; *p = 1; return *p + *(p+1) + *(p+2) + *(p+3); } => 15 expected, but got 1
+```
+
+hsjoihs「よし期待通り。なので、ここの書き込みも sizeof を見るようにしなければならない」
+
+$source
+```rust
+match typ.sizeof() {
+    8 => buf.append(raxが指す位置にrdiを代入()),
+    4 => buf.append(raxが指す位置にediを代入()),
+    _ => panic!("size が {} な型への代入はできません", typ.sizeof()),
+};
+```
+hsjoihs「よし通った！！！」
+hsjoihs「しかし、アセンブリの書きやすさのためにp[3] → p[2] → p[1] → p[0] の順で書き込んでいっていて幸いだったな。おかげでバグに気づけた」
+
+tkr「sizeof演算子って型だけじゃなくて式もかけたのまじか」
+
+$DATE「2023年2月1日」
+
+tkr「次ってなんでしたっけ」
+hsjoihs「sizeof なのでめちゃめちゃラクです」
+tkr「もう既に hsjoihs さんが実装終わらせてるようなもんだからな」
+hsjoihs「ここ数回は奇数ステップの方が圧倒的に実装重いですね」
+
+hsjoihs「現実逃避のパワーで、自分で別個でやってた C コンパイラ https://github.com/sozysozbot/2kmcc が compilerbook 基本走りきっちゃった」
+hsjoihs「ということで、課題をやります。レビューと実装をとても素早く終わらせることによって、tkr は私の課題の進捗を邪魔することができます」
+tkr「圧を掛けられている」
+
+$blockquote
+```
+hsjoihs「で、現状だと +933 -625 とあまりに diff が大きすぎる。しかしこれの大部分は式パーサーを impl Context にしたことによるインデントの変更なんだよな」
+```
+tkr「これってgitの設定でなんとかできなかったっけ」
+hsjoihs「できるんだけど（てか VSCode では勝手になんとかなる）、レビューは GitHub 上で発生するので、そっちでの負担が少なくなる方がいいだろうとの判断です 」
+tkr「あ〜〜」
+
+さうす「これ使えない？」
+$IMAGE「github-whitespace.png」
+hsjoihs「へ〜こんなのが」
+tkr「そんなのあったの」
+tkr「便利だ」
+hsjoihs「まあ今回は &mut Context じゃなくて &Context なので、第一引数で引き回してもそんなに読みづらくならないだろうとの判断もありました」
+hsjoihs「それはともかくさうすくんありがとうございます」
+
+$DATE「2023年2月2日」
+tkr「sizeofの実装やるぞ」
+tkr「トークナイザとパーサ変更して終わり。はい」
+tkr「sizeof 値 は一瞬で実装できたので、sizeof (型) を実装してからプルリク投げます」
+hsjoihs「まだ配列ないから sizeof(int **[5][2]) とか考えなくていいし、よさそう」
+hsjoihs「sizeof は型取るときはカッコ必要ですよ」
+tkr「え、そうなのか。あぶなかった。カッコがなかったら絶対式だけど、カッコがあったら両方ありうる？めちゃくちゃ面倒じゃない？」
+hsjoihs「今の c_to_elf コンパイラの現状では型名はすべて int で始まるので、困りません」 
+hsjoihs「ところで、型がカッコで括られているといえばキャストもありますが、こいつと sizeof の兼ね合いでこういう話がありますね」
+$URL「https://godbolt.org/z/1fhT5GMb1」
+$source
+```c
+int foo() {
+    int *p;
+    return sizeof((int)*p);
+}
+
+int bar() {
+    int a = 3;
+    return sizeof(int)*a;
+}
+```
+tkr「sizeof 実装できた」
+
+hsjoihs「ということで、『ステップ 21: 配列を実装する』をやっていきます」
+hsjoihs「トークナイザに角括弧を追加」
+hsjoihs「enum Type にも配列の存在を教え、Type::sizeof も実装」
+hsjoihs「直前のステップ 20 で sizeof 演算子が実装してあることによりテストケースを書きやすくなっているの、なかなか上手い工夫なんだよな」
+hsjoihs「さて、問題はパーサー。『型をパース』と『識別子名をパース』してる関数を先に一つに固め、そこに変更を加えて配列を差し込んでいくのがラクです」
+hsjoihs「てか既に parse_parameter_type_and_identifier 関数がある。じゃあこれを改造しよう」
+hsjoihs「ローカル変数も関数引数もともに parse_type_and_identifier 関数を呼ぶように変更」
+
+hsjoihs「配列をポインタに decay させるのは、Box_ という型を間に挟んで」
+$source
+```rust
+pub fn decay_if_arr(expr: Expr) -> Box_<Expr> {
+    match expr.typ() {
+        Type::Arr(t, _) => Box_(Box::new(Expr::DecayedArr {
+            expr: Box_(Box::new(expr)),
+            typ: Type::Ptr(t),
+        })),
+        _ => Box_(Box::new(expr)),
+    }
+}
+
+pub fn no_decay_even_if_arr(expr: Expr) -> Box_<Expr> {
+    Box_(Box::new(expr))
+}
+```
+hsjoihs「としてやることで解決。コード生成もした。さてあとは配列のための領域をスタックにアロケートするだけだな」
+hsjoihs「えーと現状では local_var_table に『何番目の変数か』を入れていて idx と呼び、それに WORD_SIZE を掛け算してオフセットが計算されている」
+hsjoihs「これを、オフセットを直に入れるように変更する必要があるな。これはもうこのテーブルを struct として切り出したりしたほうがいいんだろうか」
+hsjoihs「てか未定義変数をエラーにするようにした時点で .or_insert は一個削られる運命だったんだな。まずそれを処理しよう」
+hsjoihs「あ、.or_insert 全部外せる」
+hsjoihs「で、今度はオフセットを直に HashMap に入れるようにして、」
+hsjoihs「普通に更新を関数に切り出すべきだな」
+hsjoihs「HashMap に入れて max_offset を増やす LocalVarTable::allocate() も実装」
+hsjoihs「配列のサイズに基づいてアロケートするようにした。これでよかろう」
+
+
+$DATE「2023年2月6日」
+tkr「テスト実行するとMacの調子が悪くなる問題、多分サブプロセスの起動しすぎだったのでなおした」
+tkr「配列のインデックス構文はパーサ書き直すだけ。関数呼び出しも後置演算子の仲間にしたかったが意味解析も同時に行ってる現状では厳しそうなので諦め」
+
+$DATE「2023年2月15日」
+hsjoihs「パーサーのリファクタリングもちょっとやってもらったし、そろそろステップ23（グローバル変数）の実装をやる必要がある」
+hsjoihs「さてこれどうしたもんかね。流石にこれは ELF の中身を見ないことには回らないのかな。どうなんだろ」
+hsjoihs「いやまあ、『グローバル変数はスタートアップ時にヒープに確保され、ゼロクリアされる』って処理系にしても規格には準拠するんだが」
+hsjoihs「ん〜〜〜とはいえ、実際の処理系では『ゼロクリアされるような場所にグローバル変数を確保』するのはローダの仕事のはず」
+hsjoihs「つまり！これは『いまローダがないから、それの代用として Linux システムコールに頼ってヒープに確保しているだけ』と主張することができる（ふむ〜？）」
+hsjoihs「Q.『外部リンケージどうするの？』」
+hsjoihs「A.『いままだリンカないから。リンカできたらそのときに初めて考えよう』」
+
+hsjoihs「まあなにはともあれパースできないと始まらない」
+hsjoihs「いまは parse_toplevel_function_definition しかないので、これを『関数定義かグローバル変数定義』へとすり替える必要がある」
+hsjoihs「とりあえずハリボテして……」
+hsjoihs「パーサーを書いた。動く。」
+
+hsjoihs「さて、さっき実行時確保の案を出したが、グローバル変数のアドレスってコンパイル時に定数である必要があったりしなかったっけ」
+hsjoihs「なんかそこらへんを考えると、規格に想定されていない曲芸をやるのはやめて、普通に策を練ったほうがいい気がしてくるな」
+hsjoihs「よし、決めた、これは後回しにしよう。」
+$blockquote
+```
+予定変更！ @すーぱーてけらには引き続き 24 と 26 もやってもらいますが、私は 23 と 25 の実装をサボります
+
+理由：グローバル変数は外部リンケージを持つ存在なので、「幕間」のあとにやるのが自然
+
+「幕間」と呼んでいるのは、「今回の縛り特有」でどうしても必要になってくる要素をいくつか導入するフェーズ
+
+幕間 1: プロトタイプ宣言と相互再帰
+ - 現状の Buf を改造して、「名前付き穴」みたいなものを書けるようにし、.to_vec() で最終的に書き込むときにその「名前付き穴」を解決するようにする
+
+幕間 2: 初めての依存ライブラリ、初めての中間ファイル
+ - cargo add serde して、「名前付き穴」のある Buf を JSON として出力してしまう
+ - その出力ファイルを読み、「名前付き穴」を解決し、ELF として吐く仕組みを作る
+
+幕間 3: Yet Another Linkable Format.json
+ - 複数の出力ファイルを読み、「名前付き穴」を解決し、ELF として吐く仕組みを作る
+ - 分割コンパイルのテストケースを書く
+
+ということで、私の step 23 は「グローバル変数が定義できるが、sizeof しか取ることができず、読み書きしようとするとコンパイルエラー」で一旦完成とします。同様に step 25 の文字列リテラルも「sizeof しか取ることができない定数」にします
+```
+hsjoihs「sizeof のオペランドとしては正しく動くようにした。ということでこれで一旦完成とする」
+
+$DATE「2023年2月16日」
+hsjoihs「あー、グローバル変数と関数が同じ名前空間に入るようにするか」
+hsjoihs「名前空間をくっつけた」
+
+$DATE「2023年3月2日」
+tkr「char型の実装」
+tkr「型を追加する仕組みはすでにあるので少し修正加えるだけ。char+charがintになるの知らなくてバグらせてたけど直した」
+
+$DATE「2023年3月6日」
+hsjoihs「文字列リテラルをやる。ただし、sizeof のオペランドとしてのみ動くようにする」
+hsjoihs「まずはエスケープシーケンスなしで組む」
+
+$blockquote
+```
+このステップではバックスラッシュによるエスケープなどは実装する必要はありません。ステップバイステップで行くのが重要なので、簡単に実装できそうに思えても、しないようにしてみてください。
+```
+
+hsjoihs「じゃあもうこれで終わりでいいか。まあ一応『バックスラッシュを見たらエラーを吐く』ぐらいはやってもいい」
+
+$DATE「2023年4月3日」
+tkr「さすがにそろそろ再開します」
+tkr「複数行入力、雑に実装してテストケース修正するだけかな」
+tkr「テストケースはプロセス置換で修正、トークナイザで改行などを無視するようにした」
+tkr「エラー位置の表示は filename:line:col の方がVSCodeのサポートとか考えると便利なのでこっちでいきます」
+tkr「filenameのバケツリレー大変だ」
+tkr「ちゃんと動いていそう」
+
+$source
+```c
+int main() {
+    b = 1;
+}
+```
+
+$source
+```
+test.c:2:5
+    b = 1;
+    ^ 識別子 b は定義されておらず、型が分かりません
+```
+
+$DATE「2023年4月10日」
+hsjoihs「はいレビュー」
+hsjoihs「はい複数行コメント」
+hsjoihs「よしこれで any% クリアですね」
