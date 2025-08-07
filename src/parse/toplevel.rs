@@ -19,7 +19,10 @@ fn parse_test() {
         parse_statement(
             &Context {
                 local_var_and_param_declarations: HashMap::new(),
-                global_declarations: GlobalDeclarations { symbols: HashMap::new(), struct_names: HashMap::new() },
+                global_declarations: GlobalDeclarations {
+                    symbols: HashMap::new(),
+                    struct_names: HashMap::new()
+                },
             },
             &mut tokens,
             "test.c",
@@ -388,34 +391,60 @@ pub enum Type {
     Char,
     Ptr(Box<Type>),
     Arr(Box<Type>, u8),
+    Struct { struct_name: String },
 }
 
 impl Type {
     pub fn deref(&self) -> Option<Self> {
         match self {
-            Type::Int | Type::Char => None,
+            Type::Int | Type::Char | Type::Struct { .. } => None,
             Type::Ptr(x) | Type::Arr(x, _) => Some((**x).clone()),
         }
     }
 
-    pub fn sizeof(&self) -> u8 {
+    pub fn sizeof_primitive(&self) -> u8 {
         match self {
             Type::Int => 4,
             Type::Char => 1,
             Type::Ptr(_) => 8,
             Type::Arr(t, len) => t
-                .sizeof()
+                .sizeof_primitive()
                 .checked_mul(*len)
                 .expect("型のサイズが u8 に収まりません"),
+            _ => panic!("sizeof_primitive() は構造体に対しては定義されていません"),
         }
     }
 
-    pub fn alignof(&self) -> u8 {
+    pub fn sizeof(&self, struct_def_table: &HashMap<String, StructDefinition>) -> u8 {
         match self {
             Type::Int => 4,
             Type::Char => 1,
             Type::Ptr(_) => 8,
-            Type::Arr(t, _) => t.alignof(),
+            Type::Arr(t, len) => t
+                .sizeof(struct_def_table)
+                .checked_mul(*len)
+                .expect("型のサイズが u8 に収まりません"),
+            Type::Struct { struct_name } => struct_def_table.get(struct_name).map_or_else(
+                || {
+                    panic!("構造体 {struct_name} の定義が見つかりません");
+                },
+                |s| s.size,
+            ),
+        }
+    }
+
+    pub fn alignof(&self, struct_def_table: &HashMap<String, StructDefinition>) -> u8 {
+        match self {
+            Type::Int => 4,
+            Type::Char => 1,
+            Type::Ptr(_) => 8,
+            Type::Arr(t, _) => t.alignof(struct_def_table),
+            Type::Struct { struct_name } => struct_def_table.get(struct_name).map_or_else(
+                || {
+                    panic!("構造体 {struct_name} の定義が見つかりません");
+                },
+                |s| s.align,
+            ),
         }
     }
 }
@@ -723,6 +752,125 @@ pub fn parse(
 ) -> Result<Vec<FunctionDefinition>, AppError> {
     let mut function_definitions: Vec<FunctionDefinition> = vec![];
     while tokens.peek().is_some() {
+        // If it starts with the keyword `struct`, we might be seeing a toplevel struct definition:
+        // `struct Foo { int x; }`
+        // To check for that, we peek three tokens:
+
+        if let Some(Token {
+            tok: Tok::Struct, ..
+        }) = tokens.peek()
+        {
+            let mut duplicated_iter = tokens.clone();
+            duplicated_iter.next();
+            if let Some(Token {
+                tok: Tok::Identifier(struct_name),
+                ..
+            }) = duplicated_iter.next()
+            {
+                if let Some(Token {
+                    tok: Tok::開き波括弧,
+                    ..
+                }) = duplicated_iter.next()
+                {
+                    // We have a struct definition
+                    tokens.next(); // consume `struct`
+                    tokens.next(); // consume `struct_name`
+                    tokens.next(); // consume `{`
+
+                    let mut members = vec![];
+                    let mut overall_alignment = 1;
+                    let mut next_member_offset = 0;
+
+                    loop {
+                        match tokens.peek() {
+                            None => {
+                                return Err(AppError {
+                                    message: "期待された閉じ波括弧が来ませんでした".to_string(),
+                                    input: input.to_string(),
+                                    filename: filename.to_string(),
+                                    pos: input.len(),
+                                })
+                            }
+                            Some(Token {
+                                tok: Tok::閉じ波括弧,
+                                ..
+                            }) => {
+                                tokens.next();
+
+                                break;
+                            }
+                            _ => {
+                                let member_type = parse_type(tokens, filename, input)?;
+                                match tokens.next().unwrap() {
+                                    Token {
+                                        tok: Tok::Identifier(member_name),
+                                        ..
+                                    } => {
+                                        satisfy(
+                                            tokens,
+                                            filename,
+                                            input,
+                                            |tok| tok == &Tok::Semicolon,
+                                            "メンバーの後にセミコロンがありません",
+                                        )?;
+                                        let member_size =
+                                            member_type.sizeof(&global_declarations.struct_names);
+                                        if next_member_offset
+                                            % member_type.alignof(&global_declarations.struct_names)
+                                            != 0
+                                        {
+                                            next_member_offset += member_type
+                                                .alignof(&global_declarations.struct_names)
+                                                - (next_member_offset
+                                                    % member_type.alignof(
+                                                        &global_declarations.struct_names,
+                                                    ));
+                                        }
+                                        overall_alignment = overall_alignment.max(
+                                            member_type.alignof(&global_declarations.struct_names),
+                                        );
+                                        members.push(StructMember {
+                                            member_name: member_name.to_owned(),
+                                            member_type,
+                                            offset: next_member_offset,
+                                        });
+                                        next_member_offset += member_size;
+                                    }
+                                    Token { pos, .. } => {
+                                        return Err(AppError {
+                                            message: "構造体のメンバー名がありません".to_string(),
+                                            input: input.to_string(),
+                                            filename: filename.to_string(),
+                                            pos: *pos,
+                                        })
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    satisfy(
+                        tokens,
+                        filename,
+                        input,
+                        |tok| tok == &Tok::Semicolon,
+                        "構造体定義の終わりの直後にセミコロンがありません",
+                    )?;
+
+                    global_declarations.struct_names.insert(
+                        struct_name.clone(),
+                        StructDefinition {
+                            struct_name: struct_name.clone(),
+                            size: next_member_offset.div_ceil(overall_alignment)
+                                * overall_alignment,
+                            align: overall_alignment,
+                            members,
+                        },
+                    );
+                }
+            }
+        }
+
         let new_def = parse_toplevel_definition(global_declarations, tokens, filename, input)?;
         match new_def {
             ToplevelDefinition::Func(new_def) => {

@@ -2223,3 +2223,6 @@ hsjoihs「そして clippy でちょっと整理する」
 hsjoihs「えーと構造体の諸情報を覚えておくグローバルなやつが必要。FunctionDefinition 型の定義を参考にするとよさそう。」
 hsjoihs「toplevel::parse のレイヤで持つのが正しいのか？　どうなんだ？」
 hsjoihs「まあ global_declarations に持つのが正しそう。」
+
+hsjoihs「とりあえず、構造体の定義をパースして行き渡らせる実装が書けた気がする。」
+hsjoihs「テストケースに構造体の sizeof と _Alignof を書いて、テストを通して、21:22」

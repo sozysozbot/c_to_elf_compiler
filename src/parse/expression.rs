@@ -55,7 +55,9 @@ fn parse_primary(
                     |tok| tok == &Tok::開き丸括弧,
                     "開き丸括弧ではありません",
                 )
-            })?).is_some() {
+            })?)
+            .is_some()
+            {
                 let mut args = Vec::new();
 
                 if (recover(tokens, |tokens| {
@@ -66,7 +68,9 @@ fn parse_primary(
                         |tok| tok == &Tok::閉じ丸括弧,
                         "閉じ丸括弧ではありません",
                     )
-                })?).is_some() {
+                })?)
+                .is_some()
+                {
                     let func_decl = match context.global_declarations.symbols.get(ident) {
                         Some(SymbolDeclaration::Func(f)) => f.clone(),
                         Some(SymbolDeclaration::GVar(_)) => {
@@ -111,7 +115,9 @@ fn parse_primary(
                             |tok| tok == &Tok::閉じ丸括弧,
                             "閉じ丸括弧ではありません",
                         )
-                    })?).is_some() {
+                    })?)
+                    .is_some()
+                    {
                         let func_decl = match context.global_declarations.symbols.get(ident) {
                             Some(SymbolDeclaration::Func(f)) => f.clone(),
                             Some(SymbolDeclaration::GVar(_)) => {
@@ -150,7 +156,9 @@ fn parse_primary(
                             |tok| tok == &Tok::Comma,
                             "カンマではありません",
                         )
-                    })?).is_some() {
+                    })?)
+                    .is_some()
+                    {
                         let expr = parse_expr(context, tokens, filename, input)?;
                         args.push(*decay_if_arr(expr));
                     } else {
@@ -248,7 +256,7 @@ fn parse_suffix_op(
                     typ: Type::Int,
                 };
 
-                expr = subtract(Box::new(incremented_expr), Box::new(one), op_pos).ok_or(
+                expr = subtract(context, Box::new(incremented_expr), Box::new(one), op_pos).ok_or(
                     AppError {
                         message,
                         input: input.to_string(),
@@ -282,12 +290,14 @@ fn parse_suffix_op(
                     typ: Type::Int,
                 };
 
-                expr = add(Box::new(decremented_expr), Box::new(one), op_pos).ok_or(AppError {
-                    message,
-                    input: input.to_string(),
-                    filename: filename.to_string(),
-                    pos: op_pos,
-                })?;
+                expr = add(context, Box::new(decremented_expr), Box::new(one), op_pos).ok_or(
+                    AppError {
+                        message,
+                        input: input.to_string(),
+                        filename: filename.to_string(),
+                        pos: op_pos,
+                    },
+                )?;
             }
 
             Token {
@@ -475,7 +485,9 @@ fn parse_unary(
                     |tok| tok == &Tok::開き丸括弧,
                     "開き丸括弧ではありません",
                 )
-            })?).is_some() {
+            })?)
+            .is_some()
+            {
                 let typ = if let Some(typ) =
                     recover(tokens, |tokens| parse_type(tokens, filename, input))?
                 {
@@ -496,12 +508,12 @@ fn parse_unary(
             };
 
             Ok(Expr::Numeric {
-                val: typ.sizeof(),
+                val: typ.sizeof(&context.global_declarations.struct_names),
                 pos: *pos,
                 typ: Type::Int,
             })
         }
-         Some(Token {
+        Some(Token {
             tok: Tok::Alignof,
             pos,
         }) => {
@@ -515,13 +527,15 @@ fn parse_unary(
                     |tok| tok == &Tok::開き丸括弧,
                     "開き丸括弧ではありません",
                 )
-            })?).is_some() {
+            })?)
+            .is_some()
+            {
                 let typ = if let Some(typ) =
                     recover(tokens, |tokens| parse_type(tokens, filename, input))?
                 {
                     typ
                 } else {
-                    // The use of _Alignof with expressions is allowed by some C compilers as a non-standard extension. 
+                    // The use of _Alignof with expressions is allowed by some C compilers as a non-standard extension.
                     parse_expr(context, tokens, filename, input)?.typ()
                 };
                 satisfy(
@@ -537,7 +551,7 @@ fn parse_unary(
             };
 
             Ok(Expr::Numeric {
-                val: typ.sizeof(),
+                val: typ.alignof(&context.global_declarations.struct_names),
                 pos: *pos,
                 typ: Type::Int,
             })
@@ -593,7 +607,7 @@ fn parse_multiplicative(
     }
 }
 
-fn add(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
+fn add(context: &Context, 左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
         (Type::Int | Type::Char, Type::Int | Type::Char) => Some(Expr::BinaryExpr {
             op: BinaryOp::Add,
@@ -610,7 +624,7 @@ fn add(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
                 op: BinaryOp::Mul,
                 op_pos,
                 左辺: decay_if_arr(Expr::Numeric {
-                    val: t.sizeof(),
+                    val: t.sizeof(&context.global_declarations.struct_names),
                     pos: op_pos,
                     typ: Type::Int,
                 }),
@@ -619,12 +633,12 @@ fn add(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
             }),
             typ: Type::Ptr(t),
         }),
-        (Type::Int, _) => add(右辺, 左辺, op_pos),
+        (Type::Int, _) => add(context, 右辺, 左辺, op_pos),
         _ => None,
     }
 }
 
-fn subtract(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
+fn subtract(context: &Context, 左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
         (Type::Int | Type::Char, Type::Int | Type::Char) => Some(Expr::BinaryExpr {
             op: BinaryOp::Sub,
@@ -641,7 +655,7 @@ fn subtract(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr>
                 op: BinaryOp::Mul,
                 op_pos,
                 左辺: decay_if_arr(Expr::Numeric {
-                    val: t.sizeof(),
+                    val: t.sizeof(&context.global_declarations.struct_names),
                     pos: op_pos,
                     typ: Type::Int,
                 }),
@@ -661,7 +675,7 @@ fn subtract(左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr>
                 typ: Type::Int,
             }),
             右辺: decay_if_arr(Expr::Numeric {
-                val: t1.sizeof(),
+                val: t1.sizeof(&context.global_declarations.struct_names),
                 pos: op_pos,
                 typ: Type::Int,
             }),
@@ -693,7 +707,7 @@ fn parse_additive(
                     左辺.typ(),
                     右辺.typ()
                 );
-                expr = add(左辺, 右辺, *op_pos).ok_or(AppError {
+                expr = add(context, 左辺, 右辺, *op_pos).ok_or(AppError {
                     message,
                     input: input.to_string(),
                     filename: filename.to_string(),
@@ -713,7 +727,7 @@ fn parse_additive(
                     右辺.typ()
                 );
 
-                expr = subtract(左辺, 右辺, *op_pos).ok_or(AppError {
+                expr = subtract(context, 左辺, 右辺, *op_pos).ok_or(AppError {
                     message,
                     input: input.to_string(),
                     filename: filename.to_string(),

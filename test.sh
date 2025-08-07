@@ -233,6 +233,26 @@ check 8 "int main() { return _Alignof(int*); }"
 check 8 "int main() { return _Alignof(int**); }"
 check 1 "int main() { return _Alignof(char); }"
 
+# struct definitions & sizeof & _Alignof
+check 4 "struct S { int a; }; int main() { return sizeof(struct S); }"
+check 8 "struct S { int a; int b; }; int main() { return sizeof(struct S); }"
+check 12 "struct S { int a; int b; int c; }; int main() { return sizeof(struct S); }"
+check 8 "struct S { int a; char b; }; int main() { return sizeof(struct S); }"
+check 8 "struct S { char b; int a; }; int main() { return sizeof(struct S); }"
+check 2 "struct S { char b; char a; }; int main() { return sizeof(struct S); }"
+check 1 "struct S { char a; }; int main() { return sizeof(struct S); }"
+check 16 "struct S { int *a; char b; }; int main() { return  sizeof(struct S); }"
+
+check 4 "struct S { int a; }; int main() { return _Alignof(struct S); }"
+check 4 "struct S { int a; int b; }; int main() { return _Alignof(struct S); }"
+check 4 "struct S { int a; int b; int c; }; int main() { return _Alignof(struct S); }"
+check 4 "struct S { int a; char b; }; int main() { return  _Alignof(struct S); }"
+check 4 "struct S { char b; int a; }; int main() { return  _Alignof(struct S); }"
+check 1 "struct S { char b; char a; }; int main() { return _Alignof(struct S); }"
+check 1 "struct S { char a; }; int main() { return _Alignof(struct S); }"
+check 8 "struct S { int *a; char b; }; int main() { return  _Alignof(struct S); }"
+
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

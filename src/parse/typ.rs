@@ -21,13 +21,20 @@ pub fn parse_type(
             tokens.next().unwrap();
             Type::Char
         }
-        Token { tok: Tok::Struct, .. } => {
+        Token {
+            tok: Tok::Struct, ..
+        } => {
             tokens.next().unwrap();
             match tokens.next() {
                 Some(Token {
-                    tok: Tok::Identifier(ident),
-                    pos,
-                }) => todo!(), // Type::Struct(ident.clone(), *pos),
+                    tok: Tok::Identifier(struct_name),
+                    ..
+                }) => {
+
+                    Type::Struct {
+                        struct_name: struct_name.clone(),
+                    }
+                }
                 Some(Token { pos, .. }) => {
                     return Err(AppError {
                         message: "構造体名がありません".to_string(),
@@ -45,8 +52,6 @@ pub fn parse_type(
                     });
                 }
             }
-
-            // TODO: Handle struct definitions
         }
         Token { pos, .. } => {
             return Err(AppError {
