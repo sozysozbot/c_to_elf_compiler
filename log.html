@@ -3525,8 +3525,8 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 <h3 class="date">2025年8月8日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_4489adaf58a1b9c6b774c1e32df9c72c').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4489adaf58a1b9c6b774c1e32df9c72c').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_4489adaf58a1b9c6b774c1e32df9c72c" href="#permalink_4489adaf58a1b9c6b774c1e32df9c72c" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_dcbd3cdb99d8279ad5b7773cd8339603').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_dcbd3cdb99d8279ad5b7773cd8339603').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_dcbd3cdb99d8279ad5b7773cd8339603" href="#permalink_dcbd3cdb99d8279ad5b7773cd8339603" class="permalink">¶</a>
 		<div class="content">食事をした。やるぞ。</div>
 		<div class="content">とりあえず現状では関数の先頭でしか変数が宣言できず、たとえばブロック頭とかで変数を宣言しようとすると『数値リテラルでも開き丸括弧でもないものが来ました』と言われる</div>
 		<div class="content">さ～てどうしようかな</div>
@@ -3535,6 +3535,8 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 		<div class="content">ファイル分割をした。とりあえず Context がスコープチェーンを持つようにすればいい</div>
 		<div class="content">というか、パーサの時点で、『各ブロックがその中に含んでいる変数』の一覧を持っておくようにすればいい</div>
 		<div class="content">いや、そもそも Statement を StatementOrDeclaration にして、そこに包括すべきだな。リファクタリングしよう</div>
+		<div class="content">リファクタリングした。</div>
+		<div class="content">次に、Context の local_var_and_param_declarations をプライベートにして、ルックアップをメソッドに隔離することで、ここの実装を変更してもよいという風にした</div>
 	</div>
 </div>
 
