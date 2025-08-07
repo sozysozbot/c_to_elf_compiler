@@ -27,7 +27,7 @@ jobs:
           mkdir dist
           cp -r ./icons ./media ./log.html ./highlight.min.js ./vs.min.css ./dist
         working-directory: ./docs
-      - uses: actions/upload-pages-artifact@v1
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs/dist
       - name: Deploy
