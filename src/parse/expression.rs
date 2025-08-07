@@ -223,50 +223,49 @@ fn parse_suffix_op(
     let mut expr = parse_primary(context, tokens, filename, input)?;
 
     loop {
-        if let Some(_) = recover(tokens, |tokens| {
-            satisfy(
-                tokens,
-                filename,
-                input,
-                |tok| tok == &Tok::開き角括弧,
-                "開き角括弧ではありません",
-            )
-        })? {
-            let index = parse_expr(context, tokens, filename, input)?;
-            let op_pos = tokens.peek().unwrap().pos;
-            satisfy(
-                tokens,
-                filename,
-                input,
-                |tok| tok == &Tok::閉じ角括弧,
-                "この開き角括弧に対応する閉じ角括弧がありません",
-            )?;
-            let arr = decay_if_arr(expr);
-            let typ = match arr.typ() {
-                Type::Ptr(element_typ) => *element_typ,
-                _ => {
-                    return Err(AppError {
-                        message: "ポインタではありません".to_string(),
-                        input: input.to_string(),
-                        filename: filename.to_string(),
-                        pos: op_pos,
-                    })
-                }
-            };
-            expr = Expr::UnaryExpr {
-                op_pos,
-                op: UnaryOp::Deref,
-                expr: Box::new(Expr::BinaryExpr {
+        match tokens.peek().unwrap() {
+            Token {
+                tok: Tok::開き角括弧,
+                ..
+            } => {
+                tokens.next();
+                let index = parse_expr(context, tokens, filename, input)?;
+                let op_pos = tokens.peek().unwrap().pos;
+                satisfy(
+                    tokens,
+                    filename,
+                    input,
+                    |tok| tok == &Tok::閉じ角括弧,
+                    "この開き角括弧に対応する閉じ角括弧がありません",
+                )?;
+                let arr = decay_if_arr(expr);
+                let typ = match arr.typ() {
+                    Type::Ptr(element_typ) => *element_typ,
+                    _ => {
+                        return Err(AppError {
+                            message: "ポインタではありません".to_string(),
+                            input: input.to_string(),
+                            filename: filename.to_string(),
+                            pos: op_pos,
+                        })
+                    }
+                };
+                expr = Expr::UnaryExpr {
                     op_pos,
-                    op: BinaryOp::Add,
-                    左辺: arr,
-                    右辺: decay_if_arr(index),
-                    typ: typ.clone(),
-                }),
-                typ,
-            };
-        } else {
-            return Ok(expr);
+                    op: UnaryOp::Deref,
+                    expr: Box::new(Expr::BinaryExpr {
+                        op_pos,
+                        op: BinaryOp::Add,
+                        左辺: arr,
+                        右辺: decay_if_arr(index),
+                        typ: typ.clone(),
+                    }),
+                    typ,
+                };
+            }
+            _ => {
+                return Ok(expr);
+            }
         }
     }
 }
@@ -339,23 +338,29 @@ fn parse_unary(
                 expr: no_decay_even_if_arr(expr),
             })
         }
-        Some(Token { tok: Tok::Increment, pos }) => {
+        Some(Token {
+            tok: Tok::Increment,
+            pos,
+        }) => {
             tokens.next();
             let expr = parse_unary(context, tokens, filename, input)?;
             Ok(Expr::UnaryExpr {
                 op: UnaryOp::Increment,
                 op_pos: *pos,
-                typ: expr.typ(), 
+                typ: expr.typ(),
                 expr: throw_if_arr(expr), // 配列型に ++ されることはあり得ない
             })
         }
-        Some(Token { tok: Tok::Decrement, pos }) => {
+        Some(Token {
+            tok: Tok::Decrement,
+            pos,
+        }) => {
             tokens.next();
             let expr = parse_unary(context, tokens, filename, input)?;
             Ok(Expr::UnaryExpr {
                 op: UnaryOp::Decrement,
                 op_pos: *pos,
-                typ: expr.typ(), 
+                typ: expr.typ(),
                 expr: throw_if_arr(expr), // 配列型に -- されることはあり得ない
             })
         }

@@ -2188,3 +2188,7 @@ hsjoihs「の各メソッドを実装するのみ」
 hsjoihs「x64 なので当然 <code>inc    BYTE PTR [rax] </code> とかが使える。ありがとう CISC」
 hsjoihs「さてテストケースを足しましょうね～。はい inc 通った。一旦コミットするか。」
 hsjoihs「<code>check 16 "int main() { int a; int b; a = 3; b = ++a; return b * a; }"</code> で 16 が返ってくることを確認」
+
+hsjoihs「今度は後置インクリメント・デクリメント。」
+hsjoihs「えーと現状だと後置演算子が添字アクセスしかないので、ちょっとパーサーに非自明な変更が要る」
+hsjoihs「とりあえず定義をほぐした」
