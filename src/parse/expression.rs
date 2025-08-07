@@ -172,25 +172,14 @@ fn parse_primary(
                     }
                 }
             } else {
-                let typ = match context.local_var_and_param_declarations.get(ident) {
-                    Some(t) => t.clone().typ,
-                    None => match context.global_declarations.symbols.get(ident) {
-                        Some(SymbolDeclaration::GVar(t)) => t.clone(),
-                        Some(SymbolDeclaration::Func(_u)) => Err(AppError {
-                            message: format!(
-                                "識別子 {ident} は関数であり、現在関数ポインタは実装されていません",
-                            ),
-                            input: input.to_string(),
-                            filename: filename.to_string(),
-                            pos: *ident_pos,
-                        })?,
-                        None => Err(AppError {
-                            message: format!("識別子 {ident} は定義されておらず、型が分かりません",),
-                            input: input.to_string(),
-                            filename: filename.to_string(),
-                            pos: *ident_pos,
-                        })?,
-                    },
+                let typ = match context.resolve_type_and_size_as_var(ident) {
+                    Ok(t) => t.clone().typ,
+                    Err(message) => return Err(AppError {
+                        message,
+                        input: input.to_string(),
+                        filename: filename.to_string(),
+                        pos: *ident_pos,
+                    }),
                 };
                 let expr = Expr::Identifier {
                     ident: ident.clone(),

@@ -2294,3 +2294,5 @@ hsjoihs「ファイル分割をした。とりあえず Context がスコープ�
 hsjoihs「というか、パーサの時点で、『各ブロックがその中に含んでいる変数』の一覧を持っておくようにすればいい」
 hsjoihs「いや、そもそも Statement を StatementOrDeclaration にして、そこに包括すべきだな。リファクタリングしよう」
 hsjoihs「リファクタリングした。」
+
+hsjoihs「次に、Context の local_var_and_param_declarations をプライベートにして、ルックアップをメソッドに隔離することで、ここの実装を変更してもよいという風にした」

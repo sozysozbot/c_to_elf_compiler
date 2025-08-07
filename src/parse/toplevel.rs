@@ -86,8 +86,39 @@ pub struct TypeAndSize {
 }
 
 pub struct Context {
-    pub local_var_and_param_declarations: HashMap<String, TypeAndSize>,
+    local_var_and_param_declarations: HashMap<String, TypeAndSize>,
     pub global_declarations: GlobalDeclarations,
+}
+
+impl Context {
+    pub fn new(
+        local_var_and_param_declarations: HashMap<String, TypeAndSize>,
+        global_declarations: GlobalDeclarations,
+    ) -> Self {
+        Self {
+            local_var_and_param_declarations,
+            global_declarations,
+        }
+    }
+
+    pub fn resolve_type_and_size_as_var(&self, ident: &str) -> Result<TypeAndSize, String> {
+        if let Some(typ_and_size) = self.local_var_and_param_declarations.get(ident) {
+            Ok(typ_and_size.clone())
+        } else {
+            match self.global_declarations.symbols.get(ident) {
+                Some(SymbolDeclaration::GVar(t)) => Ok(TypeAndSize {
+                    typ: t.clone(),
+                    size: t.sizeof(&self.global_declarations.struct_names),
+                }),
+                Some(SymbolDeclaration::Func(_u)) => Err(format!(
+                    "識別子 {ident} は関数であり、現在関数ポインタは実装されていません",
+                )),
+                None => Err(format!(
+                    "識別子 {ident} は定義されておらず、型が分かりません",
+                )),
+            }
+        }
+    }
 }
 
 #[allow(clippy::too_many_arguments)]

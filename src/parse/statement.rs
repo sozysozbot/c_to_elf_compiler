@@ -20,13 +20,13 @@ fn parse_test() {
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
         parse_statement(
-            &Context {
-                local_var_and_param_declarations: HashMap::new(),
-                global_declarations: GlobalDeclarations {
+            &Context::new(
+                HashMap::new(),
+                GlobalDeclarations {
                     symbols: HashMap::new(),
                     struct_names: HashMap::new()
                 },
-            },
+            ),
             &mut tokens,
             "test.c",
             input
@@ -164,12 +164,16 @@ fn parse_statement(
                     })
                 }
             }
-            let then = Box::new(parse_statement_or_declaration(context, tokens, filename, input)?);
+            let then = Box::new(parse_statement_or_declaration(
+                context, tokens, filename, input,
+            )?);
             let tok = tokens.peek().unwrap();
             let else_ = match tok {
                 Token { tok: Tok::Else, .. } => {
                     tokens.next();
-                    Some(Box::new(parse_statement_or_declaration(context, tokens, filename, input)?))
+                    Some(Box::new(parse_statement_or_declaration(
+                        context, tokens, filename, input,
+                    )?))
                 }
                 _ => None,
             };
@@ -201,7 +205,9 @@ fn parse_statement(
                 |tok| tok == &Tok::閉じ丸括弧,
                 "期待された閉じ括弧が来ませんでした",
             )?;
-            let body = Box::new(parse_statement_or_declaration(context, tokens, filename, input)?);
+            let body = Box::new(parse_statement_or_declaration(
+                context, tokens, filename, input,
+            )?);
             Ok(Statement::While {
                 cond,
                 body,
@@ -262,7 +268,9 @@ fn parse_statement(
                 |tok| tok == &Tok::閉じ丸括弧,
                 "期待された閉じ括弧が来ませんでした",
             )?;
-            let body = Box::new(parse_statement_or_declaration(context, tokens, filename, input)?);
+            let body = Box::new(parse_statement_or_declaration(
+                context, tokens, filename, input,
+            )?);
             Ok(Statement::For {
                 init,
                 cond,
@@ -295,7 +303,9 @@ fn parse_statement(
 
                         break;
                     }
-                    _ => statements.push(parse_statement_or_declaration(context, tokens, filename, input)?),
+                    _ => statements.push(parse_statement_or_declaration(
+                        context, tokens, filename, input,
+                    )?),
                 }
             }
             Ok(Statement::Block {
