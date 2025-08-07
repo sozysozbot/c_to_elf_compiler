@@ -3525,8 +3525,8 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 <h3 class="date">2025年8月8日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_f34c0cadc8670a4fe31092aad3c57a60').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f34c0cadc8670a4fe31092aad3c57a60').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_f34c0cadc8670a4fe31092aad3c57a60" href="#permalink_f34c0cadc8670a4fe31092aad3c57a60" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_c68be89ed08bec3becaccfd0269142f3').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_c68be89ed08bec3becaccfd0269142f3').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_c68be89ed08bec3becaccfd0269142f3" href="#permalink_c68be89ed08bec3becaccfd0269142f3" class="permalink">¶</a>
 		<div class="content">食事をした。やるぞ。</div>
 		<div class="content">とりあえず現状では関数の先頭でしか変数が宣言できず、たとえばブロック頭とかで変数を宣言しようとすると『数値リテラルでも開き丸括弧でもないものが来ました』と言われる</div>
 		<div class="content">さ～てどうしようかな</div>
@@ -3546,7 +3546,12 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 		<div class="content">次に引数リストが空であることを表す void</div>
 		<div class="content">最後に、void* は何もしなくてもついてくる。ただし char* を Deref するときに 8 bit を読むというのをやり損ねていたので、それを修正</div>
 		<div class="content">残るは</div>
-		<div class="content"><ul><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>void</code>, <code>void *</code>, <code>return;</code></li></ul></div>
+		<div class="content"><ul><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>文字列リテラルをきちんと値として扱う</li></ul></div>
+		<div class="content">ヌルポインタ定数ってなんとかなりませんか</div>
+		<div class="content">AST の世界では簡単で、それはそうと if 文の類いで『0 かどうか』の判定を正しいサイズで行っていないとテストが意図した結果にならないので、そこを直した</div>
+		<div class="content">残るは</div>
+		<div class="content"><ul><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>文字列リテラルをきちんと値として扱う</li></ul></div>
+		<div class="content"><code>for (int i = 0;</code> は変数スコープの問題とまとめて解決する必要がある。<code>int foo();</code>は「名前付き穴」周り。『文字列リテラルをきちんと値として扱う』には、まあスタートアップ処理時に文字列リテラルをヒープに動的に確保するパワー実装になるだろうな。ローダが無い代わりにヒープで頑張る。グローバルな配列の初期化とかもそうするしかないんじゃないかな。</div>
 	</div>
 </div>
 
