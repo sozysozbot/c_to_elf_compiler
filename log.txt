@@ -2306,4 +2306,11 @@ hsjoihs「次に引数リストが空であることを表す void」
 hsjoihs「最後に、void* は何もしなくてもついてくる。ただし char* を Deref するときに 8 bit を読むというのをやり損ねていたので、それを修正」
 
 hsjoihs「残るは」
-$HTML「<ul><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>void</code>, <code>void *</code>, <code>return;</code></li></ul>」
+$HTML「<ul><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>文字列リテラルをきちんと値として扱う</li></ul>」
+
+hsjoihs「ヌルポインタ定数ってなんとかなりませんか」
+hsjoihs「AST の世界では簡単で、それはそうと if 文の類いで『0 かどうか』の判定を正しいサイズで行っていないとテストが意図した結果にならないので、そこを直した」
+
+hsjoihs「残るは」
+$HTML「<ul><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>文字列リテラルをきちんと値として扱う</li></ul>」
+$HTML「<code>for (int i = 0;</code> は変数スコープの問題とまとめて解決する必要がある。<code>int foo();</code>は「名前付き穴」周り。『文字列リテラルをきちんと値として扱う』には、まあスタートアップ処理時に文字列リテラルをヒープに動的に確保するパワー実装になるだろうな。ローダが無い代わりにヒープで頑張る。グローバルな配列の初期化とかもそうするしかないんじゃないかな。」

@@ -209,8 +209,16 @@ fn raxが指す位置にdilを代入() -> [u8; 3] {
     [0x40, 0x88, 0x38]
 }
 
+fn dilが0かを確認() -> [u8; 4] {
+    [0x40, 0x80, 0xff, 0x00]
+}
+
 fn ediが0かを確認() -> [u8; 3] {
     [0x83, 0xff, 0x00]
+}
+
+fn rdiが0かを確認() -> [u8; 4] {
+    [0x48, 0x83, 0xff, 0x00]
 }
 
 fn jmp(n: i8) -> [u8; 2] {
@@ -469,7 +477,7 @@ impl<'a> FunctionGen<'a> {
             StatementOrDeclaration::Statement(stmt) => stmt.to_owned(),
             StatementOrDeclaration::Declaration { .. } => {
                 return Buf::new(); // declaration disappears in codegen
-            },
+            }
             StatementOrDeclaration::DeclarationWithInitializer {
                 name,
                 typ_and_size,
@@ -552,7 +560,14 @@ impl<'a> FunctionGen<'a> {
 
                 let mut cond_buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut cond_buf, cond);
-                cond_buf.append(ediが0かを確認());
+
+                match cond.typ().sizeof_primitive("if") {
+                    8 => cond_buf.append(rdiが0かを確認()),
+                    4 => cond_buf.append(ediが0かを確認()),
+                    1 => cond_buf.append(dilが0かを確認()),
+                    _ => panic!("条件式の型のサイズがよろしくない"),
+                }
+
                 cond_buf.append(je(i8::try_from(then_buf.len()).unwrap()));
 
                 cond_buf
@@ -564,7 +579,12 @@ impl<'a> FunctionGen<'a> {
 
                 let mut cond_buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut cond_buf, cond);
-                cond_buf.append(ediが0かを確認());
+                match cond.typ().sizeof_primitive("if") {
+                    8 => cond_buf.append(rdiが0かを確認()),
+                    4 => cond_buf.append(ediが0かを確認()),
+                    1 => cond_buf.append(dilが0かを確認()),
+                    _ => panic!("条件式の型のサイズがよろしくない"),
+                }
                 cond_buf.append(je(i8::try_from(body_buf.len() + 2).unwrap()));
 
                 let buf = cond_buf.join(body_buf);
@@ -624,9 +644,11 @@ impl<'a> FunctionGen<'a> {
                     pos: *pos,
                 })
             }
-            Statement::Block { statements, .. } => statements
-                .iter()
-                .fold(Buf::new(), |acc, stmt| acc.join(self.statement_or_declarationを評価(stmt))),
+            Statement::Block { statements, .. } => {
+                statements.iter().fold(Buf::new(), |acc, stmt| {
+                    acc.join(self.statement_or_declarationを評価(stmt))
+                })
+            }
         }
     }
 
@@ -654,7 +676,12 @@ impl<'a> FunctionGen<'a> {
 
                 let mut else_buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut else_buf, 右辺);
-                else_buf.append(ediが0かを確認());
+                match 右辺.typ().sizeof_primitive("if") {
+                    8 => else_buf.append(rdiが0かを確認()),
+                    4 => else_buf.append(ediが0かを確認()),
+                    1 => else_buf.append(dilが0かを確認()),
+                    _ => panic!("条件式の型のサイズがよろしくない"),
+                }
                 else_buf.append(フラグを読んで異なっているかどうかをalにセット());
                 else_buf.append(alをゼロ拡張してediにセット());
 
@@ -665,7 +692,12 @@ impl<'a> FunctionGen<'a> {
 
                 let mut cond_buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut cond_buf, 左辺);
-                cond_buf.append(ediが0かを確認());
+                match 左辺.typ().sizeof_primitive("if") {
+                    8 => cond_buf.append(rdiが0かを確認()),
+                    4 => cond_buf.append(ediが0かを確認()),
+                    1 => cond_buf.append(dilが0かを確認()),
+                    _ => panic!("条件式の型のサイズがよろしくない"),
+                }
                 cond_buf.append(je(i8::try_from(then_buf.len()).expect(
                     "|| の右辺をコンパイルした長さが長すぎてジャンプを構築できません",
                 )));
@@ -686,14 +718,24 @@ impl<'a> FunctionGen<'a> {
 
                 let mut then_buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut then_buf, 右辺);
-                then_buf.append(ediが0かを確認());
+                match 右辺.typ().sizeof_primitive("if") {
+                    8 => then_buf.append(rdiが0かを確認()),
+                    4 => then_buf.append(ediが0かを確認()),
+                    1 => then_buf.append(dilが0かを確認()),
+                    _ => panic!("条件式の型のサイズがよろしくない"),
+                }
                 then_buf.append(フラグを読んで異なっているかどうかをalにセット());
                 then_buf.append(alをゼロ拡張してediにセット());
                 then_buf.append(jmp(i8::try_from(else_buf.len()).unwrap()));
 
                 let mut cond_buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut cond_buf, 左辺);
-                cond_buf.append(ediが0かを確認());
+                match 左辺.typ().sizeof_primitive("if") {
+                    8 => cond_buf.append(rdiが0かを確認()),
+                    4 => cond_buf.append(ediが0かを確認()),
+                    1 => cond_buf.append(dilが0かを確認()),
+                    _ => panic!("条件式の型のサイズがよろしくない"),
+                }
                 cond_buf.append(je(i8::try_from(then_buf.len())
                     .expect("&& の右辺をコンパイルした長さが i8 に収まりません")));
 
@@ -1129,7 +1171,11 @@ impl<'a> FunctionGen<'a> {
                     buf, expr,
                 );
             }
-            Expr::UnaryExpr { op : UnaryOp::Deref, typ, .. } => {
+            Expr::UnaryExpr {
+                op: UnaryOp::Deref,
+                typ,
+                ..
+            } => {
                 self.exprを左辺値として評価してアドレスをrdiレジスタへ(
                     buf, expr,
                 );

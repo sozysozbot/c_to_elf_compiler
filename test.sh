@@ -322,6 +322,10 @@ check 29 "int main() { int a = 7; a = a * 49; char c; char *p = &c; *p = a; retu
 check 29 "int main() { int a; a = 7; a = a * a; a = a * 7; int *p; p = &a; char *r; r = p; return *r / 3; }"
 check 29 "int main() { int a; a = 7; a = a * a; a = a * 7; int *p; p = &a; void *q; q = p; char *r; r = q; return *r / 3; }"
 
+# null pointer
+check 1 "int main() { int *p; p = 0; if (p) { return 0; } else { return 1; } }"
+# clearing the lower 32 bits does not make it a null pointer
+check 1 "int main() { int a; int *p; p = &a; int **pp; pp = &p; void *q; q = pp; int *r; r = q; *r = 0; if (p) { return 1; } else { return 0; } }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then

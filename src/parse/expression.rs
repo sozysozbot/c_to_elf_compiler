@@ -1114,6 +1114,19 @@ pub fn parse_expr(
             tokens.next();
             let 左辺 = decay_if_arr(expr);
             let 右辺 = decay_if_arr(parse_expr(context, tokens, filename, input)?);
+
+            // special case for assigning 0 to a pointer
+            if let Type::Ptr(_) = 左辺.typ() {
+                if let Expr::Numeric { val, pos, .. } = &*右辺 {
+                    if *val == 0 {
+                        return Ok(Expr::NullPtr {
+                            pos: *pos,
+                            typ: 左辺.typ(),
+                        });
+                    }
+                }
+            }
+
             Ok(Expr::BinaryExpr {
                 op: BinaryOp::Assign,
                 op_pos: *op_pos,
