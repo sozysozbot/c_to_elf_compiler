@@ -227,6 +227,12 @@ check 1 "int main() { int a; a = 0; return !a; }"
 check 0 "int main() { int a; a = 42; return !a; }"
 check 0 "int main() { int *p; int a; p = &a; return !p; }"
 
+# _Alignof
+check 4 "int main() { return _Alignof(int); }"
+check 8 "int main() { return _Alignof(int*); }"
+check 8 "int main() { return _Alignof(int**); }"
+check 1 "int main() { return _Alignof(char); }"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

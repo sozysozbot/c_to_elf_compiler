@@ -2205,3 +2205,14 @@ hsjoihs「論理否定が安そう。組むか。」
 hsjoihs「The expression !E is equivalent to (0==E) と規定されているので、それを組めばよい。オペランドがポインタなら比較対象はヌルポインタ定数。」
 hsjoihs「論理否定が多分組めた。テストを書く」
 hsjoihs「ヌルポインタを書く手は現状無いので、とりあえず『数値 0 の論理否定』『数値 42 の論理否定』『合法なポインタの論理否定』だけテスト」
+
+hsjoihs「さ～て、構造体でも組みますか。ということで _Alignof を実装します」
+hsjoihs「ん？」
+
+$source
+```
+thread 'main' panicked at src/main.rs:26:56:
+called `Result::unwrap()` on an `Err` value: AppError { message: "A (U+0041) はトークナイズできない不正な文字です", input: "int main() { return _Alignof(int); }\n", filename: "/dev/fd/63", pos: 21 }
+```
+
+hsjoihs「なるほど、識別子に大文字を許すのを忘れていた」

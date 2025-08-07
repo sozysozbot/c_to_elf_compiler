@@ -409,6 +409,15 @@ impl Type {
                 .expect("型のサイズが u8 に収まりません"),
         }
     }
+
+    pub fn alignof(&self) -> u8 {
+        match self {
+            Type::Int => 4,
+            Type::Char => 1,
+            Type::Ptr(_) => 8,
+            Type::Arr(t, _) => t.alignof(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

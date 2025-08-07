@@ -501,6 +501,47 @@ fn parse_unary(
                 typ: Type::Int,
             })
         }
+         Some(Token {
+            tok: Tok::Alignof,
+            pos,
+        }) => {
+            tokens.next();
+
+            let typ = if let Some(_) = recover(tokens, |tokens| {
+                satisfy(
+                    tokens,
+                    filename,
+                    input,
+                    |tok| tok == &Tok::開き丸括弧,
+                    "開き丸括弧ではありません",
+                )
+            })? {
+                let typ = if let Some(typ) =
+                    recover(tokens, |tokens| parse_type(tokens, filename, input))?
+                {
+                    typ
+                } else {
+                    // The use of _Alignof with expressions is allowed by some C compilers as a non-standard extension. 
+                    parse_expr(context, tokens, filename, input)?.typ()
+                };
+                satisfy(
+                    tokens,
+                    filename,
+                    input,
+                    |tok| tok == &Tok::閉じ丸括弧,
+                    "開き丸括弧に対応する閉じ丸括弧がありません",
+                )?;
+                typ
+            } else {
+                parse_unary(context, tokens, filename, input)?.typ()
+            };
+
+            Ok(Expr::Numeric {
+                val: typ.sizeof(),
+                pos: *pos,
+                typ: Type::Int,
+            })
+        }
         _ => parse_suffix_op(context, tokens, filename, input),
     }
 }

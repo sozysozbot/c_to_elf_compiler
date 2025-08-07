@@ -53,13 +53,13 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                 iter.next();
                 continue;
             }
-            'a'..='z' | '_' => {
+            'a'..='z' | 'A'..='Z' | '_' => {
                 iter.next();
                 let mut ident = String::new();
                 ident.push(c);
                 while let Some(&(_, c)) = iter.peek() {
                     match c {
-                        'a'..='z' | '0'..='9' | '_' => {
+                        'a'..='z' | 'A'..='Z' | '0'..='9' | '_' => {
                             iter.next();
                             ident.push(c);
                         }
@@ -77,6 +77,7 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     "int" => Tok::Int,
                     "char" => Tok::Char,
                     "sizeof" => Tok::Sizeof,
+                    "_Alignof" => Tok::Alignof,
                     _ => Tok::Identifier(ident),
                 };
 
