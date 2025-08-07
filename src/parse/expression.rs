@@ -1,6 +1,7 @@
 use crate::apperror::*;
 use crate::ast::*;
 use crate::parse::toplevel::StructMember;
+use crate::parse::toplevel::TypeAndSize;
 use crate::token::*;
 use std::{iter::Peekable, slice::Iter};
 
@@ -8,8 +9,8 @@ use super::combinator::recover;
 use super::combinator::satisfy;
 use super::context::Context;
 use super::toplevel::SymbolDeclaration;
-use super::typ::Type;
 use super::typ::parse_type;
+use super::typ::Type;
 fn parse_primary(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
@@ -172,18 +173,22 @@ fn parse_primary(
                     }
                 }
             } else {
-                let typ = match context.resolve_type_and_size_as_var(ident) {
-                    Ok(t) => t.clone().typ,
-                    Err(message) => return Err(AppError {
-                        message,
-                        input: input.to_string(),
-                        filename: filename.to_string(),
-                        pos: *ident_pos,
-                    }),
-                };
+                let (local_var_id, TypeAndSize { typ, .. }) =
+                    match context.resolve_type_and_size_as_var(ident) {
+                        Ok(t) => t.clone(),
+                        Err(message) => {
+                            return Err(AppError {
+                                message,
+                                input: input.to_string(),
+                                filename: filename.to_string(),
+                                pos: *ident_pos,
+                            })
+                        }
+                    };
                 let expr = Expr::Identifier {
                     ident: ident.clone(),
                     pos: *ident_pos,
+                    local_var_id,
                     typ,
                 };
                 Ok(expr)
@@ -368,7 +373,8 @@ fn parse_suffix_op(
 
                         let Type::Struct { struct_name } = (*typ_lhs_points_to).clone() else {
                             return Err(AppError {
-                                message: "-> のオペランドが構造体へのポインタではありません".to_string(),
+                                message: "-> のオペランドが構造体へのポインタではありません"
+                                    .to_string(),
                                 input: input.to_string(),
                                 filename: filename.to_string(),
                                 pos: op_pos,
@@ -402,9 +408,7 @@ fn parse_suffix_op(
                 }
             }
 
-            Token {
-                tok: Tok::Dot, ..
-            } => {
+            Token { tok: Tok::Dot, .. } => {
                 tokens.next();
                 match tokens.next() {
                     Some(Token {

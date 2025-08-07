@@ -45,7 +45,7 @@ pub struct FunctionDefinition {
     pub pos: usize,
     pub statements: Vec<StatementOrDeclaration>,
     pub return_type: Type,
-    pub local_var_declarations: HashMap<String, TypeAndSize>,
+    pub all_local_var_declarations: Vec<(String, u64, TypeAndSize)>,
 }
 
 impl From<FunctionDefinition> for (String, FunctionSignature) {
@@ -97,6 +97,21 @@ fn after_param_list(
     return_type: Type,
     func_name: &str,
 ) -> Result<FunctionDefinition, AppError> {
+    // First, we check that params list has no duplicates
+    let mut param_names = HashMap::new();
+    for (typ, ident) in &params {
+        if param_names.contains_key(ident) {
+            return Err(AppError {
+                message: format!("関数 {func_name} の引数 {ident} が重複しています"),
+                input: input.to_string(),
+                filename: filename.to_string(),
+                pos,
+            });
+        }
+        param_names.insert(ident.clone(), typ.clone());
+    }
+
+    // Then we parse
     match tokens.peek().unwrap() {
         Token {
             tok: Tok::開き波括弧,
@@ -157,24 +172,6 @@ fn after_param_list(
                 }
             }
 
-            // collect the local variable declarations (for now, we only need to handle those at the immediate function scope)
-            let mut local_var_declarations: HashMap<String, TypeAndSize> = HashMap::new();
-            for s_or_d in statements_or_declarations.iter() {
-                match s_or_d {
-                    StatementOrDeclaration::Statement(_) => {}
-                    // If it's a declaration, we insert it into the local variable declarations
-                    StatementOrDeclaration::Declaration { name, typ_and_size } => {
-                        local_var_declarations.insert(name.clone(), typ_and_size.clone());
-                    }
-                    StatementOrDeclaration::DeclarationWithInitializer {
-                        name,
-                        typ_and_size,
-                        initializer: _,
-                    } => {
-                        local_var_declarations.insert(name.clone(), typ_and_size.clone());
-                    }
-                }
-            }
 
             if return_type == Type::Void {
                 statements_or_declarations
@@ -187,7 +184,7 @@ fn after_param_list(
                 pos,
                 statements: statements_or_declarations,
                 return_type,
-                local_var_declarations,
+                all_local_var_declarations: context.all_local_var_declarations_cloned(),
             })
         }
         Token { pos, .. } => Err(AppError {

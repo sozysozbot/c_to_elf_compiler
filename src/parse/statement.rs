@@ -76,10 +76,11 @@ pub fn parse_statement_or_declaration(
                     size: local_var_type.sizeof(&context.global_declarations.struct_names),
                 };
 
-                context.insert_local_var(local_var_name.clone(), typ_and_size.clone());
+                let id = context.insert_local_var(local_var_name.clone(), typ_and_size.clone());
                 Ok(StatementOrDeclaration::Declaration {
                     name: local_var_name,
                     typ_and_size,
+                    id,
                 })
             }
             Token {
@@ -110,11 +111,12 @@ pub fn parse_statement_or_declaration(
                     size: local_var_type.sizeof(&context.global_declarations.struct_names),
                 };
 
-                context.insert_local_var(local_var_name.clone(), typ_and_size.clone());
+                let id = context.insert_local_var(local_var_name.clone(), typ_and_size.clone());
                 Ok(StatementOrDeclaration::DeclarationWithInitializer {
                     name: local_var_name,
                     initializer: expr,
                     typ_and_size,
+                    id,
                 })
             }
 

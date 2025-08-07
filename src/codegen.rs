@@ -6,6 +6,7 @@ use crate::{
     },
     Buf,
 };
+use core::panic;
 use std::collections::HashMap;
 
 /*
@@ -412,19 +413,19 @@ pub fn builtin_alloc4関数を生成() -> Buf {
 }
 
 pub struct LocalVarTable {
-    pub offsets: HashMap<String, u8>,
+    pub offsets: HashMap<(String, u64), u8>,
     pub max_offset: u8,
 }
 
 impl LocalVarTable {
-    pub fn allocate(&mut self, ident: &str, size: u8) -> u8 {
+    pub fn allocate(&mut self, ident: &str, id: u64, size: u8) -> u8 {
         let size = size.div_ceil(WORD_SIZE) * WORD_SIZE;
         let offset = self
             .max_offset
             .checked_add(size)
             .expect("オフセットが u8 に収まりません");
         self.max_offset = offset;
-        self.offsets.insert(ident.to_owned(), offset);
+        self.offsets.insert((ident.to_owned(), id), offset);
         offset
     }
 }
@@ -446,17 +447,30 @@ impl<'a> FunctionGen<'a> {
             Expr::Identifier {
                 ident,
                 pos: _,
-                typ: _,
+                local_var_id: Some(local_var_id),
+                ..
             } => {
-                let offset = self.local_var_table.offsets.get(ident).unwrap_or_else(|| {
-                    panic!(
-                        "変数 {ident} は関数 {} 内で宣言されていません",
-                        self.function_name
-                    )
-                });
+                let offset = self
+                    .local_var_table
+                    .offsets
+                    .get(&(ident.to_owned(), local_var_id.to_owned()))
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "変数 {ident} は関数 {} 内で宣言されていません",
+                            self.function_name
+                        )
+                    });
                 buf.append(rbpをプッシュ());
                 buf.append(rdiへとポップ());
                 buf.append(rdiから即値を引く(*offset));
+            }
+            Expr::Identifier {
+                ident,
+                pos: _,
+                local_var_id: None,
+                ..
+            } => {
+                panic!("グローバル変数 {ident} は今のところ左辺値として使用できません");
             }
             Expr::UnaryExpr {
                 op: UnaryOp::Deref,
@@ -480,6 +494,7 @@ impl<'a> FunctionGen<'a> {
             }
             StatementOrDeclaration::DeclarationWithInitializer {
                 name,
+                id,
                 typ_and_size,
                 initializer,
             } => {
@@ -491,6 +506,7 @@ impl<'a> FunctionGen<'a> {
                             ident: name.clone(),
                             pos: 0, // pos is not used in codegen
                             typ: typ_and_size.typ.clone(),
+                            local_var_id: Some(*id),
                         }),
                         右辺: initializer.clone(),
                         op_pos: 0, // op_pos is not used in codegen
@@ -1242,16 +1258,13 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
     let mut parameter_buf = Buf::new();
     let _return_type = &definition.return_type;
 
+    // context.rs の実装詳細「param には 0 番から順番に ID が振られている」に依存
     for (i, (param_type, param)) in definition.params.iter().enumerate() {
-        if function_gen.local_var_table.offsets.contains_key(param) {
-            panic!(
-                "関数 `{}` の仮引数 {} が重複しています",
-                definition.func_name, param
-            )
-        }
-        let offset = function_gen
-            .local_var_table
-            .allocate(param, param_type.sizeof_primitive("m"));
+        let offset = function_gen.local_var_table.allocate(
+            param,
+            i as u64,
+            param_type.sizeof_primitive("m"),
+        );
         // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
         // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
         let negative_offset: i8 = -(offset as i8);
@@ -1309,15 +1322,16 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
 
     for (
         local_var_name,
+        id,
         TypeAndSize {
             typ: _,
             size: local_var_size,
         },
-    ) in definition.local_var_declarations.iter()
+    ) in definition.all_local_var_declarations.iter()
     {
         function_gen
             .local_var_table
-            .allocate(local_var_name, *local_var_size);
+            .allocate(local_var_name, *id, *local_var_size);
     }
 
     let content_buf = definition

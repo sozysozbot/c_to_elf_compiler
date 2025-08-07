@@ -53,6 +53,7 @@ pub enum Expr {
         ident: String,
         pos: usize,
         typ: Type,
+        local_var_id: Option<u64>, // None if it's a global variable
     },
     Call {
         ident: String,
@@ -113,10 +114,12 @@ pub enum StatementOrDeclaration {
     Statement(Statement),
     Declaration {
         name: String,
+        id: u64,
         typ_and_size: TypeAndSize,
     },
     DeclarationWithInitializer {
         name: String,
+        id: u64,
         typ_and_size: TypeAndSize,
         initializer: Box<Expr>,
     },
