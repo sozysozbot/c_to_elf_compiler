@@ -3336,8 +3336,8 @@ pub fn no_decay_even_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
 <h3 class="date">2025年8月7日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_1a7e8b8f2a5f8722a0e53666db73d2a6').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1a7e8b8f2a5f8722a0e53666db73d2a6').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_1a7e8b8f2a5f8722a0e53666db73d2a6" href="#permalink_1a7e8b8f2a5f8722a0e53666db73d2a6" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_2ab0aa1eac15b7f0f6889b09d52879ff').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_2ab0aa1eac15b7f0f6889b09d52879ff').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_2ab0aa1eac15b7f0f6889b09d52879ff" href="#permalink_2ab0aa1eac15b7f0f6889b09d52879ff" class="permalink">¶</a>
 		<div class="content">あれから 2 年が経った。</div>
 		<div class="content">その間に、ZEN 大学の構想が発表されて、私は 2 年間『オートマトンと形式言語理論』の教材を書き続け、ZEN 大学が開学した。</div>
 		<div class="content">さて、2 日後の <a href="https://kernelvm.connpass.com/event/355100/">Kernel/VM 探検隊@東京 No18</a> で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。</div>
@@ -3482,6 +3482,16 @@ called &#x60;Result::unwrap()&#x60; on an &#x60;Err&#x60; value: AppError { mess
 		<div class="content">まあ global_declarations に持つのが正しそう。</div>
 		<div class="content">とりあえず、構造体の定義をパースして行き渡らせる実装が書けた気がする。</div>
 		<div class="content">テストケースに構造体の sizeof と _Alignof を書いて、テストを通して、21:22</div>
+		<div class="content">一旦休憩して 21:34。さてメンバアクセスを実装するか</div>
+		<div class="content">まずは <code>-&gt;</code> を実装する</div>
+		<div class="content">『sizeof_primitive() は構造体に対しては定義されていません』で落ちる。なぜだ。</div>
+		<pre><code class="language-rust">function_gen
+.local_var_table
+.allocate(local_var_name, local_var_type.sizeof_primitive(&quot;n&quot;));
+</code></pre>
+		<div class="content">なるほど、関数のローカル変数として構造体をアロケートしようとしてコケてる</div>
+		<div class="content">あらかじめ構造体のサイズをルックアップして覚えておき、sizeof_primitive を呼ばないようにすることで、達成。現在 22:20</div>
+		<div class="content">ドットが実装されました</div>
 	</div>
 </div>
 
