@@ -2089,3 +2089,8 @@ hsjoihs「しか使っていない。文字列処理の関数は自前で実装�
 hsjoihs「プロトタイプ宣言って 2kmcc 中に存在しますか？　存在しないのであれば『名前付き穴』とか実装しないで済むかもしれないが。」
 hsjoihs「まあ、なにはともあれ、コードも一旦全部読まねばな。」
 
+hsjoihs「このログを push しておくか。」
+$IMAGE「ci_fail.png」
+hsjoihs「なぬ～ CI が落ちる。 https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/ を読む。」
+hsjoihs「まあ actions/upload-pages-artifact@v1 を actions/upload-pages-artifact@v3 に変えたら通るんじゃないかな。通った。OK」
+
