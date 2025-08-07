@@ -182,6 +182,18 @@ fn raxが指す位置の1バイトの値をインクリメント() -> [u8; 2] {
     [0xfe, 0x00]
 }
 
+fn raxが指す位置の8バイトの値をデクリメント() -> [u8; 3] {
+    [0x48, 0xff, 0x08]
+}
+
+fn raxが指す位置の4バイトの値をデクリメント() -> [u8; 2] {
+    [0xff, 0x08]
+}
+
+fn raxが指す位置の1バイトの値をデクリメント() -> [u8; 2] {
+    [0xfe, 0x08]
+}
+
 fn raxが指す位置にediを代入() -> [u8; 2] {
     [0x89, 0x38]
 }
@@ -606,6 +618,37 @@ impl<'a> FunctionGen<'a> {
                     _ => panic!("size が {} な型へのインクリメントはできません", typ.sizeof()),
                 };
             }
+
+
+            Expr::UnaryExpr {
+                op: UnaryOp::Decrement,
+                op_pos: _,
+                expr,
+                typ,
+            } => {
+                self.exprを左辺値として評価してアドレスをrdiレジスタへ(
+                    buf, expr,
+                );
+                buf.append(rdiをプッシュ());
+                self.stack_size += WORD_SIZE_AS_U32;
+                buf.append(raxへとポップ()); // expr のアドレス
+                self.stack_size -= WORD_SIZE_AS_U32;
+                match typ.sizeof() {
+                    8 => {
+                        buf.append(raxが指す位置の8バイトの値をデクリメント());
+                        buf.append(raxが指す位置の8バイトの値をrdiに代入());
+                    },
+                    4 => {
+                        buf.append(raxが指す位置の4バイトの値をデクリメント());
+                        buf.append(raxが指す位置の4バイトの値をediに代入());
+                    },
+                    1 => {buf.append(raxが指す位置の1バイトの値をデクリメント());
+                        buf.append(raxが指す位置の1バイトの値をdilに代入());
+                    },
+                    _ => panic!("size が {} な型へのデクリメントはできません", typ.sizeof()),
+                };
+            }
+
             Expr::Identifier { .. } => {
                 self.exprを左辺値として評価してアドレスをrdiレジスタへ(
                     buf, expr,

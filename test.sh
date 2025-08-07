@@ -204,7 +204,8 @@ echo "$TESTCASE2"
 check 8 "$TESTCASE2"
 
 # increment and decrement operators
-check 16 "int main() { int a; int b; a = 3; b = ++a; return b * a; }"
+check 44 "int main() { int a; int b; a = 3; b = ++a; return b * 10 + a; }"
+check 33 "int main() { int a; int b; a = 4; b = --a; return b * 10 + a; }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then
