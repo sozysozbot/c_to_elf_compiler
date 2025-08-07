@@ -881,6 +881,7 @@ pub fn parse(
                             members,
                         },
                     );
+                    continue; // skip to the next iteration 
                 }
             }
         }

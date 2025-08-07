@@ -260,6 +260,13 @@ check 3 "struct S { int a; int b; }; int main() { struct S s; struct S *p; (&s)-
 check 42 "struct S { int a; int b; }; int main() { struct S s; s.a = 42; return s.a; }"
 check 3 "struct S { int a; int b; }; int main() { struct S s; struct S *p; s.a = 1; s.b = 2; p = &s; return p->a + p->b; }"
 
+check 42 "struct S { int a; int b; }; struct S2 { int a; int b; }; int main() { struct S s; s.a = 42; return s.a; }"
+
+
+# struct inside struct
+check 24 "struct T { int *p; char a; }; struct S { int a; struct T t; }; int main() { return sizeof(struct S); }"
+check 27 "struct T { int *p; char a; }; struct S { int a; struct T t; }; int main() { struct S s; int k; k = 4; s.a = 3; s.t.a = 20; s.t.p = &k; return s.a + s.t.a + *s.t.p; }"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"
