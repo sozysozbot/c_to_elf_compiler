@@ -311,6 +311,13 @@ check 3 "void f(int *p) { *p = 3; } int main() { int a = 30; f(&a); return a; }"
 
 check 3 "int three(void) { return 3; } int main() { return three(); }"
 
+# assigning an int to a char through a pointer
+# 7*7*7 = 343 ≡ 87 = 29 x 3 (mod 256)
+check 29 "int main() { int a; a = 7; a = a * a; a = a * 7; char b; b = a; return b / 3; }"
+check 7 "int main() { int a = 7; char c; char *p = &c; *p = a; return *p; }"
+check 87 "int main() { int a = 7; a = a * 49; char c; char *p = &c; *p = a; return *p; }"
+check 29 "int main() { int a = 7; a = a * 49; char c; char *p = &c; *p = a; return *p / 3; }"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"
