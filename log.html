@@ -3525,8 +3525,8 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 <h3 class="date">2025年8月8日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_dcbd3cdb99d8279ad5b7773cd8339603').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_dcbd3cdb99d8279ad5b7773cd8339603').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_dcbd3cdb99d8279ad5b7773cd8339603" href="#permalink_dcbd3cdb99d8279ad5b7773cd8339603" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_931056764876ba6670904a524d9149eb').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_931056764876ba6670904a524d9149eb').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_931056764876ba6670904a524d9149eb" href="#permalink_931056764876ba6670904a524d9149eb" class="permalink">¶</a>
 		<div class="content">食事をした。やるぞ。</div>
 		<div class="content">とりあえず現状では関数の先頭でしか変数が宣言できず、たとえばブロック頭とかで変数を宣言しようとすると『数値リテラルでも開き丸括弧でもないものが来ました』と言われる</div>
 		<div class="content">さ～てどうしようかな</div>
@@ -3537,6 +3537,10 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 		<div class="content">いや、そもそも Statement を StatementOrDeclaration にして、そこに包括すべきだな。リファクタリングしよう</div>
 		<div class="content">リファクタリングした。</div>
 		<div class="content">次に、Context の local_var_and_param_declarations をプライベートにして、ルックアップをメソッドに隔離することで、ここの実装を変更してもよいという風にした</div>
+		<div class="content">そして、ひたすら実装を転がして、とりあえず関数の先頭以外でも変数が宣言できるようになった（ブロックスコープはまだ）</div>
+		<div class="content">さらに <code>int a = 1;</code> の類いも実装した</div>
+		<div class="content">残るは</div>
+		<div class="content"><ul><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>void</code>, <code>void *</code>, <code>return;</code></li></ul></div>
 	</div>
 </div>
 
