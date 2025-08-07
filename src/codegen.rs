@@ -1239,16 +1239,6 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         },
     ) in definition.local_var_declarations.iter()
     {
-        if function_gen
-            .local_var_table
-            .offsets
-            .contains_key(local_var_name)
-        {
-            panic!(
-                "関数 `{}` 先頭で定義されているローカル変数 {} が仮引数またはローカル変数と重複しています",
-                definition.func_name, local_var_name
-            )
-        }
         function_gen
             .local_var_table
             .allocate(local_var_name, *local_var_size);

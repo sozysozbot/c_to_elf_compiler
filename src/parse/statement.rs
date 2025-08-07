@@ -1,6 +1,8 @@
 use crate::apperror::*;
 use crate::ast::*;
+use crate::parse::combinator::recover;
 use crate::parse::toplevel::Context;
+use crate::parse::toplevel::TypeAndSize;
 use crate::parse::typ::Type;
 use crate::token::*;
 use std::{iter::Peekable, slice::Iter};
@@ -20,7 +22,7 @@ fn parse_test() {
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
         parse_statement(
-            &Context::new(
+            &mut Context::new(
                 HashMap::new(),
                 GlobalDeclarations {
                     symbols: HashMap::new(),
@@ -54,16 +56,49 @@ fn parse_test() {
 }
 
 pub fn parse_statement_or_declaration(
-    context: &Context,
+    context: &mut Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
 ) -> Result<StatementOrDeclaration, AppError> {
-    parse_statement(context, tokens, filename, input).map(StatementOrDeclaration::Statement)
+    if let Some((local_var_type, local_var_name)) = recover(tokens, |tokens| {
+        parse_type_and_identifier(tokens, filename, input)
+    })? {
+        match tokens.peek().unwrap() {
+            Token {
+                tok: Tok::Semicolon,
+                ..
+            } => {
+                tokens.next();
+
+                let typ_and_size = TypeAndSize {
+                    typ: local_var_type.clone(),
+                    size: local_var_type.sizeof(&context.global_declarations.struct_names),
+                };
+
+                context.insert_local_var(local_var_name.clone(), typ_and_size.clone());
+                Ok(StatementOrDeclaration::Declaration {
+                    name: local_var_name,
+                    typ_and_size,
+                })
+            }
+            Token { pos, .. } => {
+                Err(AppError {
+                    message: "関数内の変数宣言で、型名と識別子の後にセミコロン以外が来ました"
+                        .to_string(),
+                    input: input.to_string(),
+                    filename: filename.to_string(),
+                    pos: *pos,
+                })
+            }
+        }
+    } else {
+        parse_statement(context, tokens, filename, input).map(StatementOrDeclaration::Statement)
+    }
 }
 
 fn parse_statement(
-    context: &Context,
+    context: &mut Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
@@ -304,7 +339,10 @@ fn parse_statement(
                         break;
                     }
                     _ => statements.push(parse_statement_or_declaration(
-                        context, tokens, filename, input,
+                        context,
+                        tokens,
+                        filename,
+                        input,
                     )?),
                 }
             }

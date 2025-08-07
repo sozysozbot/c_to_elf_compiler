@@ -1,4 +1,3 @@
-use super::combinator::recover;
 use super::combinator::satisfy;
 use super::statement::parse_statement_or_declaration;
 use super::statement::parse_type_and_identifier;
@@ -101,6 +100,16 @@ impl Context {
         }
     }
 
+    pub fn insert_local_var(&mut self, ident: String, typ_and_size: TypeAndSize) {
+        // when there is conflict in the same scope, we throw an error
+        if self.local_var_and_param_declarations.contains_key(&ident) {
+            panic!("ローカル変数の再定義: {ident}");
+        }
+
+        self.local_var_and_param_declarations
+            .insert(ident, typ_and_size);
+    }
+
     pub fn resolve_type_and_size_as_var(&self, ident: &str) -> Result<TypeAndSize, String> {
         if let Some(typ_and_size) = self.local_var_and_param_declarations.get(ident) {
             Ok(typ_and_size.clone())
@@ -141,40 +150,31 @@ fn after_param_list(
 
             let mut statements_or_declarations: Vec<StatementOrDeclaration> = vec![];
 
-            let mut local_var_declarations: HashMap<String, TypeAndSize> = HashMap::new();
-            while let Some((local_var_type, local_var_name)) = recover(tokens, |tokens| {
-                parse_type_and_identifier(tokens, filename, input)
-            })? {
-                match tokens.peek().unwrap() {
-                    Token {
-                        tok: Tok::Semicolon,
-                        ..
-                    } => {
-                        tokens.next();
+            let mut local_var_and_param_declarations: HashMap<String, TypeAndSize> = HashMap::new();
+            local_var_and_param_declarations.extend(params.iter().map(|(typ, ident)| {
+                (
+                    ident.clone(),
+                    TypeAndSize {
+                        typ: (*typ).clone(),
+                        size: typ.sizeof(&previous_global_declarations.struct_names),
+                    },
+                )
+            }));
 
-                        let typ_and_size = TypeAndSize {
-                            typ: local_var_type.clone(),
-                            size: local_var_type.sizeof(&previous_global_declarations.struct_names),
-                        };
+            let mut global_declarations = (*previous_global_declarations).clone();
 
-                        local_var_declarations.insert(local_var_name.clone(), typ_and_size.clone());
-                        statements_or_declarations.push(StatementOrDeclaration::Declaration {
-                            name: local_var_name,
-                            typ_and_size,
-                        });
-                    }
-                    Token { pos, .. } => {
-                        return Err(AppError {
-                            message:
-                                "関数内の変数宣言で、型名と識別子の後にセミコロン以外が来ました"
-                                    .to_string(),
-                            input: input.to_string(),
-                            filename: filename.to_string(),
-                            pos: *pos,
-                        })
-                    }
-                }
-            }
+            let signature = FunctionSignature {
+                params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
+                pos,
+                return_type: return_type.clone(),
+            };
+            // 今読んでる関数の定義も足さないと再帰呼び出しができない
+            global_declarations.symbols.insert(
+                func_name.to_string(),
+                SymbolDeclaration::Func(signature.clone()),
+            );
+
+            let mut context = Context::new(local_var_and_param_declarations, global_declarations);
 
             loop {
                 match tokens.peek() {
@@ -194,43 +194,22 @@ fn after_param_list(
                         break;
                     }
                     _ => {
-                        let mut local_var_and_param_declarations: HashMap<String, TypeAndSize> =
-                            local_var_declarations.clone();
-                        local_var_and_param_declarations.extend(params.iter().map(
-                            |(typ, ident)| {
-                                (
-                                    ident.clone(),
-                                    TypeAndSize {
-                                        typ: (*typ).clone(),
-                                        size: typ
-                                            .sizeof(&previous_global_declarations.struct_names),
-                                    },
-                                )
-                            },
-                        ));
-
-                        let mut global_declarations = (*previous_global_declarations).clone();
-
-                        let signature = FunctionSignature {
-                            params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
-                            pos,
-                            return_type: return_type.clone(),
-                        };
-                        // 今読んでる関数の定義も足さないと再帰呼び出しができない
-                        global_declarations.symbols.insert(
-                            func_name.to_string(),
-                            SymbolDeclaration::Func(signature.clone()),
-                        );
-                        statements_or_declarations.push(parse_statement_or_declaration(
-                            &Context {
-                                local_var_and_param_declarations,
-                                global_declarations,
-                            },
+                        let parsed = parse_statement_or_declaration(
+                            &mut context,
                             tokens,
                             filename,
                             input,
-                        )?)
+                        )?;
+                        statements_or_declarations.push(parsed);
                     }
+                }
+            }
+
+            // collect the local variable declarations (for now, we only need to handle those at the immediate function scope)
+            let mut local_var_declarations: HashMap<String, TypeAndSize> = HashMap::new();
+            for s_or_d in statements_or_declarations.iter() {
+                if let StatementOrDeclaration::Declaration { name, typ_and_size } = s_or_d {
+                    local_var_declarations.insert(name.clone(), typ_and_size.clone());
                 }
             }
 
