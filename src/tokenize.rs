@@ -397,10 +397,19 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
             }
             '&' => {
                 iter.next();
-                ans.push(Token {
-                    tok: Tok::Ampersand,
-                    pos,
-                });
+                match iter.peek() {
+                    Some(&(pos, '&')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::LogicalAnd,
+                            pos,
+                        });
+                    }
+                    _ => ans.push(Token {
+                        tok: Tok::Ampersand,
+                        pos,
+                    }),
+                }
             }
             c => {
                 return Err(AppError {

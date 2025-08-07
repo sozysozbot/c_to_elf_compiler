@@ -267,6 +267,17 @@ check 42 "struct S { int a; int b; }; struct S2 { int a; int b; }; int main() { 
 check 24 "struct T { int *p; char a; }; struct S { int a; struct T t; }; int main() { return sizeof(struct S); }"
 check 27 "struct T { int *p; char a; }; struct S { int a; struct T t; }; int main() { struct S s; int k; k = 4; s.a = 3; s.t.a = 20; s.t.p = &k; return s.a + s.t.a + *s.t.p; }"
 
+# logical and
+check 1 "int main() { int a; int b; a = 1; b = 2; return a && b; }"
+check 0 "int main() { int a; int b; a = 0; b = 2; return a && b; }"
+check 0 "int main() { int a; int b; a = 1; b = 0; return a && b; }"
+check 0 "int main() { int a; int b; a = 0; b = 0; return a && b; }"
+
+# short-circuit evaluation
+# check 3 "int update(int *p) { *p = 3; return 0; }  int main() { int a; int b; a = 42; b = 1 && update(&a); return b * 10 + a; }"
+# check 13 "int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a = 42; b = 1 && update(&a); return b * 10 + a; }"
+check 42 "int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a = 42; b = 0 && update(&a); return b * 10 + a; }"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

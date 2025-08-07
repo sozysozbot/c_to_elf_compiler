@@ -41,6 +41,8 @@ pub enum Tok {
     Struct,
     Arrow,
     Dot,
+    LogicalAnd,
+    LogicalOr,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

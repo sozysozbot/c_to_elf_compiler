@@ -572,6 +572,33 @@ impl<'a> FunctionGen<'a> {
                 // x64 なので、edi に 0 をセットすると rdi に 0 がセットされる
                 buf.append(ediに代入(0));
             }
+
+            Expr::BinaryExpr {
+                op: BinaryOp::LogicalAnd,
+                左辺,
+                右辺,
+                op_pos: _,
+                typ: _,
+            } => {
+                // `a && b` is equivalent to `a!=0 ? b!=0 : 0`
+
+                let else_buf = ediに代入(0);
+
+                let mut then_buf = Buf::new();
+                self.exprを評価してediレジスタへ(&mut then_buf, 右辺);
+                then_buf.append(ediが0かを確認());
+                then_buf.append(フラグを読んで異なっているかどうかをalにセット());
+                then_buf.append(alをゼロ拡張してediにセット());
+                then_buf.append(jmp(i8::try_from(else_buf.len()).unwrap()));
+
+                let mut cond_buf = Buf::new();
+                self.exprを評価してediレジスタへ(&mut cond_buf, 左辺);
+                cond_buf.append(ediが0かを確認());
+                cond_buf.append(je(i8::try_from(then_buf.len()).unwrap()));
+
+                buf.append(cond_buf.join(then_buf).join(else_buf))
+            }
+
             Expr::DecayedArr { expr, .. } => {
                 self.exprを評価してediレジスタへ(buf, expr);
             }

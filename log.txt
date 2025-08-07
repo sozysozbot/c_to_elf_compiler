@@ -2243,3 +2243,26 @@ hsjoihs「あらかじめ構造体のサイズをルックアップして覚え�
 hsjoihs「ドットが実装されました」
 hsjoihs「ただし構造体の定義が複数あるときに落ちるというしょうもないバグがあったので continue 文を一個足す」
 hsjoihs「構造体の中に構造体を入れても OK」
+
+hsjoihs「残るは」
+$HTML「<ul><li><code>int i = 0;</code></li><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>&&</code></li><li><code>void</code>, <code>void *</code>, <code>return;</code></li><li>||</li></ul>」
+
+hsjoihs「息抜きに && と || を実装するか」
+
+hsjoihs「&& を大体組んだが、」
+
+$source
+```
+# logical and
+check 1 "int main() { int a; int b; a = 1; b = 2; return a && b; }"
+check 0 "int main() { int a; int b; a = 0; b = 2; return a && b; }"
+check 0 "int main() { int a; int b; a = 1; b = 0; return a && b; }"
+check 0 "int main() { int a; int b; a = 0; b = 0; return a && b; }"
+
+# short-circuit evaluation
+# check 3 "int update(int *p) { *p = 3; return 0; }  int main() { int a; int b; a = 42; b = 1 && update(&a); return b * 10 + a; }"
+# check 13 "int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a = 42; b = 1 && update(&a); return b * 10 + a; }"
+check 42 "int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a = 42; b = 0 && update(&a); return b * 10 + a; }"
+```
+
+hsjoihs「といった感じで、通らないテストがある」
