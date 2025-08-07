@@ -47,7 +47,7 @@ fn parse_primary(
             構文解析と意味解析が分かれていれば問題ないが、ここで `識別子` の型を決めなければいけないため
             */
             let open_pos = tokens.peek().unwrap().pos;
-            if let Some(_) = recover(tokens, |tokens| {
+            if (recover(tokens, |tokens| {
                 satisfy(
                     tokens,
                     filename,
@@ -55,10 +55,10 @@ fn parse_primary(
                     |tok| tok == &Tok::開き丸括弧,
                     "開き丸括弧ではありません",
                 )
-            })? {
+            })?).is_some() {
                 let mut args = Vec::new();
 
-                if let Some(_) = recover(tokens, |tokens| {
+                if (recover(tokens, |tokens| {
                     satisfy(
                         tokens,
                         filename,
@@ -66,7 +66,7 @@ fn parse_primary(
                         |tok| tok == &Tok::閉じ丸括弧,
                         "閉じ丸括弧ではありません",
                     )
-                })? {
+                })?).is_some() {
                     let func_decl = match context.global_symbol_declarations.get(ident) {
                         Some(SymbolDeclaration::Func(f)) => f.clone(),
                         Some(SymbolDeclaration::GVar(_)) => {
@@ -103,7 +103,7 @@ fn parse_primary(
                 }
 
                 loop {
-                    if let Some(_) = recover(tokens, |tokens| {
+                    if (recover(tokens, |tokens| {
                         satisfy(
                             tokens,
                             filename,
@@ -111,7 +111,7 @@ fn parse_primary(
                             |tok| tok == &Tok::閉じ丸括弧,
                             "閉じ丸括弧ではありません",
                         )
-                    })? {
+                    })?).is_some() {
                         let func_decl = match context.global_symbol_declarations.get(ident) {
                             Some(SymbolDeclaration::Func(f)) => f.clone(),
                             Some(SymbolDeclaration::GVar(_)) => {
@@ -142,7 +142,7 @@ fn parse_primary(
                             typ: func_decl.return_type,
                         };
                         break Ok(expr);
-                    } else if let Some(_) = recover(tokens, |tokens| {
+                    } else if (recover(tokens, |tokens| {
                         satisfy(
                             tokens,
                             filename,
@@ -150,7 +150,7 @@ fn parse_primary(
                             |tok| tok == &Tok::Comma,
                             "カンマではありません",
                         )
-                    })? {
+                    })?).is_some() {
                         let expr = parse_expr(context, tokens, filename, input)?;
                         args.push(*decay_if_arr(expr));
                     } else {
@@ -467,7 +467,7 @@ fn parse_unary(
         }) => {
             tokens.next();
 
-            let typ = if let Some(_) = recover(tokens, |tokens| {
+            let typ = if (recover(tokens, |tokens| {
                 satisfy(
                     tokens,
                     filename,
@@ -475,7 +475,7 @@ fn parse_unary(
                     |tok| tok == &Tok::開き丸括弧,
                     "開き丸括弧ではありません",
                 )
-            })? {
+            })?).is_some() {
                 let typ = if let Some(typ) =
                     recover(tokens, |tokens| parse_type(tokens, filename, input))?
                 {
@@ -507,7 +507,7 @@ fn parse_unary(
         }) => {
             tokens.next();
 
-            let typ = if let Some(_) = recover(tokens, |tokens| {
+            let typ = if (recover(tokens, |tokens| {
                 satisfy(
                     tokens,
                     filename,
@@ -515,7 +515,7 @@ fn parse_unary(
                     |tok| tok == &Tok::開き丸括弧,
                     "開き丸括弧ではありません",
                 )
-            })? {
+            })?).is_some() {
                 let typ = if let Some(typ) =
                     recover(tokens, |tokens| parse_type(tokens, filename, input))?
                 {

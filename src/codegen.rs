@@ -383,7 +383,7 @@ pub struct LocalVarTable {
 
 impl LocalVarTable {
     pub fn allocate(&mut self, ident: &str, size: u8) -> u8 {
-        let size = (size + WORD_SIZE - 1) / WORD_SIZE * WORD_SIZE;
+        let size = size.div_ceil(WORD_SIZE) * WORD_SIZE;
         let offset = self
             .max_offset
             .checked_add(size)
