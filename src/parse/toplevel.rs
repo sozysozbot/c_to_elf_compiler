@@ -2,7 +2,6 @@ use crate::apperror::*;
 use crate::ast::*;
 use crate::token::*;
 use std::collections::HashMap;
-use std::hash::Hash;
 use std::{iter::Peekable, slice::Iter};
 
 use super::combinator::recover;

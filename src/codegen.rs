@@ -1098,7 +1098,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         };
     }
 
-    for (local_var_name, (local_var_type, local_var_size)) in definition.local_var_declarations.iter() {
+    for (local_var_name, (_, local_var_size)) in definition.local_var_declarations.iter() {
         if function_gen
             .local_var_table
             .offsets
