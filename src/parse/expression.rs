@@ -6,7 +6,7 @@ use std::{iter::Peekable, slice::Iter};
 
 use super::combinator::recover;
 use super::combinator::satisfy;
-use super::toplevel::Context;
+use super::context::Context;
 use super::toplevel::SymbolDeclaration;
 use super::typ::Type;
 use super::typ::parse_type;

@@ -1,7 +1,7 @@
 use crate::apperror::*;
 use crate::ast::*;
 use crate::parse::combinator::recover;
-use crate::parse::toplevel::Context;
+use crate::parse::context::Context;
 use crate::parse::toplevel::TypeAndSize;
 use crate::parse::typ::Type;
 use crate::token::*;
