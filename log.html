@@ -3336,8 +3336,8 @@ pub fn no_decay_even_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
 <h3 class="date">2025年8月7日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_8ba141b12a983ae2aea0c654393c2f93').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8ba141b12a983ae2aea0c654393c2f93').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_8ba141b12a983ae2aea0c654393c2f93" href="#permalink_8ba141b12a983ae2aea0c654393c2f93" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_9d6cb8e0155ce01b9916755a8e31dd2f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_9d6cb8e0155ce01b9916755a8e31dd2f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_9d6cb8e0155ce01b9916755a8e31dd2f" href="#permalink_9d6cb8e0155ce01b9916755a8e31dd2f" class="permalink">¶</a>
 		<div class="content">あれから 2 年が経った。</div>
 		<div class="content">その間に、ZEN 大学の構想が発表されて、私は 2 年間『オートマトンと形式言語理論』の教材を書き続け、ZEN 大学が開学した。</div>
 		<div class="content">さて、2 日後の <a href="https://kernelvm.connpass.com/event/355100/">Kernel/VM 探検隊@東京 No18</a> で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。</div>
@@ -3462,6 +3462,12 @@ components = [&quot;rustfmt&quot;, &quot;clippy&quot;]
 		<div class="content"><code>+=</code> と <code>-=</code> を実装した。現在 19:11</div>
 		<div class="content">次。文字リテラル。世の中 (2kmcc の中) にはエスケープシーケンスが \n と \\ と \&#x27; しかないので、やるだけ。</div>
 		<div class="content">トークナイザに文字リテラルを追加。テストケースでシェルが解釈する（かつ、ソースコード中にシングルクオートがあるのでシングルクオートで括るのを避けたい）ので、シェルスクリプト内ではバックスラッシュを倍加</div>
+		<div class="content">残るは</div>
+		<div class="content"><ul><li><code>int i = 0;</code></li><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>論理否定</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>&&</code></li><li>構造体</li><li><code>void</code>, <code>void *</code>, <code>return;</code></li><li>||</li></ul></div>
+		<div class="content">論理否定が安そう。組むか。</div>
+		<div class="content">The expression !E is equivalent to (0==E) と規定されているので、それを組めばよい。オペランドがポインタなら比較対象はヌルポインタ定数。</div>
+		<div class="content">論理否定が多分組めた。テストを書く</div>
+		<div class="content">ヌルポインタを書く手は現状無いので、とりあえず『数値 0 の論理否定』『数値 42 の論理否定』『合法なポインタの論理否定』だけテスト</div>
 	</div>
 </div>
 
