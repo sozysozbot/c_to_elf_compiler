@@ -2126,3 +2126,35 @@ $HTML「<ul><li>複合代入演算子</li><li>インクリメント・デクリ�
 hsjoihs「とかを実装する必要がある。」
 
 hsjoihs「まあとりあえず簡単なやつから実装しましょう。とりあえずインクリメント・デクリメントかなぁ。」
+hsjoihs「rust-analyzer がない。起動する。ああ rust が 1.62 なので起動しない。Rust 古すぎ罪だ。とりあえず rustup update」
+hsjoihs「ん～ cargo -V が cargo 1.62.1 だ。which cargo すると /home/hsjoihs/.cargo/bin/cargo となる。」
+hsjoihs「一旦吹き飛ばして入れなおすか。まずは rustup self uninstall」
+hsjoihs「そうしたら <code>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code>」
+
+$source
+```
+warn: It looks like you have an existing installation of Rust at:
+warn: /usr/bin
+warn: It is recommended that rustup be the primary Rust installation.
+warn: Otherwise you may have confusion unless you are careful with your PATH.
+warn: If you are sure that you want both rustup and your already installed Rust
+warn: then please reply `y' or `yes' or set RUSTUP_INIT_SKIP_PATH_CHECK to yes
+warn: or pass `-y' to ignore all ignorable checks.
+```
+
+hsjoihs「なるほど？」
+hsjoihs「もう sudo rm -rf /usr/bin/rust* するか」
+
+hsjoihs「あれっ cargo check で 1.62.1 がインストールされる」
+
+hsjoihs「なるほど rust-toolchain.toml のせいか」
+
+$source
+```
+[toolchain]
+channel = "1.62.1"
+components = ["rustfmt", "clippy"]
+```
+
+hsjoihs「<code>channel = "1.88.0"</code> にしておこう」
+hsjoihs「よ～し rust-analyzer が復活。現在時刻 17:39。」
