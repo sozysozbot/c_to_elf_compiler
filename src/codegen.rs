@@ -1,8 +1,4 @@
-use crate::{
-    ast::*,
-    parse::statement::{FunctionDefinition, Type},
-    Buf,
-};
+use crate::{ast::*, parse::statement::Type, parse::toplevel::FunctionDefinition, Buf};
 use std::collections::HashMap;
 
 /*
@@ -607,25 +603,23 @@ impl<'a> FunctionGen<'a> {
                 // `a || b` is equivalent to `a!=0 ? 1 : b!=0`
 
                 let mut else_buf = Buf::new();
-                self.exprを評価してediレジスタへ(&mut else_buf, 右辺
-                );
+                self.exprを評価してediレジスタへ(&mut else_buf, 右辺);
                 else_buf.append(ediが0かを確認());
                 else_buf.append(フラグを読んで異なっているかどうかをalにセット());
                 else_buf.append(alをゼロ拡張してediにセット());
 
                 let mut then_buf = Buf::new();
                 then_buf.append(ediに代入(1));
-                then_buf.append(jmp(
-                    i8::try_from(else_buf.len())
-                        .expect("|| の右辺をコンパイルした長さが i8 に収まりません"),
-                ));
+                then_buf.append(jmp(i8::try_from(else_buf.len())
+                    .expect("|| の右辺をコンパイルした長さが i8 に収まりません")));
 
                 let mut cond_buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut cond_buf, 左辺);
                 cond_buf.append(ediが0かを確認());
-                cond_buf.append(je(i8::try_from(then_buf.len())
-                    .expect("|| の右辺をコンパイルした長さが長すぎてジャンプを構築できません")));
-                
+                cond_buf.append(je(i8::try_from(then_buf.len()).expect(
+                    "|| の右辺をコンパイルした長さが長すぎてジャンプを構築できません",
+                )));
+
                 buf.append(cond_buf.join(then_buf).join(else_buf));
             }
 
