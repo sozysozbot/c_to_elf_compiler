@@ -2044,7 +2044,7 @@ $DATE「2025年8月7日」
 
 hsjoihs「あれから 2 年が経った。」
 hsjoihs「その間に、ZEN 大学の構想が発表されて、私は 2 年間『オートマトンと形式言語理論』の教材を書き続け、ZEN 大学が開学した。」
-hsjoihs「さて、2 日後の <a href="https://kernelvm.connpass.com/event/355100/">Kernel/VM 探検隊@東京 No18</a> で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。」
+$HTML「さて、2 日後の <a href="https://kernelvm.connpass.com/event/355100/">Kernel/VM 探検隊@東京 No18</a> で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。」
 hsjoihs「とりあえず 15:50～16:18 で過去ログを読んだ。」
 hsjoihs「過去の私、『幕間』とかいう激ヤバ分量のタスクを残していないか？」
 
@@ -2094,7 +2094,7 @@ $IMAGE「ci_fail.png」
 hsjoihs「なぬ～ CI が落ちる。 https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/ を読む。」
 hsjoihs「まあ actions/upload-pages-artifact@v1 を actions/upload-pages-artifact@v3 に変えたら通るんじゃないかな。通った。OK。」
 
-hsjoihs「プロトタイプ宣言が 2kmcc 内にあるかどうかを調べる。2kmcc のコードに <code>^\S.+\);</code> で検索をかけると、」
+$HTML「プロトタイプ宣言が 2kmcc 内にあるかどうかを調べる。2kmcc のコードに <code>^\S.+\);</code> で検索をかけると、」
 
 $source
 ```c
@@ -2129,7 +2129,7 @@ hsjoihs「まあとりあえず簡単なやつから実装しましょう。と�
 hsjoihs「rust-analyzer がない。起動する。ああ rust が 1.62 なので起動しない。Rust 古すぎ罪だ。とりあえず rustup update」
 hsjoihs「ん～ cargo -V が cargo 1.62.1 だ。which cargo すると /home/hsjoihs/.cargo/bin/cargo となる。」
 hsjoihs「一旦吹き飛ばして入れなおすか。まずは rustup self uninstall」
-hsjoihs「そうしたら <code>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code>」
+$HTML「そうしたら <code>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code>」
 
 $source
 ```
@@ -2156,7 +2156,7 @@ channel = "1.62.1"
 components = ["rustfmt", "clippy"]
 ```
 
-hsjoihs「<code>channel = "1.88.0"</code> にしておこう」
+$HTML「<code>channel = "1.88.0"</code> にしておこう」
 hsjoihs「よ～し rust-analyzer が復活。現在時刻 17:39。」
 hsjoihs「トークナイザに Increment と Decrement を足して、」
 hsjoihs「前置インクリメントは素直に実装……あれ？ 汎整数拡張って起きるんだっけ？ `char a; return sizeof(++a);` で実験すると 1。了解。」
@@ -2185,9 +2185,9 @@ $source
 ```
 
 hsjoihs「の各メソッドを実装するのみ」
-hsjoihs「x64 なので当然 <code>inc    BYTE PTR [rax] </code> とかが使える。ありがとう CISC」
+$HTML「x64 なので当然 <code>inc    BYTE PTR [rax] </code> とかが使える。ありがとう CISC」
 hsjoihs「さてテストケースを足しましょうね～。はい inc 通った。一旦コミットするか。」
-hsjoihs「<code>check 16 "int main() { int a; int b; a = 3; b = ++a; return b * a; }"</code> で 16 が返ってくることを確認」
+$HTML「<code>check 16 "int main() { int a; int b; a = 3; b = ++a; return b * a; }"</code> で 16 が返ってくることを確認」
 
 hsjoihs「今度は後置インクリメント・デクリメント。」
 hsjoihs「えーと現状だと後置演算子が添字アクセスしかないので、ちょっとパーサーに非自明な変更が要る」
@@ -2195,5 +2195,5 @@ hsjoihs「とりあえず定義をほぐした」
 hsjoihs「後置インクリメントを実装。現在 18:44」
 hsjoihs「後置デクリメントも実装。現在 18:46」
 hsjoihs「次は複合代入演算子かなぁ」
-hsjoihs「2kmcc 内では複合代入演算子は `+=` と `-=` しか使われていないので、これだけ実装すればいい」
-hsjoihs「`+=` と `-=` を実装した。現在 19:11」
+$HTML「2kmcc 内では複合代入演算子は <code>+=</code> と <code>-=</code> しか使われていないので、これだけ実装すればいい」
+$HTML「<code>+=</code> と <code>-=</code> を実装した。現在 19:11」
