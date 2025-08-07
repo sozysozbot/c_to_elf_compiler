@@ -38,7 +38,7 @@ pub enum Tok {
     SubAssign,
     LogicalNot,
     Alignof,
-    Struct
+    Struct,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

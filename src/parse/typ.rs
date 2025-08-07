@@ -29,12 +29,9 @@ pub fn parse_type(
                 Some(Token {
                     tok: Tok::Identifier(struct_name),
                     ..
-                }) => {
-
-                    Type::Struct {
-                        struct_name: struct_name.clone(),
-                    }
-                }
+                }) => Type::Struct {
+                    struct_name: struct_name.clone(),
+                },
                 Some(Token { pos, .. }) => {
                     return Err(AppError {
                         message: "構造体名がありません".to_string(),

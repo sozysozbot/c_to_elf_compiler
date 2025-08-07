@@ -638,7 +638,9 @@ fn add(context: &Context, 左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -
     }
 }
 
-fn subtract(context: &Context, 左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
+fn subtract(
+    context: &Context, 左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize
+) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
         (Type::Int | Type::Char, Type::Int | Type::Char) => Some(Expr::BinaryExpr {
             op: BinaryOp::Sub,

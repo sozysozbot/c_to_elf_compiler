@@ -595,67 +595,92 @@ impl<'a> FunctionGen<'a> {
                     8 => buf.append(raxが指す位置にrdiを代入()),
                     4 => buf.append(raxが指す位置にediを代入()),
                     1 => buf.append(raxが指す位置にdilを代入()),
-                    _ => panic!("size が {} な型への代入はできません", typ.sizeof_primitive()),
+                    _ => panic!(
+                        "size が {} な型への代入はできません",
+                        typ.sizeof_primitive()
+                    ),
                 };
             }
 
-            Expr::BinaryExpr { op: BinaryOp::AddAssign, op_pos: _, 左辺, 右辺, typ } => {
+            Expr::BinaryExpr {
+                op: BinaryOp::AddAssign,
+                op_pos: _,
+                左辺,
+                右辺,
+                typ,
+            } => {
                 self.exprを評価してediレジスタへ(buf, 右辺);
                 buf.append(rdiをプッシュ());
                 self.stack_size += WORD_SIZE_AS_U32;
 
                 // スタックトップ：右辺
 
-                self.exprを左辺値として評価してアドレスをrdiレジスタへ(buf, 左辺);
+                self.exprを左辺値として評価してアドレスをrdiレジスタへ(
+                    buf, 左辺,
+                );
                 buf.append(rdiをプッシュ()); // 左辺のアドレス：rdi
                 self.stack_size += WORD_SIZE_AS_U32;
 
                 buf.append(rdiを間接参照()); // 左辺の値：rdi
-                
+
                 buf.append(rsiへとポップ()); // 左辺のアドレス：rsi
                 self.stack_size -= WORD_SIZE_AS_U32;
 
                 buf.append(raxへとポップ()); // 右辺の値：rax
                 self.stack_size -= WORD_SIZE_AS_U32;
 
-                buf.append(rdiにraxを足し合わせる()); 
-                buf.append(rsiをraxにコピー()); 
+                buf.append(rdiにraxを足し合わせる());
+                buf.append(rsiをraxにコピー());
 
                 match typ.sizeof_primitive() {
                     8 => buf.append(raxが指す位置にrdiを代入()),
                     4 => buf.append(raxが指す位置にediを代入()),
                     1 => buf.append(raxが指す位置にdilを代入()),
-                    _ => panic!("size が {} な型への代入はできません", typ.sizeof_primitive()),
+                    _ => panic!(
+                        "size が {} な型への代入はできません",
+                        typ.sizeof_primitive()
+                    ),
                 };
             }
 
-            Expr::BinaryExpr { op: BinaryOp::SubAssign, op_pos: _, 左辺, 右辺, typ } => {
+            Expr::BinaryExpr {
+                op: BinaryOp::SubAssign,
+                op_pos: _,
+                左辺,
+                右辺,
+                typ,
+            } => {
                 self.exprを評価してediレジスタへ(buf, 右辺);
                 buf.append(rdiをプッシュ());
                 self.stack_size += WORD_SIZE_AS_U32;
 
                 // スタックトップ：右辺
 
-                self.exprを左辺値として評価してアドレスをrdiレジスタへ(buf, 左辺);
+                self.exprを左辺値として評価してアドレスをrdiレジスタへ(
+                    buf, 左辺,
+                );
                 buf.append(rdiをプッシュ()); // 左辺のアドレス：rdi
                 self.stack_size += WORD_SIZE_AS_U32;
 
                 buf.append(rdiを間接参照()); // 左辺の値：rdi
-                
+
                 buf.append(rsiへとポップ()); // 左辺のアドレス：rsi
                 self.stack_size -= WORD_SIZE_AS_U32;
 
                 buf.append(raxへとポップ()); // 右辺の値：rax
                 self.stack_size -= WORD_SIZE_AS_U32;
 
-                buf.append(rdiからraxを減じる()); 
-                buf.append(rsiをraxにコピー()); 
+                buf.append(rdiからraxを減じる());
+                buf.append(rsiをraxにコピー());
 
                 match typ.sizeof_primitive() {
                     8 => buf.append(raxが指す位置にrdiを代入()),
                     4 => buf.append(raxが指す位置にediを代入()),
                     1 => buf.append(raxが指す位置にdilを代入()),
-                    _ => panic!("size が {} な型への代入はできません", typ.sizeof_primitive()),
+                    _ => panic!(
+                        "size が {} な型への代入はできません",
+                        typ.sizeof_primitive()
+                    ),
                 };
             }
 
@@ -676,18 +701,21 @@ impl<'a> FunctionGen<'a> {
                     8 => {
                         buf.append(raxが指す位置の8バイトの値をインクリメント());
                         buf.append(raxが指す位置の8バイトの値をrdiに代入());
-                    },
+                    }
                     4 => {
                         buf.append(raxが指す位置の4バイトの値をインクリメント());
                         buf.append(raxが指す位置の4バイトの値をediに代入());
-                    },
-                    1 => {buf.append(raxが指す位置の1バイトの値をインクリメント());
+                    }
+                    1 => {
+                        buf.append(raxが指す位置の1バイトの値をインクリメント());
                         buf.append(raxが指す位置の1バイトの値をdilに代入());
-                    },
-                    _ => panic!("size が {} な型へのインクリメントはできません", typ.sizeof_primitive()),
+                    }
+                    _ => panic!(
+                        "size が {} な型へのインクリメントはできません",
+                        typ.sizeof_primitive()
+                    ),
                 };
             }
-
 
             Expr::UnaryExpr {
                 op: UnaryOp::Decrement,
@@ -706,15 +734,19 @@ impl<'a> FunctionGen<'a> {
                     8 => {
                         buf.append(raxが指す位置の8バイトの値をデクリメント());
                         buf.append(raxが指す位置の8バイトの値をrdiに代入());
-                    },
+                    }
                     4 => {
                         buf.append(raxが指す位置の4バイトの値をデクリメント());
                         buf.append(raxが指す位置の4バイトの値をediに代入());
-                    },
-                    1 => {buf.append(raxが指す位置の1バイトの値をデクリメント());
+                    }
+                    1 => {
+                        buf.append(raxが指す位置の1バイトの値をデクリメント());
                         buf.append(raxが指す位置の1バイトの値をdilに代入());
-                    },
-                    _ => panic!("size が {} な型へのデクリメントはできません", typ.sizeof_primitive()),
+                    }
+                    _ => panic!(
+                        "size が {} な型へのデクリメントはできません",
+                        typ.sizeof_primitive()
+                    ),
                 };
             }
 
@@ -726,7 +758,10 @@ impl<'a> FunctionGen<'a> {
                     8 => buf.append(rdiを間接参照()),
                     4 => buf.append(rdiを間接参照()),
                     1 => buf.append(rdiをmovzxで間接参照()),
-                    _ => panic!("size が {} な型の参照はできません", expr.typ().sizeof_primitive()),
+                    _ => panic!(
+                        "size が {} な型の参照はできません",
+                        expr.typ().sizeof_primitive()
+                    ),
                 };
             }
             Expr::BinaryExpr {
