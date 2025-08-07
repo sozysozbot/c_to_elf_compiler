@@ -25,7 +25,8 @@ fn tokenize_test() {
 #[allow(clippy::too_many_lines)]
 pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
     let mut ans = vec![];
-    let mut iter = input.chars().enumerate().peekable();
+    let mut iter: std::iter::Peekable<std::iter::Enumerate<std::str::Chars<'_>>> =
+        input.chars().enumerate().peekable();
     while let Some(&(pos, c)) = iter.peek() {
         match c {
             '"' => {
@@ -135,7 +136,7 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     }
                     _ => {
                         ans.push(Token { tok: Tok::Add, pos });
-                    },
+                    }
                 }
             }
             '-' => {
@@ -157,7 +158,7 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     }
                     _ => {
                         ans.push(Token { tok: Tok::Sub, pos });
-                    },
+                    }
                 }
             }
             '*' => {
@@ -295,6 +296,75 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     }),
                 }
             }
+            '\'' => {
+                iter.next();
+                match iter.next() {
+                    Some((_, '\\')) => {
+                        // escape sequence
+                        match iter.next() {
+                            Some((_, 'n')) => ans.push(Token {
+                                tok: Tok::Num(10),
+                                pos,
+                            }),
+                            Some((_, '\'')) => ans.push(Token {
+                                tok: Tok::Num(39),
+                                pos,
+                            }),
+                            Some((_, '\\')) => ans.push(Token {
+                                tok: Tok::Num(92),
+                                pos,
+                            }),
+                            Some((_, c)) => {
+                                return Err(AppError {
+                                    message: format!(
+                                        "文字リテラルのエスケープシーケンス '\\{c}' は未対応です",
+                                    ),
+                                    input: input.to_string(),
+                                    filename: filename.to_string(),
+                                    pos,
+                                });
+                            }
+                            None => {
+                                return Err(AppError {
+                                    message: "文字リテラルが終了する前にEOFが来ました".to_string(),
+                                    input: input.to_string(),
+                                    filename: filename.to_string(),
+                                    pos,
+                                });
+                            }
+                        }
+
+                        expect_end_of_char_lit(input, filename, pos, &mut iter)?;
+                    }
+                    Some((_, c)) => {
+                        let charcode = u32::from(c);
+                        if charcode > 255 {
+                            return Err(AppError {
+                                message: format!(
+                                    "文字リテラルの値が符号なし8ビット整数に収まりません：'{c}'"
+                                ),
+                                input: input.to_string(),
+                                filename: filename.to_string(),
+                                pos,
+                            });
+                        }
+
+                        ans.push(Token {
+                            tok: Tok::Num(charcode as u8),
+                            pos,
+                        });
+                        expect_end_of_char_lit(input, filename, pos, &mut iter)?;
+                    }
+                    None => {
+                        return Err(AppError {
+                            message: "文字リテラルが終了する前にEOFが来ました".to_string(),
+                            input: input.to_string(),
+                            filename: filename.to_string(),
+                            pos,
+                        });
+                    }
+                }
+            }
             '0'..='9' => ans.push(Token {
                 tok: Tok::Num(parse_num(&mut iter).map_err(|message| AppError {
                     message,
@@ -332,6 +402,31 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
         }
     }
     Ok(ans)
+}
+
+fn expect_end_of_char_lit(
+    input: &str,
+    filename: &str,
+    pos: usize,
+    iter: &mut std::iter::Peekable<std::iter::Enumerate<std::str::Chars<'_>>>,
+) -> Result<(), AppError> {
+    match iter.next() {
+        Some((_, '\'')) => Ok(()),
+        None => Err(AppError {
+            message: "文字リテラルが終了する前にEOFが来ました".to_string(),
+            input: input.to_string(),
+            filename: filename.to_string(),
+            pos,
+        }),
+        Some((_, c)) => Err(AppError {
+            message: format!(
+                "文字リテラルの終端が不正です。予期される終端は ' ですが、実際には '{c}' でした"
+            ),
+            input: input.to_string(),
+            filename: filename.to_string(),
+            pos,
+        }),
+    }
 }
 
 fn parse_num(

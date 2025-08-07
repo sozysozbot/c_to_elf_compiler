@@ -215,6 +215,12 @@ check 3 "int main() { int a; a = 7; a -= 4; return a; }"
 check 77 "int main() { int a; int b; a = 3; b = (a += 4); return b * 10 + a; }"
 check 33 "int main() { int a; int b; a = 7; b = (a -= 4); return b * 10 + a; }"
 
+# char literals
+check 97 "int main() { char a; a = 'a'; return a; }"
+check 65 "int main() { char a; a = 'A'; return a; }"
+check 10 "int main() { char a; a = '\\n'; return a; }"
+check 92 "int main() { char a; a = '\\\\'; return a; }"
+check 39 "int main() { char a; a = '\\''; return a; }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then
