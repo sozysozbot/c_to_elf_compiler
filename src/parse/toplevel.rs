@@ -6,6 +6,7 @@ use super::typ::parse_type;
 use super::typ::Type;
 use crate::apperror::*;
 use crate::ast::*;
+use crate::parse::statement::return_void;
 use crate::token::*;
 use std::collections::HashMap;
 use std::{iter::Peekable, slice::Iter};
@@ -194,12 +195,8 @@ fn after_param_list(
                         break;
                     }
                     _ => {
-                        let parsed = parse_statement_or_declaration(
-                            &mut context,
-                            tokens,
-                            filename,
-                            input,
-                        )?;
+                        let parsed =
+                            parse_statement_or_declaration(&mut context, tokens, filename, input)?;
                         statements_or_declarations.push(parsed);
                     }
                 }
@@ -222,6 +219,12 @@ fn after_param_list(
                         local_var_declarations.insert(name.clone(), typ_and_size.clone());
                     }
                 }
+            }
+
+            if return_type == Type::Void {
+                statements_or_declarations.push(
+                    StatementOrDeclaration::Statement(return_void(pos))
+                );
             }
 
             Ok(FunctionDefinition {

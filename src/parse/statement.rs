@@ -131,6 +131,17 @@ pub fn parse_statement_or_declaration(
     }
 }
 
+pub fn return_void(pos: usize) -> Statement {
+    Statement::Return {
+        semicolon_pos: pos,
+        expr: Box::new(Expr::Numeric {
+            val: 42,
+            pos: 0,
+            typ: Type::Void,
+        }),
+    }
+}
+
 fn parse_statement(
     context: &mut Context,
     tokens: &mut Peekable<Iter<Token>>,
@@ -170,7 +181,17 @@ fn parse_statement(
         Token {
             tok: Tok::Return, ..
         } => {
+            let pos = tok.pos;
             tokens.next();
+            if let Some(Token {
+                tok: Tok::Semicolon,
+                ..
+            }) = tokens.peek()
+            {
+                tokens.next();
+                return Ok(return_void(pos));
+            }
+
             let expr = Box::new(parse_expr(context, tokens, filename, input)?);
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {

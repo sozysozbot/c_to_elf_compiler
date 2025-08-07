@@ -79,6 +79,7 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     "sizeof" => Tok::Sizeof,
                     "_Alignof" => Tok::Alignof,
                     "struct" => Tok::Struct,
+                    "void" => Tok::Void,
                     _ => Tok::Identifier(ident),
                 };
 

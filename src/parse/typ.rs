@@ -12,12 +12,13 @@ pub enum Type {
     Ptr(Box<Type>),
     Arr(Box<Type>, u8),
     Struct { struct_name: String },
+    Void,
 }
 
 impl Type {
     pub fn deref(&self) -> Option<Self> {
         match self {
-            Type::Int | Type::Char | Type::Struct { .. } => None,
+            Type::Int | Type::Char | Type::Struct { .. } | Type::Void => None,
             Type::Ptr(x) | Type::Arr(x, _) => Some((**x).clone()),
         }
     }
@@ -39,6 +40,7 @@ impl Type {
         match self {
             Type::Int => 4,
             Type::Char => 1,
+            Type::Void => 1, // GNU extension
             Type::Ptr(_) => 8,
             Type::Arr(t, len) => t
                 .sizeof(struct_def_table)
@@ -57,6 +59,7 @@ impl Type {
         match self {
             Type::Int => 4,
             Type::Char => 1,
+            Type::Void => 1, // GNU extension
             Type::Ptr(_) => 8,
             Type::Arr(t, _) => t.alignof(struct_def_table),
             Type::Struct { struct_name } => struct_def_table.get(struct_name).map_or_else(
@@ -82,6 +85,10 @@ pub fn parse_type(
         Token { tok: Tok::Char, .. } => {
             tokens.next().unwrap();
             Type::Char
+        }
+        Token { tok: Tok::Void, .. } => {
+            tokens.next().unwrap();
+            Type::Void
         }
         Token {
             tok: Tok::Struct, ..

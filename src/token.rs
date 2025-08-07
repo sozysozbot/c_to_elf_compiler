@@ -43,6 +43,7 @@ pub enum Tok {
     Dot,
     LogicalAnd,
     LogicalOr,
+    Void,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

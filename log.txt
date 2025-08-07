@@ -2300,3 +2300,5 @@ hsjoihs「そして、ひたすら実装を転がして、とりあえず関数�
 $HTML「さらに <code>int a = 1;</code> の類いも実装した」
 hsjoihs「残るは」
 $HTML「<ul><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>void</code>, <code>void *</code>, <code>return;</code></li></ul>」
+hsjoihs「void 型でも作るかぁ」
+hsjoihs「まずは戻り値の型としての void。return; は Type::Void を持った 42 を return する仕様とし、void が戻り値型の関数には勝手に return; を末尾に挿入するようにする」

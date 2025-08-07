@@ -301,11 +301,13 @@ check 13 "int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a
 check 3 "int main() { int a; a = 7; int b; b = 4; return a - b; }"
 check 1 "int main() { int a; a = 1; int b; b = 2; return a || b; }"
 
-
 # variable declaration with initialization
 check 3 "int main() { int a = 7; int b = 4; return a - b; }"
 check 1 "int main() { int a = 1; int b = 2; return a || b; }"
 
+# void type
+check 3 "void f(int *p) { *p = 3; return; } int main() { int a = 30; f(&a); return a; }"
+check 3 "void f(int *p) { *p = 3; } int main() { int a = 30; f(&a); return a; }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then
