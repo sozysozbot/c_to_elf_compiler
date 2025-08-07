@@ -2278,3 +2278,8 @@ hsjoihs「その通りです。適宜 64 ビットを渡すようにして生還
 
 hsjoihs「この勢いで || も作っておくか」
 hsjoihs「作った。現在時刻 23:49」
+
+hsjoihs「残るは」
+$HTML「<ul><li><code>int i = 0;</code></li><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>void</code>, <code>void *</code>, <code>return;</code></li></ul>」
+
+hsjoihs「一旦休憩するか」
