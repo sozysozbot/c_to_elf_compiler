@@ -2187,3 +2187,4 @@ $source
 hsjoihs「の各メソッドを実装するのみ」
 hsjoihs「x64 なので当然 <code>inc    BYTE PTR [rax] </code> とかが使える。ありがとう CISC」
 hsjoihs「さてテストケースを足しましょうね～。はい inc 通った。一旦コミットするか。」
+hsjoihs「<code>check 16 "int main() { int a; int b; a = 3; b = ++a; return b * a; }"</code> で 16 が返ってくることを確認」
