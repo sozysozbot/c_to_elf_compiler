@@ -172,7 +172,7 @@ fn parse_primary(
                 }
             } else {
                 let typ = match context.local_var_and_param_declarations.get(ident) {
-                    Some(t) => t.clone(),
+                    Some(t) => t.clone().0,
                     None => match context.global_declarations.symbols.get(ident) {
                         Some(SymbolDeclaration::GVar(t)) => t.clone(),
                         Some(SymbolDeclaration::Func(_u)) => Err(AppError {
@@ -256,14 +256,18 @@ fn parse_suffix_op(
                     typ: Type::Int,
                 };
 
-                expr = subtract(context, Box::new(incremented_expr), Box::new(one), op_pos).ok_or(
-                    AppError {
-                        message,
-                        input: input.to_string(),
-                        filename: filename.to_string(),
-                        pos: op_pos,
-                    },
-                )?;
+                expr = subtract_with_potential_scaling_by_sizeof(
+                    context,
+                    Box::new(incremented_expr),
+                    Box::new(one),
+                    op_pos,
+                )
+                .ok_or(AppError {
+                    message,
+                    input: input.to_string(),
+                    filename: filename.to_string(),
+                    pos: op_pos,
+                })?;
             }
 
             Token {
@@ -290,14 +294,101 @@ fn parse_suffix_op(
                     typ: Type::Int,
                 };
 
-                expr = add(context, Box::new(decremented_expr), Box::new(one), op_pos).ok_or(
-                    AppError {
-                        message,
-                        input: input.to_string(),
-                        filename: filename.to_string(),
-                        pos: op_pos,
-                    },
-                )?;
+                expr = add_with_potential_scaling_by_sizeof(
+                    context,
+                    Box::new(decremented_expr),
+                    Box::new(one),
+                    op_pos,
+                )
+                .ok_or(AppError {
+                    message,
+                    input: input.to_string(),
+                    filename: filename.to_string(),
+                    pos: op_pos,
+                })?;
+            }
+
+            Token {
+                tok: Tok::Arrow, ..
+            } => {
+                tokens.next();
+                match tokens.next() {
+                    Some(Token {
+                        tok: Tok::Identifier(ident),
+                        pos,
+                    }) => {
+                        let op_pos = *pos;
+                        let typ_lhs_points_to = match expr.typ() {
+                            Type::Ptr(t) => t.clone(),
+                            _ => {
+                                return Err(AppError {
+                                    message: "-> の対象がポインタではありません".to_string(),
+                                    input: input.to_string(),
+                                    filename: filename.to_string(),
+                                    pos: op_pos,
+                                })
+                            }
+                        };
+
+                        let Type::Struct { struct_name } = (*typ_lhs_points_to).clone() else {
+                            return Err(AppError {
+                                message: "-> の対象が構造体へのポインタではありません".to_string(),
+                                input: input.to_string(),
+                                filename: filename.to_string(),
+                                pos: op_pos,
+                            });
+                        };
+
+                        // ptr->ident is *(((char *)ptr + offsetof(struct, ident)))
+                        // and its type is the type of struct_name.ident
+                        let member = context
+                            .global_declarations
+                            .struct_names
+                            .get(&struct_name)
+                            .and_then(|s| s.members.get(ident))
+                            .map_or_else(
+                                || {
+                                    Err(AppError {
+                                        message: format!(
+                                            "構造体 {struct_name} にフィールド {ident} がありません",
+                                        ),
+                                        input: input.to_string(),
+                                        filename: filename.to_string(),
+                                        pos: op_pos,
+                                    })
+                                },
+                                Ok,
+                            )?;
+
+                        let typ_of_member = member.member_type.clone();
+                        let offset = member.offset;
+
+                        expr = Expr::UnaryExpr {
+                            op: UnaryOp::Deref,
+                            op_pos,
+                            expr: Box::new(Expr::BinaryExpr {
+                                op_pos,
+                                op: BinaryOp::Add,
+                                左辺: decay_if_arr(expr),
+                                右辺: Box::new(Expr::Numeric {
+                                    val: offset,
+                                    pos: op_pos,
+                                    typ: Type::Int,
+                                }),
+                                typ: Type::Ptr(Box::new(typ_of_member.clone())),
+                            }),
+                            typ: typ_of_member,
+                        };
+                    }
+                    _ => {
+                        return Err(AppError {
+                            message: "矢印の右側には識別子が必要です".to_string(),
+                            input: input.to_string(),
+                            filename: filename.to_string(),
+                            pos: tokens.peek().unwrap().pos,
+                        });
+                    }
+                }
             }
 
             Token {
@@ -607,7 +698,12 @@ fn parse_multiplicative(
     }
 }
 
-fn add(context: &Context, 左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -> Option<Expr> {
+fn add_with_potential_scaling_by_sizeof(
+    context: &Context,
+    左辺: Box<Expr>,
+    右辺: Box<Expr>,
+    op_pos: usize,
+) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
         (Type::Int | Type::Char, Type::Int | Type::Char) => Some(Expr::BinaryExpr {
             op: BinaryOp::Add,
@@ -633,13 +729,16 @@ fn add(context: &Context, 左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize) -
             }),
             typ: Type::Ptr(t),
         }),
-        (Type::Int, _) => add(context, 右辺, 左辺, op_pos),
+        (Type::Int, _) => add_with_potential_scaling_by_sizeof(context, 右辺, 左辺, op_pos),
         _ => None,
     }
 }
 
-fn subtract(
-    context: &Context, 左辺: Box<Expr>, 右辺: Box<Expr>, op_pos: usize
+fn subtract_with_potential_scaling_by_sizeof(
+    context: &Context,
+    左辺: Box<Expr>,
+    右辺: Box<Expr>,
+    op_pos: usize,
 ) -> Option<Expr> {
     match (左辺.typ(), 右辺.typ()) {
         (Type::Int | Type::Char, Type::Int | Type::Char) => Some(Expr::BinaryExpr {
@@ -709,12 +808,14 @@ fn parse_additive(
                     左辺.typ(),
                     右辺.typ()
                 );
-                expr = add(context, 左辺, 右辺, *op_pos).ok_or(AppError {
-                    message,
-                    input: input.to_string(),
-                    filename: filename.to_string(),
-                    pos: *op_pos,
-                })?;
+                expr = add_with_potential_scaling_by_sizeof(context, 左辺, 右辺, *op_pos).ok_or(
+                    AppError {
+                        message,
+                        input: input.to_string(),
+                        filename: filename.to_string(),
+                        pos: *op_pos,
+                    },
+                )?;
             }
             Token {
                 tok: Tok::Sub,
@@ -729,12 +830,13 @@ fn parse_additive(
                     右辺.typ()
                 );
 
-                expr = subtract(context, 左辺, 右辺, *op_pos).ok_or(AppError {
-                    message,
-                    input: input.to_string(),
-                    filename: filename.to_string(),
-                    pos: *op_pos,
-                })?;
+                expr = subtract_with_potential_scaling_by_sizeof(context, 左辺, 右辺, *op_pos)
+                    .ok_or(AppError {
+                        message,
+                        input: input.to_string(),
+                        filename: filename.to_string(),
+                        pos: *op_pos,
+                    })?;
             }
             _ => {
                 return Ok(expr);

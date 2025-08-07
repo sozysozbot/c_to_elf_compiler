@@ -591,13 +591,13 @@ impl<'a> FunctionGen<'a> {
 
                 buf.append(raxへとポップ()); // 左辺のアドレス
                 self.stack_size -= WORD_SIZE_AS_U32;
-                match typ.sizeof_primitive() {
+                match typ.sizeof_primitive("a") {
                     8 => buf.append(raxが指す位置にrdiを代入()),
                     4 => buf.append(raxが指す位置にediを代入()),
                     1 => buf.append(raxが指す位置にdilを代入()),
                     _ => panic!(
                         "size が {} な型への代入はできません",
-                        typ.sizeof_primitive()
+                        typ.sizeof_primitive("b")
                     ),
                 };
             }
@@ -632,13 +632,13 @@ impl<'a> FunctionGen<'a> {
                 buf.append(rdiにraxを足し合わせる());
                 buf.append(rsiをraxにコピー());
 
-                match typ.sizeof_primitive() {
+                match typ.sizeof_primitive("c") {
                     8 => buf.append(raxが指す位置にrdiを代入()),
                     4 => buf.append(raxが指す位置にediを代入()),
                     1 => buf.append(raxが指す位置にdilを代入()),
                     _ => panic!(
                         "size が {} な型への代入はできません",
-                        typ.sizeof_primitive()
+                        typ.sizeof_primitive("d")
                     ),
                 };
             }
@@ -673,13 +673,13 @@ impl<'a> FunctionGen<'a> {
                 buf.append(rdiからraxを減じる());
                 buf.append(rsiをraxにコピー());
 
-                match typ.sizeof_primitive() {
+                match typ.sizeof_primitive("e") {
                     8 => buf.append(raxが指す位置にrdiを代入()),
                     4 => buf.append(raxが指す位置にediを代入()),
                     1 => buf.append(raxが指す位置にdilを代入()),
                     _ => panic!(
                         "size が {} な型への代入はできません",
-                        typ.sizeof_primitive()
+                        typ.sizeof_primitive("f")
                     ),
                 };
             }
@@ -697,7 +697,7 @@ impl<'a> FunctionGen<'a> {
                 self.stack_size += WORD_SIZE_AS_U32;
                 buf.append(raxへとポップ()); // expr のアドレス
                 self.stack_size -= WORD_SIZE_AS_U32;
-                match typ.sizeof_primitive() {
+                match typ.sizeof_primitive("g") {
                     8 => {
                         buf.append(raxが指す位置の8バイトの値をインクリメント());
                         buf.append(raxが指す位置の8バイトの値をrdiに代入());
@@ -712,7 +712,7 @@ impl<'a> FunctionGen<'a> {
                     }
                     _ => panic!(
                         "size が {} な型へのインクリメントはできません",
-                        typ.sizeof_primitive()
+                        typ.sizeof_primitive("h")
                     ),
                 };
             }
@@ -730,7 +730,7 @@ impl<'a> FunctionGen<'a> {
                 self.stack_size += WORD_SIZE_AS_U32;
                 buf.append(raxへとポップ()); // expr のアドレス
                 self.stack_size -= WORD_SIZE_AS_U32;
-                match typ.sizeof_primitive() {
+                match typ.sizeof_primitive("i") {
                     8 => {
                         buf.append(raxが指す位置の8バイトの値をデクリメント());
                         buf.append(raxが指す位置の8バイトの値をrdiに代入());
@@ -745,7 +745,7 @@ impl<'a> FunctionGen<'a> {
                     }
                     _ => panic!(
                         "size が {} な型へのデクリメントはできません",
-                        typ.sizeof_primitive()
+                        typ.sizeof_primitive("j")
                     ),
                 };
             }
@@ -754,13 +754,13 @@ impl<'a> FunctionGen<'a> {
                 self.exprを左辺値として評価してアドレスをrdiレジスタへ(
                     buf, expr,
                 );
-                match expr.typ().sizeof_primitive() {
+                match expr.typ().sizeof_primitive("k") {
                     8 => buf.append(rdiを間接参照()),
                     4 => buf.append(rdiを間接参照()),
                     1 => buf.append(rdiをmovzxで間接参照()),
                     _ => panic!(
                         "size が {} な型の参照はできません",
-                        expr.typ().sizeof_primitive()
+                        expr.typ().sizeof_primitive("l")
                     ),
                 };
             }
@@ -1068,7 +1068,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         }
         let offset = function_gen
             .local_var_table
-            .allocate(param, param_type.sizeof_primitive());
+            .allocate(param, param_type.sizeof_primitive("m"));
         // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
         // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
         let negative_offset: i8 = -(offset as i8);
@@ -1098,7 +1098,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         };
     }
 
-    for (local_var_name, local_var_type) in definition.local_var_declarations.iter() {
+    for (local_var_name, (local_var_type, local_var_size)) in definition.local_var_declarations.iter() {
         if function_gen
             .local_var_table
             .offsets
@@ -1111,7 +1111,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         }
         function_gen
             .local_var_table
-            .allocate(local_var_name, local_var_type.sizeof_primitive());
+            .allocate(local_var_name, *local_var_size);
     }
 
     let content_buf = definition

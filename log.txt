@@ -2226,3 +2226,17 @@ hsjoihs「まあ global_declarations に持つのが正しそう。」
 
 hsjoihs「とりあえず、構造体の定義をパースして行き渡らせる実装が書けた気がする。」
 hsjoihs「テストケースに構造体の sizeof と _Alignof を書いて、テストを通して、21:22」
+
+hsjoihs「一旦休憩して 21:34。さてメンバアクセスを実装するか」
+$HTML「まずは <code>-&gt;</code> を実装する」
+hsjoihs「『sizeof_primitive() は構造体に対しては定義されていません』で落ちる。なぜだ。」
+
+$source 
+```rust
+function_gen
+.local_var_table
+.allocate(local_var_name, local_var_type.sizeof_primitive("n"));
+```
+
+hsjoihs「なるほど、関数のローカル変数として構造体をアロケートしようとしてコケてる」
+hsjoihs「あらかじめ構造体のサイズをルックアップして覚えておき、sizeof_primitive を呼ばないようにすることで、達成。現在 22:20」

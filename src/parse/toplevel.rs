@@ -2,6 +2,7 @@ use crate::apperror::*;
 use crate::ast::*;
 use crate::token::*;
 use std::collections::HashMap;
+use std::hash::Hash;
 use std::{iter::Peekable, slice::Iter};
 
 use super::combinator::recover;
@@ -402,16 +403,16 @@ impl Type {
         }
     }
 
-    pub fn sizeof_primitive(&self) -> u8 {
+    pub fn sizeof_primitive(&self, msg: &str) -> u8 {
         match self {
             Type::Int => 4,
             Type::Char => 1,
             Type::Ptr(_) => 8,
             Type::Arr(t, len) => t
-                .sizeof_primitive()
+                .sizeof_primitive(msg)
                 .checked_mul(*len)
                 .expect("型のサイズが u8 に収まりません"),
-            _ => panic!("sizeof_primitive() は構造体に対しては定義されていません"),
+            _ => panic!("sizeof_primitive() は構造体に対しては定義されていません。 msg: {msg}"),
         }
     }
 
@@ -466,12 +467,11 @@ pub struct StructDefinition {
     pub struct_name: String,
     pub size: u8,
     pub align: u8,
-    pub members: Vec<StructMember>,
+    pub members: HashMap<String, StructMember>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct StructMember {
-    pub member_name: String,
     pub member_type: Type,
     pub offset: u8,
 }
@@ -483,7 +483,7 @@ pub struct FunctionDefinition {
     pub pos: usize,
     pub statements: Vec<Statement>,
     pub return_type: Type,
-    pub local_var_declarations: HashMap<String, Type>,
+    pub local_var_declarations: HashMap<String, (Type, u8)>,
 }
 
 impl From<FunctionDefinition> for (String, FunctionSignature) {
@@ -518,7 +518,7 @@ pub struct GlobalDeclarations {
     pub struct_names: HashMap<String, StructDefinition>,
 }
 pub struct Context {
-    pub local_var_and_param_declarations: HashMap<String, Type>,
+    pub local_var_and_param_declarations: HashMap<String, (Type, u8)>,
     pub global_declarations: GlobalDeclarations,
 }
 
@@ -539,7 +539,7 @@ fn after_param_list(
             ..
         } => {
             tokens.next();
-            let mut local_var_declarations = HashMap::new();
+            let mut local_var_declarations: HashMap<String, (Type, u8)> = HashMap::new();
             while let Some((local_var_type, local_var_name)) = recover(tokens, |tokens| {
                 parse_type_and_identifier(tokens, filename, input)
             })? {
@@ -549,7 +549,13 @@ fn after_param_list(
                         ..
                     } => {
                         tokens.next();
-                        local_var_declarations.insert(local_var_name, local_var_type);
+                        local_var_declarations.insert(
+                            local_var_name,
+                            (
+                                local_var_type.clone(),
+                                local_var_type.sizeof(&previous_global_declarations.struct_names),
+                            ),
+                        );
                     }
                     Token { pos, .. } => {
                         return Err(AppError {
@@ -583,12 +589,19 @@ fn after_param_list(
                         break;
                     }
                     _ => {
-                        let mut local_var_and_param_declarations = local_var_declarations.clone();
-                        local_var_and_param_declarations.extend(
-                            params
-                                .iter()
-                                .map(|(typ, ident)| (ident.clone(), (*typ).clone())),
-                        );
+                        let mut local_var_and_param_declarations: HashMap<String, (Type, u8)> =
+                            local_var_declarations.clone();
+                        local_var_and_param_declarations.extend(params.iter().map(
+                            |(typ, ident)| {
+                                (
+                                    ident.clone(),
+                                    (
+                                        (*typ).clone(),
+                                        typ.sizeof(&previous_global_declarations.struct_names),
+                                    ),
+                                )
+                            },
+                        ));
 
                         let mut global_declarations = (*previous_global_declarations).clone();
 
@@ -777,7 +790,7 @@ pub fn parse(
                     tokens.next(); // consume `struct_name`
                     tokens.next(); // consume `{`
 
-                    let mut members = vec![];
+                    let mut members = HashMap::new();
                     let mut overall_alignment = 1;
                     let mut next_member_offset = 0;
 
@@ -829,11 +842,13 @@ pub fn parse(
                                         overall_alignment = overall_alignment.max(
                                             member_type.alignof(&global_declarations.struct_names),
                                         );
-                                        members.push(StructMember {
-                                            member_name: member_name.to_owned(),
-                                            member_type,
-                                            offset: next_member_offset,
-                                        });
+                                        members.insert(
+                                            member_name.to_owned(),
+                                            StructMember {
+                                                member_type,
+                                                offset: next_member_offset,
+                                            },
+                                        );
                                         next_member_offset += member_size;
                                     }
                                     Token { pos, .. } => {

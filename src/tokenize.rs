@@ -151,6 +151,13 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                             pos,
                         });
                     }
+                    Some(&(pos, '>')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::Arrow,
+                            pos,
+                        });
+                    }
                     Some(&(pos, '=')) => {
                         iter.next();
                         ans.push(Token {
