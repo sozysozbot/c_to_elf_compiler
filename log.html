@@ -3336,8 +3336,8 @@ pub fn no_decay_even_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
 <h3 class="date">2025年8月7日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_9d6cb8e0155ce01b9916755a8e31dd2f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_9d6cb8e0155ce01b9916755a8e31dd2f').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_9d6cb8e0155ce01b9916755a8e31dd2f" href="#permalink_9d6cb8e0155ce01b9916755a8e31dd2f" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_bd3e0d7fd8c74c0fb58de4cc29a933e1').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_bd3e0d7fd8c74c0fb58de4cc29a933e1').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_bd3e0d7fd8c74c0fb58de4cc29a933e1" href="#permalink_bd3e0d7fd8c74c0fb58de4cc29a933e1" class="permalink">¶</a>
 		<div class="content">あれから 2 年が経った。</div>
 		<div class="content">その間に、ZEN 大学の構想が発表されて、私は 2 年間『オートマトンと形式言語理論』の教材を書き続け、ZEN 大学が開学した。</div>
 		<div class="content">さて、2 日後の <a href="https://kernelvm.connpass.com/event/355100/">Kernel/VM 探検隊@東京 No18</a> で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。</div>
@@ -3468,6 +3468,14 @@ components = [&quot;rustfmt&quot;, &quot;clippy&quot;]
 		<div class="content">The expression !E is equivalent to (0==E) と規定されているので、それを組めばよい。オペランドがポインタなら比較対象はヌルポインタ定数。</div>
 		<div class="content">論理否定が多分組めた。テストを書く</div>
 		<div class="content">ヌルポインタを書く手は現状無いので、とりあえず『数値 0 の論理否定』『数値 42 の論理否定』『合法なポインタの論理否定』だけテスト</div>
+		<div class="content">さ～て、構造体でも組みますか。ということで _Alignof を実装します</div>
+		<div class="content">ん？</div>
+		<pre><code class="language-">thread &#x27;main&#x27; panicked at src/main.rs:26:56:
+called &#x60;Result::unwrap()&#x60; on an &#x60;Err&#x60; value: AppError { message: &quot;A (U+0041) はトークナイズできない不正な文字です&quot;, input: &quot;int main() { return _Alignof(int); }\n&quot;, filename: &quot;/dev/fd/63&quot;, pos: 21 }
+</code></pre>
+		<div class="content">なるほど、識別子に大文字を許すのを忘れていた</div>
+		<div class="content">はいテストが通った。ということで、構造体を実装していきますか</div>
+		<div class="content">とりあえず struct というキーワードを足す</div>
 	</div>
 </div>
 
