@@ -10,7 +10,7 @@ use c_to_elf_compiler::parse::toplevel::FunctionSignature;
 use c_to_elf_compiler::parse::toplevel::GlobalDeclarations;
 use c_to_elf_compiler::parse::toplevel::SymbolDeclaration;
 use c_to_elf_compiler::parse::toplevel::ToplevelDefinition;
-use c_to_elf_compiler::parse::statement::Type;
+use c_to_elf_compiler::parse::typ::Type;
 use c_to_elf_compiler::parse::toplevel::parse_toplevel_definition;
 use c_to_elf_compiler::token::Token;
 use c_to_elf_compiler::tokenize;

@@ -1,4 +1,4 @@
-use crate::{ast::*, parse::statement::Type, parse::toplevel::FunctionDefinition, Buf};
+use crate::{ast::*, parse::typ::Type, parse::toplevel::FunctionDefinition, Buf};
 use std::collections::HashMap;
 
 /*

@@ -1,16 +1,15 @@
+use super::combinator::recover;
+use super::combinator::satisfy;
+use super::statement::parse_statement;
+use super::statement::parse_type_and_identifier;
+use super::statement::parse_角括弧に包まれた数の列;
+use super::typ::parse_type;
+use super::typ::Type;
 use crate::apperror::*;
 use crate::ast::*;
-use crate::parse::statement::parse_statement;
-use crate::parse::statement::parse_type_and_identifier;
-use crate::parse::statement::parse_角括弧に包まれた数の列;
-use crate::parse::statement::Type;
 use crate::token::*;
 use std::collections::HashMap;
 use std::{iter::Peekable, slice::Iter};
-
-use super::combinator::recover;
-use super::combinator::satisfy;
-use super::typ::parse_type;
 
 #[derive(Debug, Clone)]
 pub enum ToplevelDefinition {
@@ -79,7 +78,6 @@ pub struct GlobalDeclarations {
     pub symbols: HashMap<String, SymbolDeclaration>,
     pub struct_names: HashMap<String, StructDefinition>,
 }
-
 
 pub struct Context {
     pub local_var_and_param_declarations: HashMap<String, (Type, u8)>,
@@ -446,7 +444,7 @@ pub fn parse(
                             members,
                         },
                     );
-                    continue; // skip to the next iteration 
+                    continue; // skip to the next iteration
                 }
             }
         }

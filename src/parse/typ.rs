@@ -1,11 +1,73 @@
-use std::{iter::Peekable, slice::Iter};
+use std::{collections::HashMap, iter::Peekable, slice::Iter};
 
 use crate::{
-    apperror::AppError,
-    token::{Tok, Token},
+    apperror::AppError, parse::toplevel::StructDefinition, token::{Tok, Token}
 };
 
-use super::statement::Type;
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum Type {
+    Int,
+    Char,
+    Ptr(Box<Type>),
+    Arr(Box<Type>, u8),
+    Struct { struct_name: String },
+}
+
+impl Type {
+    pub fn deref(&self) -> Option<Self> {
+        match self {
+            Type::Int | Type::Char | Type::Struct { .. } => None,
+            Type::Ptr(x) | Type::Arr(x, _) => Some((**x).clone()),
+        }
+    }
+
+    pub fn sizeof_primitive(&self, msg: &str) -> u8 {
+        match self {
+            Type::Int => 4,
+            Type::Char => 1,
+            Type::Ptr(_) => 8,
+            Type::Arr(t, len) => t
+                .sizeof_primitive(msg)
+                .checked_mul(*len)
+                .expect("型のサイズが u8 に収まりません"),
+            _ => panic!("sizeof_primitive() は構造体に対しては定義されていません。 msg: {msg}"),
+        }
+    }
+
+    pub fn sizeof(&self, struct_def_table: &HashMap<String, StructDefinition>) -> u8 {
+        match self {
+            Type::Int => 4,
+            Type::Char => 1,
+            Type::Ptr(_) => 8,
+            Type::Arr(t, len) => t
+                .sizeof(struct_def_table)
+                .checked_mul(*len)
+                .expect("型のサイズが u8 に収まりません"),
+            Type::Struct { struct_name } => struct_def_table.get(struct_name).map_or_else(
+                || {
+                    panic!("構造体 {struct_name} の定義が見つかりません");
+                },
+                |s| s.size,
+            ),
+        }
+    }
+
+    pub fn alignof(&self, struct_def_table: &HashMap<String, StructDefinition>) -> u8 {
+        match self {
+            Type::Int => 4,
+            Type::Char => 1,
+            Type::Ptr(_) => 8,
+            Type::Arr(t, _) => t.alignof(struct_def_table),
+            Type::Struct { struct_name } => struct_def_table.get(struct_name).map_or_else(
+                || {
+                    panic!("構造体 {struct_name} の定義が見つかりません");
+                },
+                |s| s.align,
+            ),
+        }
+    }
+}
 
 pub fn parse_type(
     tokens: &mut Peekable<Iter<Token>>,

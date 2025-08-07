@@ -8,7 +8,7 @@ use super::combinator::recover;
 use super::combinator::satisfy;
 use super::toplevel::Context;
 use super::toplevel::SymbolDeclaration;
-use super::statement::Type;
+use super::typ::Type;
 use super::typ::parse_type;
 fn parse_primary(
     context: &Context,

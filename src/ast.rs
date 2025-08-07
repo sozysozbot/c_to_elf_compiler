@@ -1,4 +1,4 @@
-use crate::parse::statement::Type;
+use crate::parse::typ::Type;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum BinaryOp {
