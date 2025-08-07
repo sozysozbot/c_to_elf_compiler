@@ -254,6 +254,40 @@ fn parse_suffix_op(
                     pos: op_pos,
                 })?;
             }
+
+
+            Token {
+                tok: Tok::Decrement,
+                ..
+            } => {
+                tokens.next();
+                let op_pos = tokens.peek().unwrap().pos;
+
+                let message = format!(
+                    "型が {:?} なので、デクリメントできません",
+                    expr.typ(),
+                );
+
+                // a-- can be compiled to ((--a) + 1)
+
+                let decremented_expr = Expr::UnaryExpr {
+                    op: UnaryOp::Decrement,
+                    op_pos,
+                    typ: expr.typ(),
+                    expr: Box::new(expr),
+                };
+
+                let one = Expr::Numeric { val: 1, pos: op_pos, typ: Type::Int };
+
+                expr = add(Box::new(decremented_expr), Box::new(one), op_pos).ok_or(AppError {
+                    message,
+                    input: input.to_string(),
+                    filename: filename.to_string(),
+                    pos: op_pos,
+                })?;
+            }
+
+
             Token {
                 tok: Tok::開き角括弧,
                 ..

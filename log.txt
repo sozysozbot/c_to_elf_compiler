@@ -2192,3 +2192,5 @@ hsjoihs「<code>check 16 "int main() { int a; int b; a = 3; b = ++a; return b * 
 hsjoihs「今度は後置インクリメント・デクリメント。」
 hsjoihs「えーと現状だと後置演算子が添字アクセスしかないので、ちょっとパーサーに非自明な変更が要る」
 hsjoihs「とりあえず定義をほぐした」
+hsjoihs「後置インクリメントを実装。現在 18:44」
+hsjoihs「後置デクリメントも実装。現在 18:46」

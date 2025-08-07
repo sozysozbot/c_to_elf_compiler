@@ -207,6 +207,7 @@ check 8 "$TESTCASE2"
 check 44 "int main() { int a; int b; a = 3; b = ++a; return b * 10 + a; }"
 check 33 "int main() { int a; int b; a = 4; b = --a; return b * 10 + a; }"
 check 34 "int main() { int a; int b; a = 3; b = a++; return b * 10 + a; }"
+check 43 "int main() { int a; int b; a = 4; b = a--; return b * 10 + a; }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then
