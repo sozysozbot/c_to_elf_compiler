@@ -3336,8 +3336,8 @@ pub fn no_decay_even_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
 <h3 class="date">2025年8月7日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_8b549d275c14c5863b61d42fc25854cc').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_8b549d275c14c5863b61d42fc25854cc').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_8b549d275c14c5863b61d42fc25854cc" href="#permalink_8b549d275c14c5863b61d42fc25854cc" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_557172d9b4bf8d309663d42c8b902934').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_557172d9b4bf8d309663d42c8b902934').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_557172d9b4bf8d309663d42c8b902934" href="#permalink_557172d9b4bf8d309663d42c8b902934" class="permalink">¶</a>
 		<div class="content">あれから 2 年が経った。</div>
 		<div class="content">その間に、ZEN 大学の構想が発表されて、私は 2 年間『オートマトンと形式言語理論』の教材を書き続け、ZEN 大学が開学した。</div>
 		<div class="content">さて、2 日後の <a href="https://kernelvm.connpass.com/event/355100/">Kernel/VM 探検隊@東京 No18</a> で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。</div>
@@ -3509,7 +3509,12 @@ check 0 &quot;int main() { int a; int b; a = 0; b = 0; return a &amp;&amp; b; }&
 # check 13 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a = 42; b = 1 &amp;&amp; update(&amp;a); return b * 10 + a; }&quot;
 check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a = 42; b = 0 &amp;&amp; update(&amp;a); return b * 10 + a; }&quot;
 </code></pre>
-		<div class="content">といった感じで、通らないテストがある</div>
+		<div class="content">といった感じで、通らないテスト（セグフォする）がある</div>
+		<div class="content">これほんまに &amp;&amp; のせいなんだろうか。試してみよう</div>
+		<pre><code class="language-">int update(int *p) { *p = 3; return 1; }  int main() { int a; a = 42; update(&amp;a); return a; }
+</code></pre>
+		<div class="content">はい～セグフォ。ポインタを正しく関数に渡せていないってことかなぁ。</div>
+		<div class="content">その通りです。適宜 64 ビットを渡すようにして生還。現在 23:34</div>
 	</div>
 </div>
 
