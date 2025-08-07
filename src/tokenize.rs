@@ -118,11 +118,33 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
             }
             '+' => {
                 iter.next();
-                ans.push(Token { tok: Tok::Add, pos });
+                match iter.peek() {
+                    Some(&(pos, '+')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::Increment,
+                            pos,
+                        });
+                    }
+                    _ => {
+                        ans.push(Token { tok: Tok::Add, pos });
+                    },
+                }
             }
             '-' => {
                 iter.next();
-                ans.push(Token { tok: Tok::Sub, pos });
+                match iter.peek() {
+                    Some(&(pos, '-')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::Decrement,
+                            pos,
+                        });
+                    }
+                    _ => {
+                        ans.push(Token { tok: Tok::Sub, pos });
+                    },
+                }
             }
             '*' => {
                 iter.next();

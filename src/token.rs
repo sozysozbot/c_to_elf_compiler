@@ -32,6 +32,8 @@ pub enum Tok {
     Sizeof,
     開き角括弧,
     閉じ角括弧,
+    Increment,
+    Decrement,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

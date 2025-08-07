@@ -339,6 +339,26 @@ fn parse_unary(
                 expr: no_decay_even_if_arr(expr),
             })
         }
+        Some(Token { tok: Tok::Increment, pos }) => {
+            tokens.next();
+            let expr = parse_unary(context, tokens, filename, input)?;
+            Ok(Expr::UnaryExpr {
+                op: UnaryOp::Increment,
+                op_pos: *pos,
+                typ: expr.typ(), 
+                expr: throw_if_arr(expr), // 配列型に ++ されることはあり得ない
+            })
+        }
+        Some(Token { tok: Tok::Decrement, pos }) => {
+            tokens.next();
+            let expr = parse_unary(context, tokens, filename, input)?;
+            Ok(Expr::UnaryExpr {
+                op: UnaryOp::Decrement,
+                op_pos: *pos,
+                typ: expr.typ(), 
+                expr: throw_if_arr(expr), // 配列型に -- されることはあり得ない
+            })
+        }
         Some(Token {
             tok: Tok::Sizeof,
             pos,

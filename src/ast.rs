@@ -18,6 +18,8 @@ pub enum BinaryOp {
 pub enum UnaryOp {
     Addr,
     Deref,
+    Increment,
+    Decrement,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -70,6 +72,13 @@ pub fn decay_if_arr(expr: Expr) -> Box<Expr> {
         }),
         _ => Box::new(expr),
     }
+}
+
+pub fn throw_if_arr(expr: Expr) -> Box<Expr> {
+    if let Type::Arr(_, _) = expr.typ() {
+        panic!("配列型に対して適用できない操作があります: {expr:?}");
+    }
+    Box::new(expr)
 }
 
 pub fn no_decay_even_if_arr(expr: Expr) -> Box<Expr> {

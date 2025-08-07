@@ -203,6 +203,9 @@ TESTCASE2=$'int main() /* foo\n */ { // bar\n  return 8; // baz\n} // quux\n'
 echo "$TESTCASE2"
 check 8 "$TESTCASE2"
 
+# increment and decrement operators
+check 4 "int main() { int a; a = 3; return ++a; }"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

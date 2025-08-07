@@ -2158,3 +2158,32 @@ components = ["rustfmt", "clippy"]
 
 hsjoihs「<code>channel = "1.88.0"</code> にしておこう」
 hsjoihs「よ～し rust-analyzer が復活。現在時刻 17:39。」
+hsjoihs「トークナイザに Increment と Decrement を足して、」
+hsjoihs「前置インクリメントは素直に実装……あれ？ 汎整数拡張って起きるんだっけ？ `char a; return sizeof(++a);` で実験すると 1。了解。」
+hsjoihs「expression.rs に足して現在 17:50」
+hsjoihs「となると次は codegen で、」
+hsjoihs「BinaryOp::Assign の実装をコピペしよう」
+hsjoihs「ほしいのは `raxが指す位置の(8|4|1)バイトの値をインクリメント` を表す機械語列」
+hsjoihs「あとインクリメント後の値を edi レジスタにセットすることも必要か」
+hsjoihs「rax を読んでその位置の(8|4|1)バイトの値をedi 系統にセットする機械語がほしいな」
+
+hsjoihs「あとは、」
+
+$source
+```rust
+8 => {
+    buf.append(raxが指す位置の8バイトの値をインクリメント());
+    buf.append(raxが指す位置の8バイトの値をrdiに代入());
+},
+4 => {
+    buf.append(raxが指す位置の4バイトの値をインクリメント());
+    buf.append(raxが指す位置の4バイトの値をediに代入());
+},
+1 => {buf.append(raxが指す位置の1バイトの値をインクリメント());
+    buf.append(raxが指す位置の1バイトの値をdilに代入());
+},
+```
+
+hsjoihs「の各メソッドを実装するのみ」
+hsjoihs「x64 なので当然 <code>inc    BYTE PTR [rax] </code> とかが使える。ありがとう CISC」
+hsjoihs「さてテストケースを足しましょうね～。はい inc 通った。一旦コミットするか。」
