@@ -160,6 +160,7 @@ check 4 "int main() { int x; return sizeof(sizeof(&x)); }"
 check 4 "int main() { return sizeof 1; }"
 check 4 "int main() { return sizeof(int); }"
 check 8 "int main() { return sizeof(int*); }"
+check 8 "int main() { return sizeof(int**); }"
 
 check 20 "int main() { int arr[5]; return sizeof(arr); }"
 check 40 "int main() { int arr[5][2]; return sizeof(arr); }"

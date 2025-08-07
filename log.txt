@@ -2044,7 +2044,7 @@ $DATE「2025年8月7日」
 
 hsjoihs「あれから 2 年が経った。」
 hsjoihs「その間に、ZEN 大学の構想が発表されて、私は 2 年間『オートマトンと形式言語理論』の教材を書き続け、ZEN 大学が開学した。」
-hsjoihs「さて、2 日後の <a href="https://kernelvm.connpass.com/event/355100/">Kernel/VM 探検隊@東京 No18</a> で出すために、そろそろ作業をしていかんとな。」
+hsjoihs「さて、2 日後の <a href="https://kernelvm.connpass.com/event/355100/">Kernel/VM 探検隊@東京 No18</a> で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。」
 hsjoihs「とりあえず 15:50～16:18 で過去ログを読んだ。」
 hsjoihs「過去の私、『幕間』とかいう激ヤバ分量のタスクを残していないか？」
 
@@ -2092,5 +2092,37 @@ hsjoihs「まあ、なにはともあれ、コードも一旦全部読まねば�
 hsjoihs「このログを push しておくか。」
 $IMAGE「ci_fail.png」
 hsjoihs「なぬ～ CI が落ちる。 https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/ を読む。」
-hsjoihs「まあ actions/upload-pages-artifact@v1 を actions/upload-pages-artifact@v3 に変えたら通るんじゃないかな。通った。OK」
+hsjoihs「まあ actions/upload-pages-artifact@v1 を actions/upload-pages-artifact@v3 に変えたら通るんじゃないかな。通った。OK。」
 
+hsjoihs「プロトタイプ宣言が 2kmcc 内にあるかどうかを調べる。2kmcc のコードに <code>^\S.+\);</code> で検索をかけると、」
+
+$source
+```c
+int printf();
+void exit();
+void *calloc();
+int strcmp();
+int strncmp();
+char *strchr();
+char *strncpy();
+char *strstr();
+struct Expr *parseExpr(void);
+struct Expr *parseUnary(void);
+struct Type *consume_simple_type(void);
+struct Expr *equalityExpr(struct Expr *lhs, struct Expr *rhs, int kind);
+void EvaluateExprIntoRax(struct Expr *expr);
+```
+
+hsjoihs「がある。まあそりゃ再帰下降は相互再帰するんだからプロトタイプ宣言が必要なのは当たり前か。うーむ。」
+
+hsjoihs「とりあえず c-to-elf のコードを読んでいく。」
+hsjoihs「パーサ以外は読んだ。まあパーサは読まなくても困らんだろ。現在 17:03。」
+hsjoihs「どちらかというとテストケースを読む必要がある。」
+hsjoihs「読んだ。まあ any% クリアと言ってるんだからそれぐらいの進捗よね。」
+hsjoihs「これを 2kmcc に至らせるには、」
+
+$HTML「<ul><li>複合代入演算子</li><li>インクリメント・デクリメント</li><li><code>int i = 0;</code></li><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>論理否定</li><li>文字リテラル</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>&&</code></li><li>構造体</li><li><code>void</code>, <code>void *</code>, <code>return;</code></li><li>||</li></ul>」
+
+hsjoihs「とかを実装する必要がある。」
+
+hsjoihs「まあとりあえず簡単なやつから実装しましょう。とりあえずインクリメント・デクリメントかなぁ。」
