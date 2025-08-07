@@ -1,6 +1,6 @@
 use super::combinator::recover;
 use super::combinator::satisfy;
-use super::statement::parse_statement;
+use super::statement::parse_statement_or_declaration;
 use super::statement::parse_type_and_identifier;
 use super::statement::parse_角括弧に包まれた数の列;
 use super::typ::parse_type;
@@ -42,7 +42,7 @@ pub struct FunctionDefinition {
     pub func_name: String,
     pub params: Vec<(Type, String)>,
     pub pos: usize,
-    pub statements: Vec<Statement>,
+    pub statements: Vec<StatementOrDeclaration>,
     pub return_type: Type,
     pub local_var_declarations: HashMap<String, TypeAndSize>,
 }
@@ -107,6 +107,9 @@ fn after_param_list(
             ..
         } => {
             tokens.next();
+
+            let mut statements_or_declarations: Vec<StatementOrDeclaration> = vec![];
+
             let mut local_var_declarations: HashMap<String, TypeAndSize> = HashMap::new();
             while let Some((local_var_type, local_var_name)) = recover(tokens, |tokens| {
                 parse_type_and_identifier(tokens, filename, input)
@@ -117,13 +120,17 @@ fn after_param_list(
                         ..
                     } => {
                         tokens.next();
-                        local_var_declarations.insert(
-                            local_var_name,
-                            TypeAndSize {
-                                typ: local_var_type.clone(),
-                                size: local_var_type.sizeof(&previous_global_declarations.struct_names),
-                            },
-                        );
+
+                        let typ_and_size = TypeAndSize {
+                            typ: local_var_type.clone(),
+                            size: local_var_type.sizeof(&previous_global_declarations.struct_names),
+                        };
+
+                        local_var_declarations.insert(local_var_name.clone(), typ_and_size.clone());
+                        statements_or_declarations.push(StatementOrDeclaration::Declaration {
+                            name: local_var_name,
+                            typ_and_size,
+                        });
                     }
                     Token { pos, .. } => {
                         return Err(AppError {
@@ -138,7 +145,6 @@ fn after_param_list(
                 }
             }
 
-            let mut statements = vec![];
             loop {
                 match tokens.peek() {
                     None => {
@@ -165,7 +171,8 @@ fn after_param_list(
                                     ident.clone(),
                                     TypeAndSize {
                                         typ: (*typ).clone(),
-                                        size: typ.sizeof(&previous_global_declarations.struct_names),
+                                        size: typ
+                                            .sizeof(&previous_global_declarations.struct_names),
                                     },
                                 )
                             },
@@ -183,7 +190,7 @@ fn after_param_list(
                             func_name.to_string(),
                             SymbolDeclaration::Func(signature.clone()),
                         );
-                        statements.push(parse_statement(
+                        statements_or_declarations.push(parse_statement_or_declaration(
                             &Context {
                                 local_var_and_param_declarations,
                                 global_declarations,
@@ -200,7 +207,7 @@ fn after_param_list(
                 func_name: func_name.to_string(),
                 params,
                 pos,
-                statements,
+                statements: statements_or_declarations,
                 return_type,
                 local_var_declarations,
             })

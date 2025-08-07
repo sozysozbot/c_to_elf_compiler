@@ -1257,7 +1257,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
     let content_buf = definition
         .statements
         .iter()
-        .map(|stmt| function_gen.statementを評価(stmt))
+        .map(|stmt| function_gen.statement_or_declarationを評価(stmt))
         .fold(parameter_buf, Buf::join);
 
     main_buf.append(rspから即値を引く(

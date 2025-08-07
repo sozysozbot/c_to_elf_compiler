@@ -62,7 +62,7 @@ pub fn parse_statement_or_declaration(
     parse_statement(context, tokens, filename, input).map(StatementOrDeclaration::Statement)
 }
 
-pub fn parse_statement(
+fn parse_statement(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
