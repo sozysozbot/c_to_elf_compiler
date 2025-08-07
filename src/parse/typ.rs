@@ -5,7 +5,7 @@ use crate::{
     token::{Tok, Token},
 };
 
-use super::toplevel::Type;
+use super::statement::Type;
 
 pub fn parse_type(
     tokens: &mut Peekable<Iter<Token>>,

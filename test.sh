@@ -297,6 +297,10 @@ check 52 "int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a
 check 3 "int update(int *p) { *p = 3; return 0; }  int main() { int a; int b; a = 42; b = 0 || update(&a); return b * 10 + a; }"
 check 13 "int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a = 42; b = 0 || update(&a); return b * 10 + a; }"
 
+# variable declaration at the start of a block
+check 4 "int main() { { int a; a = 7;} return 4; }"
+
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

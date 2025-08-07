@@ -2283,3 +2283,10 @@ hsjoihs「残るは」
 $HTML「<ul><li><code>int i = 0;</code></li><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>void</code>, <code>void *</code>, <code>return;</code></li></ul>」
 
 hsjoihs「一旦休憩するか」
+
+$DATE「2025年8月8日」
+hsjoihs「食事をした。やるぞ。」
+hsjoihs「とりあえず現状では関数の先頭でしか変数が宣言できず、たとえばブロック頭とかで変数を宣言しようとすると『数値リテラルでも開き丸括弧でもないものが来ました』と言われる」
+hsjoihs「さ～てどうしようかな」
+hsjoihs「2kmcc はスコープチェーンを真面目に実装してないんだが、まあ別に実装してもいい」
+hsjoihs「というか toplevel.rs の中で普通の statement をパースしてるの気に入らないからファイル分割するか」

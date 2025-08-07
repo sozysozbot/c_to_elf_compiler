@@ -1,6 +1,6 @@
 use crate::{
     ast::*,
-    parse::toplevel::{FunctionDefinition, Type},
+    parse::statement::{FunctionDefinition, Type},
     Buf,
 };
 use std::collections::HashMap;

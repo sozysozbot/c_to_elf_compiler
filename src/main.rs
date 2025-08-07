@@ -4,13 +4,13 @@ use std::io::Write;
 
 use c_to_elf_compiler::apperror::AppError;
 use c_to_elf_compiler::codegen;
-use c_to_elf_compiler::parse::toplevel;
-use c_to_elf_compiler::parse::toplevel::FunctionDefinition;
-use c_to_elf_compiler::parse::toplevel::FunctionSignature;
-use c_to_elf_compiler::parse::toplevel::GlobalDeclarations;
-use c_to_elf_compiler::parse::toplevel::SymbolDeclaration;
-use c_to_elf_compiler::parse::toplevel::ToplevelDefinition;
-use c_to_elf_compiler::parse::toplevel::Type;
+use c_to_elf_compiler::parse::statement;
+use c_to_elf_compiler::parse::statement::FunctionDefinition;
+use c_to_elf_compiler::parse::statement::FunctionSignature;
+use c_to_elf_compiler::parse::statement::GlobalDeclarations;
+use c_to_elf_compiler::parse::statement::SymbolDeclaration;
+use c_to_elf_compiler::parse::statement::ToplevelDefinition;
+use c_to_elf_compiler::parse::statement::Type;
 use c_to_elf_compiler::token::Token;
 use c_to_elf_compiler::tokenize;
 use c_to_elf_compiler::Buf;
@@ -83,7 +83,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
     );
 
     let function_definitions =
-        toplevel::parse(&mut global_declarations, &mut tokens, filename, input)?;
+        statement::parse(&mut global_declarations, &mut tokens, filename, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let mut buf = Buf::from(&tiny[0..0x78]);
@@ -125,7 +125,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         )]
         .into_iter()
         .collect();
-        if let ToplevelDefinition::Func(entry) = toplevel::parse_toplevel_definition(
+        if let ToplevelDefinition::Func(entry) = statement::parse_toplevel_definition(
             &GlobalDeclarations {
                 symbols: previous_symbol_declarations,
                 struct_names: HashMap::new(),

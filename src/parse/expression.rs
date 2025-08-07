@@ -1,14 +1,14 @@
 use crate::apperror::*;
 use crate::ast::*;
-use crate::parse::toplevel::StructMember;
+use crate::parse::statement::StructMember;
 use crate::token::*;
 use std::{iter::Peekable, slice::Iter};
 
 use super::combinator::recover;
 use super::combinator::satisfy;
-use super::toplevel::Context;
-use super::toplevel::SymbolDeclaration;
-use super::toplevel::Type;
+use super::statement::Context;
+use super::statement::SymbolDeclaration;
+use super::statement::Type;
 use super::typ::parse_type;
 fn parse_primary(
     context: &Context,
