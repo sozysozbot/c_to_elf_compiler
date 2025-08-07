@@ -1,4 +1,4 @@
-use crate::parse::typ::Type;
+use crate::parse::{toplevel::TypeAndSize, typ::Type};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum BinaryOp {
@@ -109,6 +109,15 @@ impl Expr {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+pub enum StatementOrDeclaration {
+    Statement(Statement),
+    Declaration {
+        name: String,
+        typ_and_size: TypeAndSize,
+    },
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Statement {
     Expr {
         expr: Box<Expr>,
@@ -124,24 +133,24 @@ pub enum Statement {
     },
     If {
         cond: Box<Expr>,
-        then: Box<Statement>,
-        else_: Option<Box<Statement>>,
+        then: Box<StatementOrDeclaration>,
+        else_: Option<Box<StatementOrDeclaration>>,
         pos: usize,
     },
     While {
         cond: Box<Expr>,
-        body: Box<Statement>,
+        body: Box<StatementOrDeclaration>,
         pos: usize,
     },
     For {
         init: Option<Box<Expr>>,
         cond: Option<Box<Expr>>,
         update: Option<Box<Expr>>,
-        body: Box<Statement>,
+        body: Box<StatementOrDeclaration>,
         pos: usize,
     },
     Block {
-        statements: Vec<Statement>,
+        statements: Vec<StatementOrDeclaration>,
         pos: usize,
     },
 }

@@ -11,10 +11,10 @@ use super::typ::parse_type;
 
 #[test]
 fn parse_test() {
-    use std::collections::HashMap;
-    use crate::parse::typ::Type;
     use crate::parse::toplevel::GlobalDeclarations;
+    use crate::parse::typ::Type;
     use crate::tokenize::tokenize;
+    use std::collections::HashMap;
     let input = "5 - 3;";
     let tokens = tokenize(input, "test.c").unwrap();
     let mut tokens = tokens.iter().peekable();
@@ -52,6 +52,16 @@ fn parse_test() {
         }
     );
 }
+
+pub fn parse_statement_or_declaration(
+    context: &Context,
+    tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
+    input: &str,
+) -> Result<StatementOrDeclaration, AppError> {
+    parse_statement(context, tokens, filename, input).map(StatementOrDeclaration::Statement)
+}
+
 pub fn parse_statement(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
@@ -154,12 +164,12 @@ pub fn parse_statement(
                     })
                 }
             }
-            let then = Box::new(parse_statement(context, tokens, filename, input)?);
+            let then = Box::new(parse_statement_or_declaration(context, tokens, filename, input)?);
             let tok = tokens.peek().unwrap();
             let else_ = match tok {
                 Token { tok: Tok::Else, .. } => {
                     tokens.next();
-                    Some(Box::new(parse_statement(context, tokens, filename, input)?))
+                    Some(Box::new(parse_statement_or_declaration(context, tokens, filename, input)?))
                 }
                 _ => None,
             };
@@ -191,7 +201,7 @@ pub fn parse_statement(
                 |tok| tok == &Tok::閉じ丸括弧,
                 "期待された閉じ括弧が来ませんでした",
             )?;
-            let body = Box::new(parse_statement(context, tokens, filename, input)?);
+            let body = Box::new(parse_statement_or_declaration(context, tokens, filename, input)?);
             Ok(Statement::While {
                 cond,
                 body,
@@ -252,7 +262,7 @@ pub fn parse_statement(
                 |tok| tok == &Tok::閉じ丸括弧,
                 "期待された閉じ括弧が来ませんでした",
             )?;
-            let body = Box::new(parse_statement(context, tokens, filename, input)?);
+            let body = Box::new(parse_statement_or_declaration(context, tokens, filename, input)?);
             Ok(Statement::For {
                 init,
                 cond,
@@ -285,7 +295,7 @@ pub fn parse_statement(
 
                         break;
                     }
-                    _ => statements.push(parse_statement(context, tokens, filename, input)?),
+                    _ => statements.push(parse_statement_or_declaration(context, tokens, filename, input)?),
                 }
             }
             Ok(Statement::Block {

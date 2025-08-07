@@ -2292,3 +2292,4 @@ hsjoihs「2kmcc はスコープチェーンを真面目に実装してないん�
 hsjoihs「というか toplevel.rs の中で普通の statement をパースしてるの気に入らないからファイル分割するか」
 hsjoihs「ファイル分割をした。とりあえず Context がスコープチェーンを持つようにすればいい」
 hsjoihs「というか、パーサの時点で、『各ブロックがその中に含んでいる変数』の一覧を持っておくようにすればいい」
+hsjoihs「いや、そもそも Statement を StatementOrDeclaration にして、そこに包括すべきだな。リファクタリングしよう」

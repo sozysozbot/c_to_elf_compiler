@@ -461,6 +461,18 @@ impl<'a> FunctionGen<'a> {
         }
     }
 
+    pub fn statement_or_declarationを評価(
+        &mut self,
+        stmt_or_decl: &StatementOrDeclaration,
+    ) -> Buf {
+        let stmt = match stmt_or_decl {
+            StatementOrDeclaration::Statement(stmt) => stmt,
+            StatementOrDeclaration::Declaration { .. } => {
+                return Buf::new(); // declaration disappears in codegen
+            }
+        };
+        self.statementを評価(stmt)
+    }
     pub fn statementを評価(&mut self, stmt: &Statement) -> Buf {
         match stmt {
             Statement::Expr {
@@ -496,9 +508,9 @@ impl<'a> FunctionGen<'a> {
             } => {
                 let else_buf = else_
                     .as_ref()
-                    .map(|else_| self.statementを評価(else_.as_ref()));
+                    .map(|else_| self.statement_or_declarationを評価(else_.as_ref()));
 
-                let then_buf =  self.statementを評価(then.as_ref()).join(
+                let then_buf =  self.statement_or_declarationを評価(then.as_ref()).join(
                 else_buf
                     .as_ref()
                     .map(|else_buf| {
@@ -527,7 +539,7 @@ impl<'a> FunctionGen<'a> {
                     .join(else_buf.unwrap_or_else(Buf::new))
             }
             Statement::While { cond, body, .. } => {
-                let body_buf = self.statementを評価(body.as_ref());
+                let body_buf = self.statement_or_declarationを評価(body.as_ref());
 
                 let mut cond_buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut cond_buf, cond);
@@ -546,8 +558,24 @@ impl<'a> FunctionGen<'a> {
                 update,
                 body,
                 pos,
-            } => self.statementを評価(&Statement::Block {
-                statements: vec![
+            } => {
+                let body: Box<StatementOrDeclaration> =
+                    Box::new(StatementOrDeclaration::Statement(Statement::Block {
+                        statements: vec![
+                            Some(body.as_ref().clone()),
+                            update.clone().map(|update| {
+                                StatementOrDeclaration::Statement(Statement::Expr {
+                                    expr: update,
+                                    semicolon_pos: *pos,
+                                })
+                            }),
+                        ]
+                        .into_iter()
+                        .flatten()
+                        .collect::<Vec<_>>(),
+                        pos: *pos,
+                    }));
+                let statements: Vec<Statement> = vec![
                     init.clone().map(|init| Statement::Expr {
                         expr: init,
                         semicolon_pos: *pos,
@@ -560,30 +588,24 @@ impl<'a> FunctionGen<'a> {
                                 typ: Type::Int,
                             })
                         }),
-                        body: Box::new(Statement::Block {
-                            statements: vec![
-                                Some(body.as_ref().clone()),
-                                update.clone().map(|update| Statement::Expr {
-                                    expr: update,
-                                    semicolon_pos: *pos,
-                                }),
-                            ]
-                            .into_iter()
-                            .flatten()
-                            .collect::<Vec<_>>(),
-                            pos: *pos,
-                        }),
+                        body,
                         pos: *pos,
                     }),
                 ]
                 .into_iter()
                 .flatten()
-                .collect::<Vec<_>>(),
-                pos: *pos,
-            }),
+                .collect::<Vec<_>>();
+                self.statementを評価(&Statement::Block {
+                    statements: statements
+                        .into_iter()
+                        .map(StatementOrDeclaration::Statement)
+                        .collect(),
+                    pos: *pos,
+                })
+            }
             Statement::Block { statements, .. } => statements
                 .iter()
-                .fold(Buf::new(), |acc, stmt| acc.join(self.statementを評価(stmt))),
+                .fold(Buf::new(), |acc, stmt| acc.join(self.statement_or_declarationを評価(stmt))),
         }
     }
 
