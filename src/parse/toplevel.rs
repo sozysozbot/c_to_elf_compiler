@@ -222,9 +222,8 @@ fn after_param_list(
             }
 
             if return_type == Type::Void {
-                statements_or_declarations.push(
-                    StatementOrDeclaration::Statement(return_void(pos))
-                );
+                statements_or_declarations
+                    .push(StatementOrDeclaration::Statement(return_void(pos)));
             }
 
             Ok(FunctionDefinition {
@@ -265,28 +264,58 @@ pub fn parse_toplevel_definition(
 
                 let mut params = Vec::new();
 
-                match tokens.peek().unwrap() {
-                    Token {
+                // If the next token is `)`, we have no parameters
+                if let Token {
                         tok: Tok::閉じ丸括弧,
                         ..
-                    } => {
-                        tokens.next();
+                    } = tokens.peek().unwrap() {
+                    tokens.next();
+                    return Ok(ToplevelDefinition::Func(after_param_list(
+                        previous_declarations,
+                        tokens,
+                        filename,
+                        input,
+                        params,
+                        *pos,
+                        return_type,
+                        ident,
+                    )?));
+                }
+
+                // check whether the following two tokens are `void` and `)`
+                if let Some(Token {
+                    tok: Tok::Void,
+                    ..
+                }) = tokens.peek()
+                {
+                    let mut t2 = tokens.clone();
+                    t2.next();
+                    if let Some(Token {
+                        tok: Tok::閉じ丸括弧,
+                        ..
+                    }) = t2.next()
+                    {
+                        tokens.next(); // consume `void`
+                        tokens.next(); // consume `)`
                         return Ok(ToplevelDefinition::Func(after_param_list(
                             previous_declarations,
                             tokens,
                             filename,
                             input,
-                            params,
+                            vec![],
                             *pos,
                             return_type,
                             ident,
                         )?));
                     }
-                    _ => {
-                        let param = parse_type_and_identifier(tokens,filename, input)?;
-                        params.push(param);
-                    }
                 }
+
+
+                // We have at least one parameter
+
+
+                let param = parse_type_and_identifier(tokens,filename, input)?;
+                params.push(param);
 
                 loop {
                     match tokens.peek().unwrap() {

@@ -309,6 +309,8 @@ check 1 "int main() { int a = 1; int b = 2; return a || b; }"
 check 3 "void f(int *p) { *p = 3; return; } int main() { int a = 30; f(&a); return a; }"
 check 3 "void f(int *p) { *p = 3; } int main() { int a = 30; f(&a); return a; }"
 
+check 3 "int three(void) { return 3; } int main() { return three(); }"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"
