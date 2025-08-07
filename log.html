@@ -3336,11 +3336,11 @@ pub fn no_decay_even_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
 <h3 class="date">2025年8月7日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_9b7713d5a128a1af5cab4e42a8d54ac4').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_9b7713d5a128a1af5cab4e42a8d54ac4').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_9b7713d5a128a1af5cab4e42a8d54ac4" href="#permalink_9b7713d5a128a1af5cab4e42a8d54ac4" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_eb5a2b0679266b236cfb7dde46567a3a').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_eb5a2b0679266b236cfb7dde46567a3a').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_eb5a2b0679266b236cfb7dde46567a3a" href="#permalink_eb5a2b0679266b236cfb7dde46567a3a" class="permalink">¶</a>
 		<div class="content">あれから 2 年が経った。</div>
 		<div class="content">その間に、ZEN 大学の構想が発表されて、私は 2 年間『オートマトンと形式言語理論』の教材を書き続け、ZEN 大学が開学した。</div>
-		<div class="content">さて、2 日後の &lt;a href=&quot;<a href="https://kernelvm.connpass.com/event/355100/&quot;&gt;Kernel/VM" target="_blank" rel="noopener noreferrer">https://kernelvm.connpass.com/event/355100/&quot;&gt;Kernel/VM</a> 探検隊@東京 No18&lt;/a&gt; で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。</div>
+		<div class="content">さて、2 日後の <a href="https://kernelvm.connpass.com/event/355100/">Kernel/VM 探検隊@東京 No18</a> で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。</div>
 		<div class="content">とりあえず 15:50～16:18 で過去ログを読んだ。</div>
 		<div class="content">過去の私、『幕間』とかいう激ヤバ分量のタスクを残していないか？</div>
 		<blockquote>予定変更！ @すーぱーてけらには引き続き 24 と 26 もやってもらいますが、私は 23 と 25 の実装をサボります
@@ -3381,7 +3381,7 @@ char *strstr();
 		<div class="content"><img width="500" src="media/ci_fail.png"></div>
 		<div class="content">なぬ～ CI が落ちる。 <a href="https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/" target="_blank" rel="noopener noreferrer">https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/</a> を読む。</div>
 		<div class="content">まあ actions/upload-pages-artifact@v1 を actions/upload-pages-artifact@v3 に変えたら通るんじゃないかな。通った。OK。</div>
-		<div class="content">プロトタイプ宣言が 2kmcc 内にあるかどうかを調べる。2kmcc のコードに &lt;code&gt;^\S.+\);&lt;/code&gt; で検索をかけると、</div>
+		<div class="content">プロトタイプ宣言が 2kmcc 内にあるかどうかを調べる。2kmcc のコードに <code>^\S.+\);</code> で検索をかけると、</div>
 		<pre><code class="language-c">int printf();
 void exit();
 void *calloc();
@@ -3408,7 +3408,7 @@ void EvaluateExprIntoRax(struct Expr *expr);
 		<div class="content">rust-analyzer がない。起動する。ああ rust が 1.62 なので起動しない。Rust 古すぎ罪だ。とりあえず rustup update</div>
 		<div class="content">ん～ cargo -V が cargo 1.62.1 だ。which cargo すると /home/hsjoihs/.cargo/bin/cargo となる。</div>
 		<div class="content">一旦吹き飛ばして入れなおすか。まずは rustup self uninstall</div>
-		<div class="content">そうしたら &lt;code&gt;curl --proto &#x27;=https&#x27; --tlsv1.2 -sSf <a href="https://sh.rustup.rs" target="_blank" rel="noopener noreferrer">https://sh.rustup.rs</a> | sh&lt;/code&gt;</div>
+		<div class="content">そうしたら <code>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code></div>
 		<pre><code class="language-">warn: It looks like you have an existing installation of Rust at:
 warn: /usr/bin
 warn: It is recommended that rustup be the primary Rust installation.
@@ -3425,7 +3425,7 @@ warn: or pass &#x60;-y&#x27; to ignore all ignorable checks.
 channel = &quot;1.62.1&quot;
 components = [&quot;rustfmt&quot;, &quot;clippy&quot;]
 </code></pre>
-		<div class="content">&lt;code&gt;channel = &quot;1.88.0&quot;&lt;/code&gt; にしておこう</div>
+		<div class="content"><code>channel = "1.88.0"</code> にしておこう</div>
 		<div class="content">よ～し rust-analyzer が復活。現在時刻 17:39。</div>
 		<div class="content">トークナイザに Increment と Decrement を足して、</div>
 		<div class="content">前置インクリメントは素直に実装……あれ？ 汎整数拡張って起きるんだっけ？ &#x60;char a; return sizeof(++a);&#x60; で実験すると 1。了解。</div>
@@ -3449,17 +3449,17 @@ components = [&quot;rustfmt&quot;, &quot;clippy&quot;]
 },
 </code></pre>
 		<div class="content">の各メソッドを実装するのみ</div>
-		<div class="content">x64 なので当然 &lt;code&gt;inc    BYTE PTR [rax] &lt;/code&gt; とかが使える。ありがとう CISC</div>
+		<div class="content">x64 なので当然 <code>inc    BYTE PTR [rax] </code> とかが使える。ありがとう CISC</div>
 		<div class="content">さてテストケースを足しましょうね～。はい inc 通った。一旦コミットするか。</div>
-		<div class="content">&lt;code&gt;check 16 &quot;int main() { int a; int b; a = 3; b = ++a; return b * a; }&quot;&lt;/code&gt; で 16 が返ってくることを確認</div>
+		<div class="content"><code>check 16 "int main() { int a; int b; a = 3; b = ++a; return b * a; }"</code> で 16 が返ってくることを確認</div>
 		<div class="content">今度は後置インクリメント・デクリメント。</div>
 		<div class="content">えーと現状だと後置演算子が添字アクセスしかないので、ちょっとパーサーに非自明な変更が要る</div>
 		<div class="content">とりあえず定義をほぐした</div>
 		<div class="content">後置インクリメントを実装。現在 18:44</div>
 		<div class="content">後置デクリメントも実装。現在 18:46</div>
 		<div class="content">次は複合代入演算子かなぁ</div>
-		<div class="content">2kmcc 内では複合代入演算子は &#x60;+=&#x60; と &#x60;-=&#x60; しか使われていないので、これだけ実装すればいい</div>
-		<div class="content">&#x60;+=&#x60; と &#x60;-=&#x60; を実装した。現在 19:11</div>
+		<div class="content">2kmcc 内では複合代入演算子は <code>+=</code> と <code>-=</code> しか使われていないので、これだけ実装すればいい</div>
+		<div class="content"><code>+=</code> と <code>-=</code> を実装した。現在 19:11</div>
 	</div>
 </div>
 
