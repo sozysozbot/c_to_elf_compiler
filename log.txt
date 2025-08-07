@@ -2216,3 +2216,5 @@ called `Result::unwrap()` on an `Err` value: AppError { message: "A (U+0041) は
 ```
 
 hsjoihs「なるほど、識別子に大文字を許すのを忘れていた」
+hsjoihs「はいテストが通った。ということで、構造体を実装していきますか」
+hsjoihs「とりあえず struct というキーワードを足す」
