@@ -173,7 +173,7 @@ fn parse_primary(
                 }
             } else {
                 let typ = match context.local_var_and_param_declarations.get(ident) {
-                    Some(t) => t.clone().0,
+                    Some(t) => t.clone().typ,
                     None => match context.global_declarations.symbols.get(ident) {
                         Some(SymbolDeclaration::GVar(t)) => t.clone(),
                         Some(SymbolDeclaration::Func(_u)) => Err(AppError {

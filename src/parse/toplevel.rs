@@ -44,7 +44,7 @@ pub struct FunctionDefinition {
     pub pos: usize,
     pub statements: Vec<Statement>,
     pub return_type: Type,
-    pub local_var_declarations: HashMap<String, (Type, u8)>,
+    pub local_var_declarations: HashMap<String, TypeAndSize>,
 }
 
 impl From<FunctionDefinition> for (String, FunctionSignature) {
@@ -79,8 +79,14 @@ pub struct GlobalDeclarations {
     pub struct_names: HashMap<String, StructDefinition>,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct TypeAndSize {
+    pub typ: Type,
+    pub size: u8,
+}
+
 pub struct Context {
-    pub local_var_and_param_declarations: HashMap<String, (Type, u8)>,
+    pub local_var_and_param_declarations: HashMap<String, TypeAndSize>,
     pub global_declarations: GlobalDeclarations,
 }
 
@@ -101,7 +107,7 @@ fn after_param_list(
             ..
         } => {
             tokens.next();
-            let mut local_var_declarations: HashMap<String, (Type, u8)> = HashMap::new();
+            let mut local_var_declarations: HashMap<String, TypeAndSize> = HashMap::new();
             while let Some((local_var_type, local_var_name)) = recover(tokens, |tokens| {
                 parse_type_and_identifier(tokens, filename, input)
             })? {
@@ -113,10 +119,10 @@ fn after_param_list(
                         tokens.next();
                         local_var_declarations.insert(
                             local_var_name,
-                            (
-                                local_var_type.clone(),
-                                local_var_type.sizeof(&previous_global_declarations.struct_names),
-                            ),
+                            TypeAndSize {
+                                typ: local_var_type.clone(),
+                                size: local_var_type.sizeof(&previous_global_declarations.struct_names),
+                            },
                         );
                     }
                     Token { pos, .. } => {
@@ -151,16 +157,16 @@ fn after_param_list(
                         break;
                     }
                     _ => {
-                        let mut local_var_and_param_declarations: HashMap<String, (Type, u8)> =
+                        let mut local_var_and_param_declarations: HashMap<String, TypeAndSize> =
                             local_var_declarations.clone();
                         local_var_and_param_declarations.extend(params.iter().map(
                             |(typ, ident)| {
                                 (
                                     ident.clone(),
-                                    (
-                                        (*typ).clone(),
-                                        typ.sizeof(&previous_global_declarations.struct_names),
-                                    ),
+                                    TypeAndSize {
+                                        typ: (*typ).clone(),
+                                        size: typ.sizeof(&previous_global_declarations.struct_names),
+                                    },
                                 )
                             },
                         ));
