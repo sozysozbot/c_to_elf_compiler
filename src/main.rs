@@ -99,8 +99,6 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
     buf.append(codegen::builtin_alloc4関数を生成());
     global_function_table.insert("__builtin_alloc4".to_string(), builtin_alloc4_pos);
 
-    let mut buf = buf;
-
     for definition in function_definitions {
         codegen::関数をコード生成しメインバッファとグローバル関数テーブルに挿入(
             &mut global_function_table,

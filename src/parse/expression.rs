@@ -167,7 +167,7 @@ fn parse_primary(
                     Some(t) => t.clone(),
                     None => match context.global_symbol_declarations.get(ident) {
                         Some(SymbolDeclaration::GVar(t)) => t.clone(),
-                        Some(SymbolDeclaration::Func(u)) => Err(AppError {
+                        Some(SymbolDeclaration::Func(_u)) => Err(AppError {
                             message: format!(
                                 "識別子 {ident} は関数であり、現在関数ポインタは実装されていません",
                             ),

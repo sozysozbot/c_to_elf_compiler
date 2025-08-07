@@ -472,6 +472,7 @@ pub struct Context {
     pub global_symbol_declarations: HashMap<String, SymbolDeclaration>,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn after_param_list(
     previous_global_symbol_declarations: &HashMap<String, SymbolDeclaration>,
     tokens: &mut Peekable<Iter<Token>>,
