@@ -3525,8 +3525,8 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 <h3 class="date">2025年8月8日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_acc7be06d0ff01820fbf36d4aff93933').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_acc7be06d0ff01820fbf36d4aff93933').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_acc7be06d0ff01820fbf36d4aff93933" href="#permalink_acc7be06d0ff01820fbf36d4aff93933" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_f34c0cadc8670a4fe31092aad3c57a60').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_f34c0cadc8670a4fe31092aad3c57a60').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_f34c0cadc8670a4fe31092aad3c57a60" href="#permalink_f34c0cadc8670a4fe31092aad3c57a60" class="permalink">¶</a>
 		<div class="content">食事をした。やるぞ。</div>
 		<div class="content">とりあえず現状では関数の先頭でしか変数が宣言できず、たとえばブロック頭とかで変数を宣言しようとすると『数値リテラルでも開き丸括弧でもないものが来ました』と言われる</div>
 		<div class="content">さ～てどうしようかな</div>
@@ -3544,6 +3544,9 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 		<div class="content">void 型でも作るかぁ</div>
 		<div class="content">まずは戻り値の型としての void。return; は Type::Void を持った 42 を return する仕様とし、void が戻り値型の関数には勝手に return; を末尾に挿入するようにする</div>
 		<div class="content">次に引数リストが空であることを表す void</div>
+		<div class="content">最後に、void* は何もしなくてもついてくる。ただし char* を Deref するときに 8 bit を読むというのをやり損ねていたので、それを修正</div>
+		<div class="content">残るは</div>
+		<div class="content"><ul><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>void</code>, <code>void *</code>, <code>return;</code></li></ul></div>
 	</div>
 </div>
 
