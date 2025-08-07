@@ -276,6 +276,30 @@ fn rbpにoffsetを足した位置にr9dを代入(offset: i8) -> [u8; 4] {
     [0x44, 0x89, 0x4d, offset.to_le_bytes()[0]]
 }
 
+fn rbpにoffsetを足した位置にrdiを代入(offset: i8) -> [u8; 4] {
+    [0x48, 0x89, 0x7d, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にrsiを代入(offset: i8) -> [u8; 4] {
+    [0x48, 0x89, 0x75, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にrdxを代入(offset: i8) -> [u8; 4] {
+    [0x48, 0x89, 0x55, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にrcxを代入(offset: i8) -> [u8; 4] {
+    [0x48, 0x89, 0x4d, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にr8を代入(offset: i8) -> [u8; 5] {
+    [0x48, 0x44, 0x89, 0x45, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にr9を代入(offset: i8) -> [u8; 5] {
+    [0x48, 0x44, 0x89, 0x4d, offset.to_le_bytes()[0]]
+}
+
 pub fn builtin_three関数を生成() -> Buf {
     プロローグ(0).join(eaxに即値をセット(3)).join(エピローグ())
 }
@@ -1099,26 +1123,52 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
         // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
         let negative_offset: i8 = -(offset as i8);
-        match i {
-            0 => parameter_buf.append(rbpにoffsetを足した位置にediを代入(
+        match (i, param_type.sizeof_primitive("n")) {
+            (0, 8) => parameter_buf.append(rbpにoffsetを足した位置にrdiを代入(
                 negative_offset,
             )),
-            1 => parameter_buf.append(rbpにoffsetを足した位置にesiを代入(
+            (1, 8) => parameter_buf.append(rbpにoffsetを足した位置にrsiを代入(
                 negative_offset,
             )),
-            2 => parameter_buf.append(rbpにoffsetを足した位置にedxを代入(
+            (2, 8) => parameter_buf.append(rbpにoffsetを足した位置にrdxを代入(
                 negative_offset,
             )),
-            3 => parameter_buf.append(rbpにoffsetを足した位置にecxを代入(
+            (3, 8) => parameter_buf.append(rbpにoffsetを足した位置にrcxを代入(
                 negative_offset,
             )),
-            4 => parameter_buf.append(rbpにoffsetを足した位置にr8dを代入(
+            (4, 8) => parameter_buf.append(rbpにoffsetを足した位置にr8を代入(
                 negative_offset,
             )),
-            5 => parameter_buf.append(rbpにoffsetを足した位置にr9dを代入(
+            (5, 8) => parameter_buf.append(rbpにoffsetを足した位置にr9を代入(
                 negative_offset,
             )),
-            _ => panic!(
+            (0, 4) => parameter_buf.append(rbpにoffsetを足した位置にediを代入(
+                negative_offset,
+            )),
+            (1, 4) => parameter_buf.append(rbpにoffsetを足した位置にesiを代入(
+                negative_offset,
+            )),
+            (2, 4) => parameter_buf.append(rbpにoffsetを足した位置にedxを代入(
+                negative_offset,
+            )),
+            (3, 4) => parameter_buf.append(rbpにoffsetを足した位置にecxを代入(
+                negative_offset,
+            )),
+            (4, 4) => parameter_buf.append(rbpにoffsetを足した位置にr8dを代入(
+                negative_offset,
+            )),
+            (5, 4) => parameter_buf.append(rbpにoffsetを足した位置にr9dを代入(
+                negative_offset,
+            )),
+            (0..=5, _) => {
+                todo!(
+                    "関数 `{}` の仮引数 {} の型の size {} は未対応です",
+                    definition.func_name,
+                    param,
+                    param_type.sizeof_primitive("o")
+                )
+            }
+            (_, _) => panic!(
                 "関数 `{}` に 7 つ以上の仮引数があります",
                 definition.func_name
             ),

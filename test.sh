@@ -273,9 +273,13 @@ check 0 "int main() { int a; int b; a = 0; b = 2; return a && b; }"
 check 0 "int main() { int a; int b; a = 1; b = 0; return a && b; }"
 check 0 "int main() { int a; int b; a = 0; b = 0; return a && b; }"
 
+# write through a pointer across a function call
+check 3 "int update(int *p) { *p = 3; return 1; }  int main() { int a; a = 42; update(&a); return a; }"
+
+
 # short-circuit evaluation
-# check 3 "int update(int *p) { *p = 3; return 0; }  int main() { int a; int b; a = 42; b = 1 && update(&a); return b * 10 + a; }"
-# check 13 "int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a = 42; b = 1 && update(&a); return b * 10 + a; }"
+check 3 "int update(int *p) { *p = 3; return 0; }  int main() { int a; int b; a = 42; b = 1 && update(&a); return b * 10 + a; }"
+check 13 "int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a = 42; b = 1 && update(&a); return b * 10 + a; }"
 check 42 "int update(int *p) { *p = 3; return 1; }  int main() { int a; int b; a = 42; b = 0 && update(&a); return b * 10 + a; }"
 
 wait_jobs
