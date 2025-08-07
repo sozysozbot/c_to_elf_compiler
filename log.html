@@ -3336,8 +3336,8 @@ pub fn no_decay_even_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
 <h3 class="date">2025年8月7日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_bd3e0d7fd8c74c0fb58de4cc29a933e1').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_bd3e0d7fd8c74c0fb58de4cc29a933e1').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_bd3e0d7fd8c74c0fb58de4cc29a933e1" href="#permalink_bd3e0d7fd8c74c0fb58de4cc29a933e1" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_1a7e8b8f2a5f8722a0e53666db73d2a6').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_1a7e8b8f2a5f8722a0e53666db73d2a6').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_1a7e8b8f2a5f8722a0e53666db73d2a6" href="#permalink_1a7e8b8f2a5f8722a0e53666db73d2a6" class="permalink">¶</a>
 		<div class="content">あれから 2 年が経った。</div>
 		<div class="content">その間に、ZEN 大学の構想が発表されて、私は 2 年間『オートマトンと形式言語理論』の教材を書き続け、ZEN 大学が開学した。</div>
 		<div class="content">さて、2 日後の <a href="https://kernelvm.connpass.com/event/355100/">Kernel/VM 探検隊@東京 No18</a> で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。</div>
@@ -3476,6 +3476,12 @@ called &#x60;Result::unwrap()&#x60; on an &#x60;Err&#x60; value: AppError { mess
 		<div class="content">なるほど、識別子に大文字を許すのを忘れていた</div>
 		<div class="content">はいテストが通った。ということで、構造体を実装していきますか</div>
 		<div class="content">とりあえず struct というキーワードを足す</div>
+		<div class="content">そして clippy でちょっと整理する</div>
+		<div class="content">えーと構造体の諸情報を覚えておくグローバルなやつが必要。FunctionDefinition 型の定義を参考にするとよさそう。</div>
+		<div class="content">toplevel::parse のレイヤで持つのが正しいのか？　どうなんだ？</div>
+		<div class="content">まあ global_declarations に持つのが正しそう。</div>
+		<div class="content">とりあえず、構造体の定義をパースして行き渡らせる実装が書けた気がする。</div>
+		<div class="content">テストケースに構造体の sizeof と _Alignof を書いて、テストを通して、21:22</div>
 	</div>
 </div>
 
