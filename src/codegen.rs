@@ -568,6 +568,10 @@ impl<'a> FunctionGen<'a> {
         }
 
         match expr {
+            Expr::NullPtr { .. } => {
+                // x64 なので、edi に 0 をセットすると rdi に 0 がセットされる
+                buf.append(ediに代入(0));
+            }
             Expr::DecayedArr { expr, .. } => {
                 self.exprを評価してediレジスタへ(buf, expr);
             }

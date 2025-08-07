@@ -222,6 +222,11 @@ check 10 "int main() { char a; a = '\\n'; return a; }"
 check 92 "int main() { char a; a = '\\\\'; return a; }"
 check 39 "int main() { char a; a = '\\''; return a; }"
 
+# logical not
+check 1 "int main() { int a; a = 0; return !a; }"
+check 0 "int main() { int a; a = 42; return !a; }"
+check 0 "int main() { int *p; int a; p = &a; return !p; }"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

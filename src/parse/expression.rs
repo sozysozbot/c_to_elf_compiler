@@ -231,10 +231,7 @@ fn parse_suffix_op(
                 tokens.next();
                 let op_pos = tokens.peek().unwrap().pos;
 
-                let message = format!(
-                    "型が {:?} なので、インクリメントできません",
-                    expr.typ(),
-                );
+                let message = format!("型が {:?} なので、インクリメントできません", expr.typ(),);
 
                 // a++ can be compiled to ((++a) - 1)
 
@@ -245,16 +242,21 @@ fn parse_suffix_op(
                     expr: Box::new(expr),
                 };
 
-                let one = Expr::Numeric { val: 1, pos: op_pos, typ: Type::Int };
-
-                expr = subtract(Box::new(incremented_expr), Box::new(one), op_pos).ok_or(AppError {
-                    message,
-                    input: input.to_string(),
-                    filename: filename.to_string(),
+                let one = Expr::Numeric {
+                    val: 1,
                     pos: op_pos,
-                })?;
-            }
+                    typ: Type::Int,
+                };
 
+                expr = subtract(Box::new(incremented_expr), Box::new(one), op_pos).ok_or(
+                    AppError {
+                        message,
+                        input: input.to_string(),
+                        filename: filename.to_string(),
+                        pos: op_pos,
+                    },
+                )?;
+            }
 
             Token {
                 tok: Tok::Decrement,
@@ -263,10 +265,7 @@ fn parse_suffix_op(
                 tokens.next();
                 let op_pos = tokens.peek().unwrap().pos;
 
-                let message = format!(
-                    "型が {:?} なので、デクリメントできません",
-                    expr.typ(),
-                );
+                let message = format!("型が {:?} なので、デクリメントできません", expr.typ(),);
 
                 // a-- can be compiled to ((--a) + 1)
 
@@ -277,7 +276,11 @@ fn parse_suffix_op(
                     expr: Box::new(expr),
                 };
 
-                let one = Expr::Numeric { val: 1, pos: op_pos, typ: Type::Int };
+                let one = Expr::Numeric {
+                    val: 1,
+                    pos: op_pos,
+                    typ: Type::Int,
+                };
 
                 expr = add(Box::new(decremented_expr), Box::new(one), op_pos).ok_or(AppError {
                     message,
@@ -286,7 +289,6 @@ fn parse_suffix_op(
                     pos: op_pos,
                 })?;
             }
-
 
             Token {
                 tok: Tok::開き角括弧,
@@ -369,6 +371,37 @@ fn parse_unary(
                     typ: Type::Int,
                 }),
                 右辺: decay_if_arr(expr),
+            })
+        }
+        Some(Token {
+            tok: Tok::LogicalNot,
+            pos,
+        }) => {
+            tokens.next();
+            let expr = parse_suffix_op(context, tokens, filename, input)?;
+
+            // The expression !E is equivalent to (0==E)
+            // オペランドがポインタなら比較対象はヌルポインタ定数
+
+            let zero = if let Type::Ptr(_) = expr.typ() {
+                Expr::NullPtr {
+                    pos: *pos,
+                    typ: expr.typ(),
+                }
+            } else {
+                Expr::Numeric {
+                    val: 0,
+                    pos: *pos,
+                    typ: Type::Int,
+                }
+            };
+
+            Ok(Expr::BinaryExpr {
+                op: BinaryOp::Equal,
+                op_pos: *pos,
+                左辺: Box::new(zero),
+                右辺: decay_if_arr(expr),
+                typ: Type::Int,
             })
         }
         Some(Token {

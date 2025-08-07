@@ -38,6 +38,10 @@ pub enum Expr {
         pos: usize,
         typ: Type,
     },
+    NullPtr {
+        pos: usize,
+        typ: Type,
+    },
     StringLiteral {
         val: String,
         pos: usize,
@@ -96,7 +100,8 @@ impl Expr {
             | Expr::Identifier { typ, .. }
             | Expr::Call { typ, .. }
             | Expr::DecayedArr { typ, .. }
-            | Expr::UnaryExpr { typ, .. } => (*typ).clone(),
+            | Expr::UnaryExpr { typ, .. }
+            | Expr::NullPtr { typ, .. } => (*typ).clone(),
         }
     }
 }

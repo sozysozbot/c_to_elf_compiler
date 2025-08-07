@@ -255,12 +255,10 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                         });
                     }
                     _ => {
-                        return Err(AppError {
-                            message: "`!`演算子はありません".to_string(),
-                            input: input.to_string(),
-                            filename: filename.to_string(),
+                        ans.push(Token {
+                            tok: Tok::LogicalNot,
                             pos,
-                        })
+                        });
                     }
                 }
             }
