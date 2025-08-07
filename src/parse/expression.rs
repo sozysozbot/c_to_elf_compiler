@@ -225,6 +225,36 @@ fn parse_suffix_op(
     loop {
         match tokens.peek().unwrap() {
             Token {
+                tok: Tok::Increment,
+                ..
+            } => {
+                tokens.next();
+                let op_pos = tokens.peek().unwrap().pos;
+
+                let message = format!(
+                    "型が {:?} なので、インクリメントできません",
+                    expr.typ(),
+                );
+
+                // a++ can be compiled to ((++a) - 1)
+
+                let incremented_expr = Expr::UnaryExpr {
+                    op: UnaryOp::Increment,
+                    op_pos,
+                    typ: expr.typ(),
+                    expr: Box::new(expr),
+                };
+
+                let one = Expr::Numeric { val: 1, pos: op_pos, typ: Type::Int };
+
+                expr = subtract(Box::new(incremented_expr), Box::new(one), op_pos).ok_or(AppError {
+                    message,
+                    input: input.to_string(),
+                    filename: filename.to_string(),
+                    pos: op_pos,
+                })?;
+            }
+            Token {
                 tok: Tok::開き角括弧,
                 ..
             } => {
