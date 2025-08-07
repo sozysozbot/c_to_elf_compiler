@@ -126,6 +126,13 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                             pos,
                         });
                     }
+                    Some(&(pos, '=')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::AddAssign,
+                            pos,
+                        });
+                    }
                     _ => {
                         ans.push(Token { tok: Tok::Add, pos });
                     },
@@ -138,6 +145,13 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                         iter.next();
                         ans.push(Token {
                             tok: Tok::Decrement,
+                            pos,
+                        });
+                    }
+                    Some(&(pos, '=')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::SubAssign,
                             pos,
                         });
                     }

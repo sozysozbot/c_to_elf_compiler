@@ -801,6 +801,36 @@ pub fn parse_expr(
                 右辺,
             })
         }
+        Token {
+            tok: Tok::AddAssign,
+            pos: op_pos,
+        } => {
+            tokens.next();
+            let 左辺 = decay_if_arr(expr);
+            let 右辺 = decay_if_arr(parse_expr(context, tokens, filename, input)?);
+            Ok(Expr::BinaryExpr {
+                op: BinaryOp::AddAssign,
+                op_pos: *op_pos,
+                typ: 左辺.typ(),
+                左辺,
+                右辺,
+            })
+        }
+        Token {
+            tok: Tok::SubAssign,
+            pos: op_pos,
+        } => {
+            tokens.next();
+            let 左辺 = decay_if_arr(expr);
+            let 右辺 = decay_if_arr(parse_expr(context, tokens, filename, input)?);
+            Ok(Expr::BinaryExpr {
+                op: BinaryOp::SubAssign,
+                op_pos: *op_pos,
+                typ: 左辺.typ(),
+                左辺,
+                右辺,
+            })
+        }
         _ => Ok(expr),
     }
 }

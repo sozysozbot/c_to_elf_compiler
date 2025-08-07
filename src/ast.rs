@@ -12,6 +12,8 @@ pub enum BinaryOp {
     NotEqual,
     AndThen,
     Assign,
+    AddAssign,
+    SubAssign,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

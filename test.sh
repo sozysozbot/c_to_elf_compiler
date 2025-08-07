@@ -209,6 +209,13 @@ check 33 "int main() { int a; int b; a = 4; b = --a; return b * 10 + a; }"
 check 34 "int main() { int a; int b; a = 3; b = a++; return b * 10 + a; }"
 check 43 "int main() { int a; int b; a = 4; b = a--; return b * 10 + a; }"
 
+# add-assign and sub-assign operators
+check 7 "int main() { int a; a = 3; a += 4; return a; }"
+check 3 "int main() { int a; a = 7; a -= 4; return a; }"
+check 77 "int main() { int a; int b; a = 3; b = (a += 4); return b * 10 + a; }"
+check 33 "int main() { int a; int b; a = 7; b = (a -= 4); return b * 10 + a; }"
+
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

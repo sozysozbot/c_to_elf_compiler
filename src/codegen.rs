@@ -47,6 +47,10 @@ pub fn rspをrbpにコピー() -> [u8; 3] {
     [0x48, 0x89, 0xe5]
 }
 
+pub fn rsiをraxにコピー() -> [u8; 3] {
+    [0x48, 0x89, 0xf0]
+}
+
 pub fn rspから即値を引く(x: u8) -> Buf {
     Buf::from([0x48, 0x83, 0xec, x])
 }
@@ -590,6 +594,67 @@ impl<'a> FunctionGen<'a> {
                     _ => panic!("size が {} な型への代入はできません", typ.sizeof()),
                 };
             }
+
+            Expr::BinaryExpr { op: BinaryOp::AddAssign, op_pos: _, 左辺, 右辺, typ } => {
+                self.exprを評価してediレジスタへ(buf, 右辺);
+                buf.append(rdiをプッシュ());
+                self.stack_size += WORD_SIZE_AS_U32;
+
+                // スタックトップ：右辺
+
+                self.exprを左辺値として評価してアドレスをrdiレジスタへ(buf, 左辺);
+                buf.append(rdiをプッシュ()); // 左辺のアドレス：rdi
+                self.stack_size += WORD_SIZE_AS_U32;
+
+                buf.append(rdiを間接参照()); // 左辺の値：rdi
+                
+                buf.append(rsiへとポップ()); // 左辺のアドレス：rsi
+                self.stack_size -= WORD_SIZE_AS_U32;
+
+                buf.append(raxへとポップ()); // 右辺の値：rax
+                self.stack_size -= WORD_SIZE_AS_U32;
+
+                buf.append(rdiにraxを足し合わせる()); 
+                buf.append(rsiをraxにコピー()); 
+
+                match typ.sizeof() {
+                    8 => buf.append(raxが指す位置にrdiを代入()),
+                    4 => buf.append(raxが指す位置にediを代入()),
+                    1 => buf.append(raxが指す位置にdilを代入()),
+                    _ => panic!("size が {} な型への代入はできません", typ.sizeof()),
+                };
+            }
+
+            Expr::BinaryExpr { op: BinaryOp::SubAssign, op_pos: _, 左辺, 右辺, typ } => {
+                self.exprを評価してediレジスタへ(buf, 右辺);
+                buf.append(rdiをプッシュ());
+                self.stack_size += WORD_SIZE_AS_U32;
+
+                // スタックトップ：右辺
+
+                self.exprを左辺値として評価してアドレスをrdiレジスタへ(buf, 左辺);
+                buf.append(rdiをプッシュ()); // 左辺のアドレス：rdi
+                self.stack_size += WORD_SIZE_AS_U32;
+
+                buf.append(rdiを間接参照()); // 左辺の値：rdi
+                
+                buf.append(rsiへとポップ()); // 左辺のアドレス：rsi
+                self.stack_size -= WORD_SIZE_AS_U32;
+
+                buf.append(raxへとポップ()); // 右辺の値：rax
+                self.stack_size -= WORD_SIZE_AS_U32;
+
+                buf.append(rdiからraxを減じる()); 
+                buf.append(rsiをraxにコピー()); 
+
+                match typ.sizeof() {
+                    8 => buf.append(raxが指す位置にrdiを代入()),
+                    4 => buf.append(raxが指す位置にediを代入()),
+                    1 => buf.append(raxが指す位置にdilを代入()),
+                    _ => panic!("size が {} な型への代入はできません", typ.sizeof()),
+                };
+            }
+
             Expr::UnaryExpr {
                 op: UnaryOp::Increment,
                 op_pos: _,
