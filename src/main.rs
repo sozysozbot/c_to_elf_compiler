@@ -7,6 +7,7 @@ use c_to_elf_compiler::codegen;
 use c_to_elf_compiler::parse::toplevel;
 use c_to_elf_compiler::parse::toplevel::FunctionDefinition;
 use c_to_elf_compiler::parse::toplevel::FunctionSignature;
+use c_to_elf_compiler::parse::toplevel::GlobalDeclarations;
 use c_to_elf_compiler::parse::toplevel::SymbolDeclaration;
 use c_to_elf_compiler::parse::toplevel::ToplevelDefinition;
 use c_to_elf_compiler::parse::toplevel::Type;
@@ -71,8 +72,11 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
     .into_iter()
     .collect();
 
-    let mut global_declarations = HashMap::new();
-    global_declarations.extend(
+    let mut global_declarations = GlobalDeclarations {
+        symbols: HashMap::new(),
+        struct_names: HashMap::new(),
+    };
+    global_declarations.symbols.extend(
         function_declarations
             .into_iter()
             .map(|(name, signature)| (name, SymbolDeclaration::Func(signature))),
@@ -111,17 +115,21 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         // スタートアップ処理はここに C のソースコードとして実装
         let tokens = tokenize::tokenize("int __start() { __throw main(); }", filename).unwrap();
         let mut tokens = tokens.iter().peekable();
+        let previous_symbol_declarations: HashMap<String, SymbolDeclaration> = [(
+            "main".to_string(),
+            SymbolDeclaration::Func(FunctionSignature {
+                params: vec![],
+                pos: 0,
+                return_type: Type::Int,
+            }),
+        )]
+        .into_iter()
+        .collect();
         if let ToplevelDefinition::Func(entry) = toplevel::parse_toplevel_definition(
-            &[(
-                "main".to_string(),
-                SymbolDeclaration::Func(FunctionSignature {
-                    params: vec![],
-                    pos: 0,
-                    return_type: Type::Int,
-                }),
-            )]
-            .into_iter()
-            .collect(),
+            &GlobalDeclarations {
+                symbols: previous_symbol_declarations,
+                struct_names: HashMap::new(),
+            },
             &mut tokens,
             filename,
             input,

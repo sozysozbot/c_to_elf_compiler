@@ -19,7 +19,7 @@ fn parse_test() {
         parse_statement(
             &Context {
                 local_var_and_param_declarations: HashMap::new(),
-                global_symbol_declarations: HashMap::new(),
+                global_declarations: GlobalDeclarations { symbols: HashMap::new(), struct_names: HashMap::new() },
             },
             &mut tokens,
             "test.c",
@@ -432,6 +432,21 @@ pub struct GlobalVariableDefinition {
     pub typ: Type,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct StructDefinition {
+    pub struct_name: String,
+    pub size: u8,
+    pub align: u8,
+    pub members: Vec<StructMember>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct StructMember {
+    pub member_name: String,
+    pub member_type: Type,
+    pub offset: u8,
+}
+
 #[derive(Debug, Clone)]
 pub struct FunctionDefinition {
     pub func_name: String,
@@ -467,14 +482,20 @@ pub enum SymbolDeclaration {
     Func(FunctionSignature),
     GVar(Type),
 }
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GlobalDeclarations {
+    pub symbols: HashMap<String, SymbolDeclaration>,
+    pub struct_names: HashMap<String, StructDefinition>,
+}
 pub struct Context {
     pub local_var_and_param_declarations: HashMap<String, Type>,
-    pub global_symbol_declarations: HashMap<String, SymbolDeclaration>,
+    pub global_declarations: GlobalDeclarations,
 }
 
 #[allow(clippy::too_many_arguments)]
 fn after_param_list(
-    previous_global_symbol_declarations: &HashMap<String, SymbolDeclaration>,
+    previous_global_declarations: &GlobalDeclarations,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
@@ -540,8 +561,7 @@ fn after_param_list(
                                 .map(|(typ, ident)| (ident.clone(), (*typ).clone())),
                         );
 
-                        let mut global_symbol_declarations =
-                            (*previous_global_symbol_declarations).clone();
+                        let mut global_declarations = (*previous_global_declarations).clone();
 
                         let signature = FunctionSignature {
                             params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
@@ -549,14 +569,14 @@ fn after_param_list(
                             return_type: return_type.clone(),
                         };
                         // 今読んでる関数の定義も足さないと再帰呼び出しができない
-                        global_symbol_declarations.insert(
+                        global_declarations.symbols.insert(
                             func_name.to_string(),
                             SymbolDeclaration::Func(signature.clone()),
                         );
                         statements.push(parse_statement(
                             &Context {
                                 local_var_and_param_declarations,
-                                global_symbol_declarations,
+                                global_declarations,
                             },
                             tokens,
                             filename,
@@ -585,7 +605,7 @@ fn after_param_list(
 }
 
 pub fn parse_toplevel_definition(
-    previous_declarations: &HashMap<String, SymbolDeclaration>,
+    previous_declarations: &GlobalDeclarations,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
@@ -696,7 +716,7 @@ pub fn parse_toplevel_definition(
 }
 
 pub fn parse(
-    global_declarations: &mut HashMap<String, SymbolDeclaration>,
+    global_declarations: &mut GlobalDeclarations,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
@@ -707,11 +727,15 @@ pub fn parse(
         match new_def {
             ToplevelDefinition::Func(new_def) => {
                 let (name, signature) = new_def.clone().into();
-                global_declarations.insert(name, SymbolDeclaration::Func(signature));
+                global_declarations
+                    .symbols
+                    .insert(name, SymbolDeclaration::Func(signature));
                 function_definitions.push(new_def);
             }
             ToplevelDefinition::GVar(gvar) => {
-                global_declarations.insert(gvar.name, SymbolDeclaration::GVar(gvar.typ));
+                global_declarations
+                    .symbols
+                    .insert(gvar.name, SymbolDeclaration::GVar(gvar.typ));
             }
         }
     }

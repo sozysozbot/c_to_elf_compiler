@@ -67,7 +67,7 @@ fn parse_primary(
                         "閉じ丸括弧ではありません",
                     )
                 })?).is_some() {
-                    let func_decl = match context.global_symbol_declarations.get(ident) {
+                    let func_decl = match context.global_declarations.symbols.get(ident) {
                         Some(SymbolDeclaration::Func(f)) => f.clone(),
                         Some(SymbolDeclaration::GVar(_)) => {
                             return Err(AppError {
@@ -112,7 +112,7 @@ fn parse_primary(
                             "閉じ丸括弧ではありません",
                         )
                     })?).is_some() {
-                        let func_decl = match context.global_symbol_declarations.get(ident) {
+                        let func_decl = match context.global_declarations.symbols.get(ident) {
                             Some(SymbolDeclaration::Func(f)) => f.clone(),
                             Some(SymbolDeclaration::GVar(_)) => {
                                 return Err(AppError {
@@ -165,7 +165,7 @@ fn parse_primary(
             } else {
                 let typ = match context.local_var_and_param_declarations.get(ident) {
                     Some(t) => t.clone(),
-                    None => match context.global_symbol_declarations.get(ident) {
+                    None => match context.global_declarations.symbols.get(ident) {
                         Some(SymbolDeclaration::GVar(t)) => t.clone(),
                         Some(SymbolDeclaration::Func(_u)) => Err(AppError {
                             message: format!(
