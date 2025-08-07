@@ -256,6 +256,10 @@ check 8 "struct S { int *a; char b; }; int main() { return  _Alignof(struct S); 
 check 42 "struct S { int a; int b; }; int main() { struct S s; (&s)->a = 42; return (&s)->a; }"
 check 3 "struct S { int a; int b; }; int main() { struct S s; struct S *p; (&s)->a = 1; (&s)->b = 2; p = &s; return p->a + p->b; }"
 
+# dot operator
+check 42 "struct S { int a; int b; }; int main() { struct S s; s.a = 42; return s.a; }"
+check 3 "struct S { int a; int b; }; int main() { struct S s; struct S *p; s.a = 1; s.b = 2; p = &s; return p->a + p->b; }"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

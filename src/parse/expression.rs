@@ -1,5 +1,6 @@
 use crate::apperror::*;
 use crate::ast::*;
+use crate::parse::toplevel::StructMember;
 use crate::token::*;
 use std::{iter::Peekable, slice::Iter};
 
@@ -222,6 +223,52 @@ fn parse_primary(
     }
 }
 
+fn search_struct_member<'a>(
+    context: &'a Context,
+    struct_name: &str,
+    ident: &str,
+    input: &str,
+    filename: &str,
+    op_pos: usize,
+) -> Result<&'a StructMember, AppError> {
+    let member = context
+        .global_declarations
+        .struct_names
+        .get(struct_name)
+        .and_then(|s| s.members.get(ident))
+        .map_or_else(
+            || {
+                Err(AppError {
+                    message: format!("構造体 {struct_name} にフィールド {ident} がありません",),
+                    input: input.to_string(),
+                    filename: filename.to_string(),
+                    pos: op_pos,
+                })
+            },
+            Ok,
+        )?;
+    Ok(member)
+}
+
+fn arrow_expr(op_pos: usize, expr: Expr, offset: u8, typ_of_member: Type) -> Expr {
+    Expr::UnaryExpr {
+        op: UnaryOp::Deref,
+        op_pos,
+        expr: Box::new(Expr::BinaryExpr {
+            op_pos,
+            op: BinaryOp::Add,
+            左辺: decay_if_arr(expr),
+            右辺: Box::new(Expr::Numeric {
+                val: offset,
+                pos: op_pos,
+                typ: Type::Int,
+            }),
+            typ: Type::Ptr(Box::new(typ_of_member.clone())),
+        }),
+        typ: typ_of_member,
+    }
+}
+
 fn parse_suffix_op(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
@@ -322,7 +369,7 @@ fn parse_suffix_op(
                             Type::Ptr(t) => t.clone(),
                             _ => {
                                 return Err(AppError {
-                                    message: "-> の対象がポインタではありません".to_string(),
+                                    message: "-> のオペランドがポインタではありません".to_string(),
                                     input: input.to_string(),
                                     filename: filename.to_string(),
                                     pos: op_pos,
@@ -332,7 +379,7 @@ fn parse_suffix_op(
 
                         let Type::Struct { struct_name } = (*typ_lhs_points_to).clone() else {
                             return Err(AppError {
-                                message: "-> の対象が構造体へのポインタではありません".to_string(),
+                                message: "-> のオペランドが構造体へのポインタではありません".to_string(),
                                 input: input.to_string(),
                                 filename: filename.to_string(),
                                 pos: op_pos,
@@ -341,48 +388,77 @@ fn parse_suffix_op(
 
                         // ptr->ident is *(((char *)ptr + offsetof(struct, ident)))
                         // and its type is the type of struct_name.ident
-                        let member = context
-                            .global_declarations
-                            .struct_names
-                            .get(&struct_name)
-                            .and_then(|s| s.members.get(ident))
-                            .map_or_else(
-                                || {
-                                    Err(AppError {
-                                        message: format!(
-                                            "構造体 {struct_name} にフィールド {ident} がありません",
-                                        ),
-                                        input: input.to_string(),
-                                        filename: filename.to_string(),
-                                        pos: op_pos,
-                                    })
-                                },
-                                Ok,
-                            )?;
+                        let member = search_struct_member(
+                            context,
+                            &struct_name,
+                            ident,
+                            input,
+                            filename,
+                            op_pos,
+                        )?;
 
                         let typ_of_member = member.member_type.clone();
                         let offset = member.offset;
 
-                        expr = Expr::UnaryExpr {
-                            op: UnaryOp::Deref,
-                            op_pos,
-                            expr: Box::new(Expr::BinaryExpr {
-                                op_pos,
-                                op: BinaryOp::Add,
-                                左辺: decay_if_arr(expr),
-                                右辺: Box::new(Expr::Numeric {
-                                    val: offset,
-                                    pos: op_pos,
-                                    typ: Type::Int,
-                                }),
-                                typ: Type::Ptr(Box::new(typ_of_member.clone())),
-                            }),
-                            typ: typ_of_member,
-                        };
+                        expr = arrow_expr(op_pos, expr, offset, typ_of_member);
                     }
                     _ => {
                         return Err(AppError {
-                            message: "矢印の右側には識別子が必要です".to_string(),
+                            message: "-> の右側には識別子が必要です".to_string(),
+                            input: input.to_string(),
+                            filename: filename.to_string(),
+                            pos: tokens.peek().unwrap().pos,
+                        });
+                    }
+                }
+            }
+
+            Token {
+                tok: Tok::Dot, ..
+            } => {
+                tokens.next();
+                match tokens.next() {
+                    Some(Token {
+                        tok: Tok::Identifier(ident),
+                        pos,
+                    }) => {
+                        let op_pos = *pos;
+
+                        let Type::Struct { struct_name } = expr.typ().clone() else {
+                            return Err(AppError {
+                                message: ". のオペランドが構造体ではありません".to_string(),
+                                input: input.to_string(),
+                                filename: filename.to_string(),
+                                pos: op_pos,
+                            });
+                        };
+
+                        // ptr->ident is *(((char *)ptr + offsetof(struct, ident)))
+                        // and its type is the type of struct_name.ident
+                        let member = search_struct_member(
+                            context,
+                            &struct_name,
+                            ident,
+                            input,
+                            filename,
+                            op_pos,
+                        )?;
+
+                        let typ_of_member = member.member_type.clone();
+                        let offset = member.offset;
+
+                        let ptr = Expr::UnaryExpr {
+                            op: UnaryOp::Addr,
+                            op_pos,
+                            typ: Type::Ptr(Box::new(typ_of_member.clone())),
+                            expr: Box::new(expr),
+                        };
+
+                        expr = arrow_expr(op_pos, ptr, offset, typ_of_member);
+                    }
+                    _ => {
+                        return Err(AppError {
+                            message: ". の右側には識別子が必要です".to_string(),
                             input: input.to_string(),
                             filename: filename.to_string(),
                             pos: tokens.peek().unwrap().pos,

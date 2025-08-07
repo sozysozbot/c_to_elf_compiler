@@ -40,6 +40,7 @@ pub enum Tok {
     Alignof,
     Struct,
     Arrow,
+    Dot,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
