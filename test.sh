@@ -302,6 +302,11 @@ check 3 "int main() { int a; a = 7; int b; b = 4; return a - b; }"
 check 1 "int main() { int a; a = 1; int b; b = 2; return a || b; }"
 
 
+# variable declaration with initialization
+check 3 "int main() { int a = 7; int b = 4; return a - b; }"
+check 1 "int main() { int a = 1; int b = 2; return a || b; }"
+
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

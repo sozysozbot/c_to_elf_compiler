@@ -208,8 +208,19 @@ fn after_param_list(
             // collect the local variable declarations (for now, we only need to handle those at the immediate function scope)
             let mut local_var_declarations: HashMap<String, TypeAndSize> = HashMap::new();
             for s_or_d in statements_or_declarations.iter() {
-                if let StatementOrDeclaration::Declaration { name, typ_and_size } = s_or_d {
-                    local_var_declarations.insert(name.clone(), typ_and_size.clone());
+                match s_or_d {
+                    StatementOrDeclaration::Statement(_) => {}
+                    // If it's a declaration, we insert it into the local variable declarations
+                    StatementOrDeclaration::Declaration { name, typ_and_size } => {
+                        local_var_declarations.insert(name.clone(), typ_and_size.clone());
+                    }
+                    StatementOrDeclaration::DeclarationWithInitializer {
+                        name,
+                        typ_and_size,
+                        initializer: _,
+                    } => {
+                        local_var_declarations.insert(name.clone(), typ_and_size.clone());
+                    }
                 }
             }
 

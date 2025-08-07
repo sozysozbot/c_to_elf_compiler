@@ -115,6 +115,11 @@ pub enum StatementOrDeclaration {
         name: String,
         typ_and_size: TypeAndSize,
     },
+    DeclarationWithInitializer {
+        name: String,
+        typ_and_size: TypeAndSize,
+        initializer: Box<Expr>,
+    },
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

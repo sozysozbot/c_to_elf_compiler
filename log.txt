@@ -2296,3 +2296,7 @@ hsjoihs「いや、そもそも Statement を StatementOrDeclaration にして�
 hsjoihs「リファクタリングした。」
 
 hsjoihs「次に、Context の local_var_and_param_declarations をプライベートにして、ルックアップをメソッドに隔離することで、ここの実装を変更してもよいという風にした」
+hsjoihs「そして、ひたすら実装を転がして、とりあえず関数の先頭以外でも変数が宣言できるようになった（ブロックスコープはまだ）」
+$HTML「さらに <code>int a = 1;</code> の類いも実装した」
+hsjoihs「残るは」
+$HTML「<ul><li><code>for (int i = 0;</code></li><li><code>int foo();</code></li><li>ヌルポインタ定数</li><li>エスケープシーケンス付き文字列リテラル</li><li><code>void</code>, <code>void *</code>, <code>return;</code></li></ul>」

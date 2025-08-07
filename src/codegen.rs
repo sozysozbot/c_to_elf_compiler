@@ -466,12 +466,33 @@ impl<'a> FunctionGen<'a> {
         stmt_or_decl: &StatementOrDeclaration,
     ) -> Buf {
         let stmt = match stmt_or_decl {
-            StatementOrDeclaration::Statement(stmt) => stmt,
+            StatementOrDeclaration::Statement(stmt) => stmt.to_owned(),
             StatementOrDeclaration::Declaration { .. } => {
                 return Buf::new(); // declaration disappears in codegen
+            },
+            StatementOrDeclaration::DeclarationWithInitializer {
+                name,
+                typ_and_size,
+                initializer,
+            } => {
+                // compile to code that assigns the initializer to the variable
+                Statement::Expr {
+                    expr: Box::new(Expr::BinaryExpr {
+                        op: BinaryOp::Assign,
+                        左辺: Box::new(Expr::Identifier {
+                            ident: name.clone(),
+                            pos: 0, // pos is not used in codegen
+                            typ: typ_and_size.typ.clone(),
+                        }),
+                        右辺: initializer.clone(),
+                        op_pos: 0, // op_pos is not used in codegen
+                        typ: typ_and_size.typ.clone(),
+                    }),
+                    semicolon_pos: 0, // semicolon_pos is not used in codegen
+                }
             }
         };
-        self.statementを評価(stmt)
+        self.statementを評価(&stmt)
     }
     pub fn statementを評価(&mut self, stmt: &Statement) -> Buf {
         match stmt {

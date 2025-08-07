@@ -82,15 +82,49 @@ pub fn parse_statement_or_declaration(
                     typ_and_size,
                 })
             }
-            Token { pos, .. } => {
-                Err(AppError {
-                    message: "関数内の変数宣言で、型名と識別子の後にセミコロン以外が来ました"
-                        .to_string(),
-                    input: input.to_string(),
-                    filename: filename.to_string(),
-                    pos: *pos,
+            Token {
+                tok: Tok::Assign,
+                pos,
+            } => {
+                tokens.next();
+                let expr = Box::new(parse_expr(context, tokens, filename, input)?);
+                match tokens.peek().unwrap() {
+                    Token {
+                        tok: Tok::Semicolon,
+                        ..
+                    } => {
+                        tokens.next();
+                    }
+                    _ => {
+                        return Err(AppError {
+                            message: "期待されたセミコロンが来ませんでした".to_string(),
+                            input: input.to_string(),
+                            filename: filename.to_string(),
+                            pos: *pos,
+                        })
+                    }
+                };
+
+                let typ_and_size = TypeAndSize {
+                    typ: local_var_type.clone(),
+                    size: local_var_type.sizeof(&context.global_declarations.struct_names),
+                };
+
+                context.insert_local_var(local_var_name.clone(), typ_and_size.clone());
+                Ok(StatementOrDeclaration::DeclarationWithInitializer {
+                    name: local_var_name,
+                    initializer: expr,
+                    typ_and_size,
                 })
             }
+
+            Token { pos, .. } => Err(AppError {
+                message: "関数内の変数宣言で、型名と識別子の後にセミコロン以外が来ました"
+                    .to_string(),
+                input: input.to_string(),
+                filename: filename.to_string(),
+                pos: *pos,
+            }),
         }
     } else {
         parse_statement(context, tokens, filename, input).map(StatementOrDeclaration::Statement)
@@ -339,10 +373,7 @@ fn parse_statement(
                         break;
                     }
                     _ => statements.push(parse_statement_or_declaration(
-                        context,
-                        tokens,
-                        filename,
-                        input,
+                        context, tokens, filename, input,
                     )?),
                 }
             }
