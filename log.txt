@@ -2275,3 +2275,6 @@ int update(int *p) { *p = 3; return 1; }  int main() { int a; a = 42; update(&a)
 
 hsjoihs「はい～セグフォ。ポインタを正しく関数に渡せていないってことかなぁ。」
 hsjoihs「その通りです。適宜 64 ビットを渡すようにして生還。現在 23:34」
+
+hsjoihs「この勢いで || も作っておくか」
+hsjoihs「作った。現在時刻 23:49」

@@ -1077,13 +1077,45 @@ fn parse_logical_and(
     }
 }
 
+fn parse_logical_or(
+    context: &Context,
+    tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
+    input: &str,
+) -> Result<Expr, AppError> {
+    let mut expr = parse_logical_and(context, tokens, filename, input)?;
+    loop {
+        let tok = tokens.peek().unwrap();
+        match tok {
+            Token {
+                tok: Tok::LogicalOr,
+                pos: op_pos,
+            } => {
+                tokens.next();
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_logical_and(context, tokens, filename, input)?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::LogicalOr,
+                    op_pos: *op_pos,
+                    左辺,
+                    右辺,
+                    typ: Type::Int,
+                }
+            }
+            _ => {
+                return Ok(expr);
+            }
+        }
+    }
+}
+
 pub fn parse_expr(
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let expr = parse_logical_and(context, tokens, filename, input)?;
+    let expr = parse_logical_or(context, tokens, filename, input)?;
     let tok = tokens.peek().unwrap();
     match tok {
         Token {

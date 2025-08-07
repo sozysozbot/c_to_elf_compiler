@@ -15,6 +15,7 @@ pub enum BinaryOp {
     AddAssign,
     SubAssign,
     LogicalAnd,
+    LogicalOr,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

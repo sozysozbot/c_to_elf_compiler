@@ -411,6 +411,26 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     }),
                 }
             }
+            '|' => {
+                iter.next();
+                match iter.peek() {
+                    Some(&(pos, '|')) => {
+                        iter.next();
+                        ans.push(Token {
+                            tok: Tok::LogicalOr,
+                            pos,
+                        });
+                    }
+                    _ => {
+                        return Err(AppError {
+                            message: "bit OR is not yet implemented".to_string(),
+                            input: input.to_string(),
+                            filename: filename.to_string(),
+                            pos,
+                        })
+                    }
+                }
+            }
             c => {
                 return Err(AppError {
                     message: format!(
