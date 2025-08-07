@@ -1129,11 +1129,20 @@ impl<'a> FunctionGen<'a> {
                     buf, expr,
                 );
             }
-            Expr::UnaryExpr { .. } => {
+            Expr::UnaryExpr { op : UnaryOp::Deref, typ, .. } => {
                 self.exprを左辺値として評価してアドレスをrdiレジスタへ(
                     buf, expr,
                 );
-                buf.append(rdiを間接参照());
+
+                match typ.sizeof_primitive("k") {
+                    8 => buf.append(rdiを間接参照()),
+                    4 => buf.append(rdiを間接参照()),
+                    1 => buf.append(rdiをmovzxで間接参照()),
+                    _ => panic!(
+                        "size が {} な型の参照はできません",
+                        expr.typ().sizeof_primitive("l")
+                    ),
+                };
             }
         }
     }

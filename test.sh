@@ -318,6 +318,11 @@ check 7 "int main() { int a = 7; char c; char *p = &c; *p = a; return *p; }"
 check 87 "int main() { int a = 7; a = a * 49; char c; char *p = &c; *p = a; return *p; }"
 check 29 "int main() { int a = 7; a = a * 49; char c; char *p = &c; *p = a; return *p / 3; }"
 
+# void* automatically works
+check 29 "int main() { int a; a = 7; a = a * a; a = a * 7; int *p; p = &a; char *r; r = p; return *r / 3; }"
+check 29 "int main() { int a; a = 7; a = a * a; a = a * 7; int *p; p = &a; void *q; q = p; char *r; r = q; return *r / 3; }"
+
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"
