@@ -3336,8 +3336,8 @@ pub fn no_decay_even_if_arr(expr: Expr) -&gt; Box_&lt;Expr&gt; {
 <h3 class="date">2025年8月7日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_61b25cbafceae7986f7d08df5cd661a3').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_61b25cbafceae7986f7d08df5cd661a3').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_61b25cbafceae7986f7d08df5cd661a3" href="#permalink_61b25cbafceae7986f7d08df5cd661a3" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_bb2d8321fff5dc188db0d47b1e231ddf').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_bb2d8321fff5dc188db0d47b1e231ddf').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_bb2d8321fff5dc188db0d47b1e231ddf" href="#permalink_bb2d8321fff5dc188db0d47b1e231ddf" class="permalink">¶</a>
 		<div class="content">あれから 2 年が経った。</div>
 		<div class="content">その間に、ZEN 大学の構想が発表されて、私は 2 年間『オートマトンと形式言語理論』の教材を書き続け、ZEN 大学が開学した。</div>
 		<div class="content">さて、2 日後の &lt;a href=&quot;<a href="https://kernelvm.connpass.com/event/355100/&quot;&gt;Kernel/VM" target="_blank" rel="noopener noreferrer">https://kernelvm.connpass.com/event/355100/&quot;&gt;Kernel/VM</a> 探検隊@東京 No18&lt;/a&gt; で『Rui Ueyama compilerbook compile-a-compiler% 縛り実況 (C-to-ELF category)』という発表をすると宣言してしまったので、そろそろ作業をしていかんとな。</div>
@@ -3452,6 +3452,11 @@ components = [&quot;rustfmt&quot;, &quot;clippy&quot;]
 		<div class="content">x64 なので当然 &lt;code&gt;inc    BYTE PTR [rax] &lt;/code&gt; とかが使える。ありがとう CISC</div>
 		<div class="content">さてテストケースを足しましょうね～。はい inc 通った。一旦コミットするか。</div>
 		<div class="content">&lt;code&gt;check 16 &quot;int main() { int a; int b; a = 3; b = ++a; return b * a; }&quot;&lt;/code&gt; で 16 が返ってくることを確認</div>
+		<div class="content">今度は後置インクリメント・デクリメント。</div>
+		<div class="content">えーと現状だと後置演算子が添字アクセスしかないので、ちょっとパーサーに非自明な変更が要る</div>
+		<div class="content">とりあえず定義をほぐした</div>
+		<div class="content">後置インクリメントを実装。現在 18:44</div>
+		<div class="content">後置デクリメントも実装。現在 18:46</div>
 	</div>
 </div>
 
