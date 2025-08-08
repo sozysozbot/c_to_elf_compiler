@@ -3755,8 +3755,8 @@ check 101 &quot;int main(int argc, char **argv) { return argc + argv[1][2]; }&qu
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_7fb5b169a8378999ef27bccd7ded487b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7fb5b169a8378999ef27bccd7ded487b').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_7fb5b169a8378999ef27bccd7ded487b" href="#permalink_7fb5b169a8378999ef27bccd7ded487b" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_a6e56da04b668f1f63d3e790d1e7ea4e').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_a6e56da04b668f1f63d3e790d1e7ea4e').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_a6e56da04b668f1f63d3e790d1e7ea4e" href="#permalink_a6e56da04b668f1f63d3e790d1e7ea4e" class="permalink">¶</a>
 		<div class="content">いや待てよ？　先に 2kmcc step1 を倒してもよいな。倒すか。</div>
 		<div class="content">2kmcc step1 は、以下のコード</div>
 		<pre><code class="language-c">int printf();
@@ -3788,6 +3788,112 @@ int main(int argc, char **argv) {
 		<pre><code class="language-">[PASS] int main() { return atoi(&quot;123&quot;); } =&gt; 123
 </code></pre>
 		<div class="content">よ～し。</div>
+		<div class="content">この調子で、1 引数または 2 引数の printf を突っ込んで step 1 をクリアしよう</div>
+		<pre><code class="language-c">int printf(const char *fmt, void *arg1) {
+    while (*fmt) {
+        if (*fmt == &#x27;%&#x27;) {
+            fmt++;
+            if (*fmt == &#x27;d&#x27;) {
+                fmt++;
+                void *arg = &amp;arg1;
+                int *p = arg;
+                int n = *p;
+                // convert to decimal string
+                char buf[20];
+                int i = 0;
+                if (n &lt; 0) {
+                    __builtin_putchar(&#x27;-&#x27;);
+                    n = -n;
+                }
+                buf[i++] = &#x27;0&#x27; + n % 10;
+                n /= 10;
+                while (n) {
+                    buf[i++] = &#x27;0&#x27; + n % 10;
+                    n /= 10;
+                }
+                while (i) {
+                    __builtin_putchar(buf[--i]);
+                }
+            }
+        } else {
+            __builtin_putchar(*fmt);
+        }
+        fmt++;
+    }
+    return 0;
+}
+</code></pre>
+		<div class="content">こんなもんだろう。</div>
+		<div class="content">おっと！　剰余演算子が無い。作るか。作った。n /= 10; とか書いてしまってたのを n = n / 10; に置き換えると…？</div>
+		<pre><code class="language-">[PASS] int atoi(); int main() { return atoi(&quot;123&quot;); } =&gt; 123
+[FAIL] int printf(); int main() { return printf(&quot;a%dbc&quot;, 123); } =&gt; a123bc expected, but got a123c
+[PASS] int printf(); int main() { return printf(&quot;a&quot;); } =&gt; stdout: a
+[PASS] int printf(); int main() { return printf(&quot;a&quot;); } =&gt; 0
+</code></pre>
+		<div class="content">あ～～トークンを喰いすぎているから 1 文字欠けてる</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/Kory__3" target="_blank" rel="noopener noreferrer"><img alt="Kory" class="icon" src="icons/Kory.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_dfcdac770da245835f36382c68c03416').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_dfcdac770da245835f36382c68c03416').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/Kory__3" target="_blank" rel="noopener noreferrer">Kory</a></span><a id="permalink_dfcdac770da245835f36382c68c03416" href="#permalink_dfcdac770da245835f36382c68c03416" class="permalink">¶</a>
+		<div class="content">『トークンを喰いすぎ』、LLM の話かと思った</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><img alt="KOBA789" class="icon" src="icons/KOBA789.webp" height="48px"></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4552662948ecb0d8ba80bd1e2292c4e0').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4552662948ecb0d8ba80bd1e2292c4e0').style.visibility = 'hidden'">
+		<span class="name">KOBA789</span><a id="permalink_4552662948ecb0d8ba80bd1e2292c4e0" href="#permalink_4552662948ecb0d8ba80bd1e2292c4e0" class="permalink">¶</a>
+		<div class="content">こちらもちょうど『こちらの Claude もトークンを喰いすぎています』とか言おうと思った</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_33dd1c7a7b3c3c6783512f46ad53934d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_33dd1c7a7b3c3c6783512f46ad53934d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_33dd1c7a7b3c3c6783512f46ad53934d" href="#permalink_33dd1c7a7b3c3c6783512f46ad53934d" class="permalink">¶</a>
+		<div class="content">ということで、実装を直して、</div>
+		<pre><code class="language-c">int printf(const char *fmt, void *arg1) {
+    while (*fmt) {
+        if (*fmt == &#x27;%&#x27;) {
+            fmt++;
+            if (*fmt == &#x27;d&#x27;) {
+                void *arg = &amp;arg1;
+                int *p = arg;
+                int n = *p;
+                // convert to decimal string
+                char buf[20];
+                int i = 0;
+                if (n &lt; 0) {
+                    __builtin_putchar(&#x27;-&#x27;);
+                    n = -n;
+                }
+                buf[i++] = &#x27;0&#x27; + n % 10;
+                n = n / 10;
+                while (n) {
+                    buf[i++] = &#x27;0&#x27; + n % 10;
+                    n = n / 10;
+                }
+                while (i) {
+                    __builtin_putchar(buf[--i]);
+                }
+            }
+        } else {
+            __builtin_putchar(*fmt);
+        }
+        fmt++;
+    }
+    return 0;
+}
+</code></pre>
+		<pre><code class="language-">[PASS] int atoi(); int main() { return atoi(&quot;123&quot;); } =&gt; 123
+[PASS] int main() { const char *s = &quot;\&#x27;&quot;; return s[0]; } =&gt; 39
+[PASS] int main() { const char *s = &quot;\\&quot;; return s[0]; } =&gt; 92
+[PASS] int printf(); int main() { return printf(&quot;a&quot;); } =&gt; stdout: a
+[PASS] int printf(); int main() { return printf(&quot;a&quot;); } =&gt; 0
+[PASS] int printf(); int main() { return printf(&quot;a%dbc&quot;, 123); } =&gt; stdout: a123bc
+[PASS] int printf(); int main() { return printf(&quot;a%dbc&quot;, 123); } =&gt; 0
+</code></pre>
+		<div class="content">よ～～～し printf が動いていると主張できる。</div>
 	</div>
 </div>
 
