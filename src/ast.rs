@@ -22,8 +22,6 @@ pub enum BinaryOp {
 pub enum UnaryOp {
     Addr,
     Deref,
-    Increment,
-    Decrement,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

@@ -2356,3 +2356,17 @@ $source
 ```
 
 hsjoihs「これもよろしくない。ポインタ演算が中途半端にバグってる？」
+hsjoihs「あ～分かった。インクリメントをインクリメント命令に翻訳したり、複合代入演算子でポインタ幅の掛け算を忘れたりしているのが原因だ」
+
+
+$source
+```
+[PASS] int main(void){int a[5]; *(a + 3) = 174; int *p = a + 2; p = p + 1; return *p;} => 174
+[FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 2; p = p + 1; return *p;} => 174 expected, but got 0
+```
+
+hsjoihs「なるほどね。角括弧を直した。」
+
+hsjoihs「あ～『型のサイズが u8 に収まりません』の類い、あったねぇ」
+hsjoihs「でかい型のサイズがあると、まずもってローカル変数のオフセットで詰むんだよな」
+hsjoihs「よ～し、デカいオフセットに対応しよう」

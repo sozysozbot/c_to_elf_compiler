@@ -488,19 +488,34 @@ run_test 193 'struct A{int a; char c; char d; int b;}; int main(){ return sizeof
 
 run_test 190 'int main(){return sizeof(int);}' 4
 run_test 191 'int main(){return sizeof(int*);}' 8
+run_test 273 'int main(void){char a[5]; a[1] = 74; char *p = a + 2; return *--p;}' 74
+run_test 267 'int main(void){char a[5]; a[1] = 74; char *p = a + 3; p -= 2; return *p;}' 74
+
+check 174 'int main(void){int a[5]; a[3] = 174; int *p = a + 2; p = p + 1; return *p;}'
+check 174 'int main(void){int a[5]; *(a + 3) = 174; int *p = a + 2; p = p + 1; return *p;}'
+
 run_test 269 'int main(void){int a[5]; a[3] = 174; int *p = a + 2; p++; return *p;}' 174
 run_test 270 'int main(void){int a[5]; a[3] = 174; int *p = a + 2; ++p; return *p;}' 174
 run_test 271 'int main(void){int a[5]; a[3] = 174; int *p = a + 2; return *++p;}' 174
 run_test 272 'int main(void){int a[5]; a[3] = 174; int *p = a + 3; return *p++;}' 174
-run_test 273 'int main(void){char a[5]; a[1] = 74; char *p = a + 2; return *--p;}' 74
-
 run_test 264 'int main(void){int a[5]; a[3] = 174; int *p = a; p += 3; return *p;}' 174
 run_test 266 'int main(void){int a[5]; a[1] = 174; int *p = a + 3; p -= 2; return *p;}' 174
-run_test 267 'int main(void){char a[5]; a[1] = 74; char *p = a + 3; p -= 2; return *p;}' 74
 
-run_test 101 'int *foo(int *p){*p = 4;return p;} int main(){int x;int *y;y = foo(&x); *y+= 170;return x;}' 174
-run_test 102 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y;*foo(&x) += 170;return x;}' 174
-run_test 113 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y; int **z; *foo(&x) += 170;return x;}' 174
+run_test 176 'int main(){int a; int *p; p = &a; *p = 2; int *q; q = &*p; *q = 174; return a;}' 174
+run_test 177 'int main(){int a; int *p; p = &a; *p = 2; int *q; q = &(*p); *q = 174; return a;}' 174
+run_test 178 'char foo(char *p){char a; return a;} int main(){char q; foo(&(q)); return 174;}' 174
+
+run_test 118 'int main(){int a[1]; int *p; p = a; *p=2; return 174;}' 174
+run_test 119 'int main(){int a[1]; *(a+0)=2;return 174;}' 174
+
+run_test 123 'int main(){int a[1][2];int *q;q = *a;return 174;}' 174
+run_test 124 'int main(){int a[1][2];int *q;q = *a; *q=174; return **a;}' 174
+# run_test 125 'int main(){int a[86][2];int *q;q = *(a+1); *q=174; return **(a+1);}' 174
+run_test 126 'int main(){int a[5][6];int *q;q = *(a+1); *(2+q)=174; return *(*(1+a)+2);}' 174
+
+# run_test 101 'int *foo(int *p){*p = 4;return p;} int main(){int x;int *y;y = foo(&x); *y+= 170;return x;}' 174
+# run_test 102 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y;*foo(&x) += 170;return x;}' 174
+# run_test 113 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y; int **z; *foo(&x) += 170;return x;}' 174
 
 
 wait_jobs

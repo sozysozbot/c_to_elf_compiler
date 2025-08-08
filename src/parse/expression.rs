@@ -282,20 +282,19 @@ fn parse_suffix_op(
 
                 let message = format!("型が {:?} なので、インクリメントできません", expr.typ(),);
 
-                // a++ can be compiled to ((++a) - 1)
-
-                let incremented_expr = Expr::UnaryExpr {
-                    op: UnaryOp::Increment,
-                    op_pos,
-                    typ: expr.typ(),
-                    expr: Box::new(expr),
-                };
-
+                // a++ can be compiled to ((a += 1) - 1)
                 let one = Expr::Numeric {
                     val: 1,
                     pos: op_pos,
                     typ: Type::Int,
                 };
+
+                let incremented_expr = add_assign_with_potential_scaling(
+                    context,
+                    op_pos,
+                    Box::new(expr),
+                    Box::new(one.clone()),
+                );
 
                 expr = subtract_with_potential_scaling_by_sizeof(
                     context,
@@ -320,20 +319,19 @@ fn parse_suffix_op(
 
                 let message = format!("型が {:?} なので、デクリメントできません", expr.typ(),);
 
-                // a-- can be compiled to ((--a) + 1)
-
-                let decremented_expr = Expr::UnaryExpr {
-                    op: UnaryOp::Decrement,
-                    op_pos,
-                    typ: expr.typ(),
-                    expr: Box::new(expr),
-                };
-
+                // a-- can be compiled to ((a -= 1) + 1)
                 let one = Expr::Numeric {
                     val: 1,
                     pos: op_pos,
                     typ: Type::Int,
                 };
+
+                let decremented_expr = sub_assign_with_potential_scaling(
+                    context,
+                    op_pos,
+                    Box::new(expr),
+                    Box::new(one.clone()),
+                );
 
                 expr = add_with_potential_scaling_by_sizeof(
                     context,
@@ -465,7 +463,7 @@ fn parse_suffix_op(
                 ..
             } => {
                 tokens.next();
-                let index = parse_expr(context, tokens, filename, input)?;
+                let 右辺 = parse_expr(context, tokens, filename, input)?;
                 let op_pos = tokens.peek().unwrap().pos;
                 satisfy(
                     tokens,
@@ -474,8 +472,8 @@ fn parse_suffix_op(
                     |tok| tok == &Tok::閉じ角括弧,
                     "この開き角括弧に対応する閉じ角括弧がありません",
                 )?;
-                let arr = decay_if_arr(expr);
-                let typ = match arr.typ() {
+                let 左辺 = decay_if_arr(expr);
+                let typ = match 左辺.typ() {
                     Type::Ptr(element_typ) => *element_typ,
                     _ => {
                         return Err(AppError {
@@ -489,13 +487,10 @@ fn parse_suffix_op(
                 expr = Expr::UnaryExpr {
                     op_pos,
                     op: UnaryOp::Deref,
-                    expr: Box::new(Expr::BinaryExpr {
-                        op_pos,
-                        op: BinaryOp::Add,
-                        左辺: arr,
-                        右辺: decay_if_arr(index),
-                        typ: typ.clone(),
-                    }),
+                    expr: Box::new(
+                        add_with_potential_scaling_by_sizeof(context, 左辺, Box::new(右辺), op_pos)
+                            .unwrap(),
+                    ),
                     typ,
                 };
             }
@@ -611,12 +606,17 @@ fn parse_unary(
         }) => {
             tokens.next();
             let expr = parse_unary(context, tokens, filename, input)?;
-            Ok(Expr::UnaryExpr {
-                op: UnaryOp::Increment,
-                op_pos: *pos,
-                typ: expr.typ(),
-                expr: throw_if_arr(expr), // 配列型に ++ されることはあり得ない
-            })
+            let one = Expr::Numeric {
+                val: 1,
+                pos: *pos,
+                typ: Type::Int,
+            };
+            Ok(add_assign_with_potential_scaling(
+                context,
+                *pos,
+                Box::new(expr),
+                Box::new(one.clone()),
+            ))
         }
         Some(Token {
             tok: Tok::Decrement,
@@ -624,12 +624,18 @@ fn parse_unary(
         }) => {
             tokens.next();
             let expr = parse_unary(context, tokens, filename, input)?;
-            Ok(Expr::UnaryExpr {
-                op: UnaryOp::Decrement,
-                op_pos: *pos,
-                typ: expr.typ(),
-                expr: throw_if_arr(expr), // 配列型に -- されることはあり得ない
-            })
+            let one = Expr::Numeric {
+                val: 1,
+                pos: *pos,
+                typ: Type::Int,
+            };
+
+            Ok(sub_assign_with_potential_scaling(
+                context,
+                *pos,
+                Box::new(expr),
+                Box::new(one.clone()),
+            ))
         }
         Some(Token {
             tok: Tok::Sizeof,
@@ -1146,13 +1152,10 @@ pub fn parse_expr(
             tokens.next();
             let 左辺 = decay_if_arr(expr);
             let 右辺 = decay_if_arr(parse_expr(context, tokens, filename, input)?);
-            Ok(Expr::BinaryExpr {
-                op: BinaryOp::AddAssign,
-                op_pos: *op_pos,
-                typ: 左辺.typ(),
-                左辺,
-                右辺,
-            })
+
+            Ok(add_assign_with_potential_scaling(
+                context, *op_pos, 左辺, 右辺,
+            ))
         }
         Token {
             tok: Tok::SubAssign,
@@ -1161,14 +1164,71 @@ pub fn parse_expr(
             tokens.next();
             let 左辺 = decay_if_arr(expr);
             let 右辺 = decay_if_arr(parse_expr(context, tokens, filename, input)?);
-            Ok(Expr::BinaryExpr {
-                op: BinaryOp::SubAssign,
-                op_pos: *op_pos,
-                typ: 左辺.typ(),
-                左辺,
-                右辺,
-            })
+
+            Ok(sub_assign_with_potential_scaling(
+                context, *op_pos, 左辺, 右辺,
+            ))
         }
         _ => Ok(expr),
+    }
+}
+
+fn add_assign_with_potential_scaling(
+    context: &Context,
+    op_pos: usize,
+    左辺: Box<Expr>,
+    右辺: Box<Expr>,
+) -> Expr {
+    let scaled_右辺 = match 左辺.typ() {
+        Type::Ptr(t) => Box::new(Expr::BinaryExpr {
+            op: BinaryOp::Mul,
+            op_pos,
+            左辺: decay_if_arr(Expr::Numeric {
+                val: t.sizeof(&context.global_declarations.struct_names),
+                pos: op_pos,
+                typ: Type::Int,
+            }),
+            右辺,
+            typ: Type::Int,
+        }),
+        _ => 右辺,
+    };
+
+    Expr::BinaryExpr {
+        op: BinaryOp::AddAssign,
+        op_pos,
+        typ: 左辺.typ(),
+        左辺,
+        右辺: scaled_右辺,
+    }
+}
+
+fn sub_assign_with_potential_scaling(
+    context: &Context,
+    op_pos: usize,
+    左辺: Box<Expr>,
+    右辺: Box<Expr>,
+) -> Expr {
+    let scaled_右辺 = match 左辺.typ() {
+        Type::Ptr(t) => Box::new(Expr::BinaryExpr {
+            op: BinaryOp::Mul,
+            op_pos,
+            左辺: decay_if_arr(Expr::Numeric {
+                val: t.sizeof(&context.global_declarations.struct_names),
+                pos: op_pos,
+                typ: Type::Int,
+            }),
+            右辺,
+            typ: Type::Int,
+        }),
+        _ => 右辺,
+    };
+
+    Expr::BinaryExpr {
+        op: BinaryOp::SubAssign,
+        op_pos,
+        typ: 左辺.typ(),
+        左辺,
+        右辺: scaled_右辺,
     }
 }
