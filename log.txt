@@ -2494,4 +2494,6 @@ $source
 
 hsjoihs「よし。さてこれを一般の文字列リテラルに対して行えばいい」
 hsjoihs「関数名はどうせマングルする必要があるので、コンスタントプールを用意して、__builtin_strlit_105() を呼ぶと 105 番目の文字列リテラルが返ってくるという形を目指すようにする」
-$HTML「とりあえず <code>__builtin_abc</code> は <code>__builtin_strlit_0</code> に改名し、<code>codegen::builtin_strlit_n関数を生成(b"abc")</code> でそれが生成できるようにする」
+$HTML「とりあえず <code>__builtin_abc</code> は <code>__builtin_strlit_0</code> に改名し、<code>codegen::builtin_strlit_n関数を生成(b"abc")</code> でそれを生成できるようにしておく」
+hsjoihs「そうしたら、今度は因果の矢を逆転させて、『ソースコード中に出てくる文字列リテラルは、codegen する』とすればよい」
+hsjoihs「とりあえず、文字列リテラルを集めるだけ集める strlit_collector という引数をあちこちにばらまいたが、実はこれ集めるだけじゃなくて ID も振った方がいいな」

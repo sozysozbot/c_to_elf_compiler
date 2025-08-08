@@ -3,6 +3,7 @@ use crate::ast::*;
 use crate::parse::toplevel::StructMember;
 use crate::parse::toplevel::TypeAndSize;
 use crate::token::*;
+use std::collections::HashSet;
 use std::{iter::Peekable, slice::Iter};
 
 use super::combinator::recover;
@@ -12,6 +13,7 @@ use super::toplevel::SymbolDeclaration;
 use super::typ::parse_type;
 use super::typ::Type;
 fn parse_primary(
+    strlit_collector: &mut HashSet<String>,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -42,6 +44,8 @@ fn parse_primary(
                     typ: Type::Arr(Box::new(Type::Char), 4),
                 });
             }
+
+            strlit_collector.insert(val.clone());
 
             let expr = Expr::StringLiteral {
                 val: val.clone(),
@@ -114,7 +118,7 @@ fn parse_primary(
                     };
                     return Ok(expr);
                 } else {
-                    let expr = parse_expr(context, tokens, filename, input)?;
+                    let expr = parse_expr(strlit_collector, context, tokens, filename, input)?;
                     args.push(*decay_if_arr(expr));
                 }
 
@@ -171,7 +175,7 @@ fn parse_primary(
                     })?)
                     .is_some()
                     {
-                        let expr = parse_expr(context, tokens, filename, input)?;
+                        let expr = parse_expr(strlit_collector, context, tokens, filename, input)?;
                         args.push(*decay_if_arr(expr));
                     } else {
                         break Err(AppError {
@@ -208,7 +212,7 @@ fn parse_primary(
             tok: Tok::開き丸括弧,
             ..
         } => {
-            let expr = parse_expr(context, tokens, filename, input)?;
+            let expr = parse_expr(strlit_collector, context, tokens, filename, input)?;
             satisfy(
                 tokens,
                 filename,
@@ -274,12 +278,13 @@ fn arrow_expr(op_pos: usize, expr: Expr, offset: i32, typ_of_member: Type) -> Ex
 }
 
 fn parse_suffix_op(
+    strlit_collector: &mut HashSet<String>,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_primary(context, tokens, filename, input)?;
+    let mut expr = parse_primary(strlit_collector, context, tokens, filename, input)?;
 
     loop {
         match tokens.peek().unwrap() {
@@ -473,7 +478,7 @@ fn parse_suffix_op(
                 ..
             } => {
                 tokens.next();
-                let 右辺 = parse_expr(context, tokens, filename, input)?;
+                let 右辺 = parse_expr(strlit_collector, context, tokens, filename, input)?;
                 let op_pos = tokens.peek().unwrap().pos;
                 satisfy(
                     tokens,
@@ -512,6 +517,7 @@ fn parse_suffix_op(
 }
 
 fn parse_unary(
+    strlit_collector: &mut HashSet<String>,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -520,7 +526,7 @@ fn parse_unary(
     match tokens.peek() {
         Some(Token { tok: Tok::Add, pos }) => {
             tokens.next();
-            let expr = parse_suffix_op(context, tokens, filename, input)?;
+            let expr = parse_suffix_op(strlit_collector, context, tokens, filename, input)?;
             Ok(Expr::BinaryExpr {
                 op: BinaryOp::Add,
                 op_pos: *pos,
@@ -535,7 +541,7 @@ fn parse_unary(
         }
         Some(Token { tok: Tok::Sub, pos }) => {
             tokens.next();
-            let expr = parse_suffix_op(context, tokens, filename, input)?;
+            let expr = parse_suffix_op(strlit_collector, context, tokens, filename, input)?;
             Ok(Expr::BinaryExpr {
                 op: BinaryOp::Sub,
                 op_pos: *pos,
@@ -553,7 +559,7 @@ fn parse_unary(
             pos,
         }) => {
             tokens.next();
-            let expr = parse_suffix_op(context, tokens, filename, input)?;
+            let expr = parse_suffix_op(strlit_collector, context, tokens, filename, input)?;
 
             // The expression !E is equivalent to (0==E)
             // オペランドがポインタなら比較対象はヌルポインタ定数
@@ -584,7 +590,7 @@ fn parse_unary(
             pos,
         }) => {
             tokens.next();
-            let expr = parse_unary(context, tokens, filename, input)?;
+            let expr = parse_unary(strlit_collector, context, tokens, filename, input)?;
             Ok(Expr::UnaryExpr {
                 op: UnaryOp::Deref,
                 op_pos: *pos,
@@ -602,7 +608,7 @@ fn parse_unary(
             pos,
         }) => {
             tokens.next();
-            let expr = parse_unary(context, tokens, filename, input)?;
+            let expr = parse_unary(strlit_collector, context, tokens, filename, input)?;
             Ok(Expr::UnaryExpr {
                 op: UnaryOp::Addr,
                 op_pos: *pos,
@@ -615,7 +621,7 @@ fn parse_unary(
             pos,
         }) => {
             tokens.next();
-            let expr = parse_unary(context, tokens, filename, input)?;
+            let expr = parse_unary(strlit_collector, context, tokens, filename, input)?;
             let one = Expr::Numeric {
                 val: 1,
                 pos: *pos,
@@ -633,7 +639,7 @@ fn parse_unary(
             pos,
         }) => {
             tokens.next();
-            let expr = parse_unary(context, tokens, filename, input)?;
+            let expr = parse_unary(strlit_collector, context, tokens, filename, input)?;
             let one = Expr::Numeric {
                 val: 1,
                 pos: *pos,
@@ -669,7 +675,7 @@ fn parse_unary(
                 {
                     typ
                 } else {
-                    parse_expr(context, tokens, filename, input)?.typ()
+                    parse_expr(strlit_collector, context, tokens, filename, input)?.typ()
                 };
                 satisfy(
                     tokens,
@@ -680,7 +686,7 @@ fn parse_unary(
                 )?;
                 typ
             } else {
-                parse_unary(context, tokens, filename, input)?.typ()
+                parse_unary(strlit_collector, context, tokens, filename, input)?.typ()
             };
 
             Ok(Expr::Numeric {
@@ -712,7 +718,7 @@ fn parse_unary(
                     typ
                 } else {
                     // The use of _Alignof with expressions is allowed by some C compilers as a non-standard extension.
-                    parse_expr(context, tokens, filename, input)?.typ()
+                    parse_expr(strlit_collector, context, tokens, filename, input)?.typ()
                 };
                 satisfy(
                     tokens,
@@ -723,7 +729,7 @@ fn parse_unary(
                 )?;
                 typ
             } else {
-                parse_unary(context, tokens, filename, input)?.typ()
+                parse_unary(strlit_collector, context, tokens, filename, input)?.typ()
             };
 
             Ok(Expr::Numeric {
@@ -732,17 +738,18 @@ fn parse_unary(
                 typ: Type::Int,
             })
         }
-        _ => parse_suffix_op(context, tokens, filename, input),
+        _ => parse_suffix_op(strlit_collector, context, tokens, filename, input),
     }
 }
 
 fn parse_multiplicative(
+    strlit_collector: &mut HashSet<String>,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_unary(context, tokens, filename, input)?;
+    let mut expr = parse_unary(strlit_collector, context, tokens, filename, input)?;
     loop {
         match tokens.peek() {
             Some(Token {
@@ -751,7 +758,13 @@ fn parse_multiplicative(
             }) => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_unary(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_unary(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Mul,
                     op_pos: *op_pos,
@@ -766,7 +779,13 @@ fn parse_multiplicative(
             }) => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_unary(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_unary(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Div,
                     op_pos: *op_pos,
@@ -872,12 +891,13 @@ fn subtract_with_potential_scaling_by_sizeof(
 }
 
 fn parse_additive(
+    strlit_collector: &mut HashSet<String>,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_multiplicative(context, tokens, filename, input)?;
+    let mut expr = parse_multiplicative(strlit_collector, context, tokens, filename, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -887,7 +907,13 @@ fn parse_additive(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_multiplicative(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_multiplicative(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 let message = format!(
                     "左辺の型が {:?}、右辺の型が {:?} なので、足し合わせることができません",
                     左辺.typ(),
@@ -908,7 +934,13 @@ fn parse_additive(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_multiplicative(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_multiplicative(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 let message = format!(
                     "左辺の型が {:?}、右辺の型が {:?} なので、引き算できません",
                     左辺.typ(),
@@ -931,12 +963,13 @@ fn parse_additive(
 }
 
 fn parse_relational(
+    strlit_collector: &mut HashSet<String>,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_additive(context, tokens, filename, input)?;
+    let mut expr = parse_additive(strlit_collector, context, tokens, filename, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -946,7 +979,7 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_additive(strlit_collector, context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThan,
                     op_pos: *op_pos,
@@ -961,7 +994,7 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_additive(strlit_collector, context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThanOrEqual,
                     op_pos: *op_pos,
@@ -976,7 +1009,7 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_additive(strlit_collector, context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThan, // ここを逆転させ、
                     op_pos: *op_pos,
@@ -991,7 +1024,7 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_additive(strlit_collector, context, tokens, filename, input)?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThanOrEqual, // ここを逆転させ、
                     op_pos: *op_pos,
@@ -1008,12 +1041,13 @@ fn parse_relational(
 }
 
 fn parse_equality(
+    strlit_collector: &mut HashSet<String>,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_relational(context, tokens, filename, input)?;
+    let mut expr = parse_relational(strlit_collector, context, tokens, filename, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -1023,7 +1057,13 @@ fn parse_equality(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_relational(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_relational(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::Equal,
                     op_pos: *op_pos,
@@ -1038,7 +1078,13 @@ fn parse_equality(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_relational(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_relational(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::NotEqual,
                     op_pos: *op_pos,
@@ -1055,12 +1101,13 @@ fn parse_equality(
 }
 
 fn parse_logical_and(
+    strlit_collector: &mut HashSet<String>,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_equality(context, tokens, filename, input)?;
+    let mut expr = parse_equality(strlit_collector, context, tokens, filename, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -1070,7 +1117,13 @@ fn parse_logical_and(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_equality(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_equality(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LogicalAnd,
                     op_pos: *op_pos,
@@ -1087,12 +1140,13 @@ fn parse_logical_and(
 }
 
 fn parse_logical_or(
+    strlit_collector: &mut HashSet<String>,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let mut expr = parse_logical_and(context, tokens, filename, input)?;
+    let mut expr = parse_logical_and(strlit_collector, context, tokens, filename, input)?;
     loop {
         let tok = tokens.peek().unwrap();
         match tok {
@@ -1102,7 +1156,13 @@ fn parse_logical_or(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_logical_and(context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_logical_and(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LogicalOr,
                     op_pos: *op_pos,
@@ -1119,12 +1179,13 @@ fn parse_logical_or(
 }
 
 pub fn parse_expr(
+    strlit_collector: &mut HashSet<String>,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
 ) -> Result<Expr, AppError> {
-    let expr = parse_logical_or(context, tokens, filename, input)?;
+    let expr = parse_logical_or(strlit_collector, context, tokens, filename, input)?;
     let tok = tokens.peek().unwrap();
     match tok {
         Token {
@@ -1133,7 +1194,7 @@ pub fn parse_expr(
         } => {
             tokens.next();
             let 左辺 = decay_if_arr(expr);
-            let 右辺 = decay_if_arr(parse_expr(context, tokens, filename, input)?);
+            let 右辺 = decay_if_arr(parse_expr(strlit_collector, context, tokens, filename, input)?);
 
             // special case for assigning 0 to a pointer
             if let Type::Ptr(_) = 左辺.typ() {
@@ -1161,7 +1222,7 @@ pub fn parse_expr(
         } => {
             tokens.next();
             let 左辺 = decay_if_arr(expr);
-            let 右辺 = decay_if_arr(parse_expr(context, tokens, filename, input)?);
+            let 右辺 = decay_if_arr(parse_expr(strlit_collector, context, tokens, filename, input)?);
 
             Ok(add_assign_with_potential_scaling(
                 context, *op_pos, 左辺, 右辺,
@@ -1173,7 +1234,7 @@ pub fn parse_expr(
         } => {
             tokens.next();
             let 左辺 = decay_if_arr(expr);
-            let 右辺 = decay_if_arr(parse_expr(context, tokens, filename, input)?);
+            let 右辺 = decay_if_arr(parse_expr(strlit_collector, context, tokens, filename, input)?);
 
             Ok(sub_assign_with_potential_scaling(
                 context, *op_pos, 左辺, 右辺,

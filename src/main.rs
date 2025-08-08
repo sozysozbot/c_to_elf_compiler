@@ -1,5 +1,7 @@
 #![warn(clippy::pedantic)]
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::hash::Hash;
 use std::io::Write;
 
 use c_to_elf_compiler::apperror::AppError;
@@ -92,8 +94,10 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
             .map(|(name, signature)| (name, SymbolDeclaration::Func(signature))),
     );
 
+    let mut strlit_collector: HashSet<String> = HashSet::new();
+
     let function_definitions =
-        toplevel::parse_all(&mut global_declarations, &mut tokens, filename, input)?;
+        toplevel::parse_all(&mut strlit_collector, &mut global_declarations, &mut tokens, filename, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let mut buf = Buf::from(&tiny[0..0x78]);
@@ -140,6 +144,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         .into_iter()
         .collect();
         if let ToplevelDefOrDecl::FuncDef(entry) = parse_toplevel_definition(
+            &mut HashSet::new(), // should not collect string literals in startup code
             &GlobalDeclarations {
                 symbols: previous_symbol_declarations,
                 struct_names: HashMap::new(),

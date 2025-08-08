@@ -10,6 +10,7 @@ use crate::parse::context::Context;
 use crate::parse::statement::return_void;
 use crate::token::*;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::{iter::Peekable, slice::Iter};
 
 #[derive(Debug, Clone)]
@@ -94,6 +95,7 @@ pub struct TypeAndSize {
 
 #[allow(clippy::too_many_arguments)]
 fn after_param_list(
+    strlit_collector: &mut HashSet<String>,
     previous_global_declarations: &GlobalDeclarations,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -177,8 +179,13 @@ fn after_param_list(
                         break;
                     }
                     _ => {
-                        let parsed =
-                            parse_statement_or_declaration(&mut context, tokens, filename, input)?;
+                        let parsed = parse_statement_or_declaration(
+                            strlit_collector,
+                            &mut context,
+                            tokens,
+                            filename,
+                            input,
+                        )?;
                         statements_or_declarations.push(parsed);
                     }
                 }
@@ -207,11 +214,7 @@ fn after_param_list(
             // If we reach here, it means we have a function declaration
 
             // strip the parameter names
-            let params = params.map(|p| {
-                p.into_iter()
-                    .map(|(typ, _)| typ)
-                    .collect::<Vec<_>>()
-            });
+            let params = params.map(|p| p.into_iter().map(|(typ, _)| typ).collect::<Vec<_>>());
 
             Ok(ToplevelDefOrDecl::FuncDecl {
                 func_name: func_name.to_string(),
@@ -230,6 +233,7 @@ fn after_param_list(
 }
 
 pub fn parse_toplevel_definition(
+    strlit_collector: &mut HashSet<String>,
     previous_declarations: &GlobalDeclarations,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -256,6 +260,7 @@ pub fn parse_toplevel_definition(
                     } = tokens.peek().unwrap() {
                     tokens.next();
                     return after_param_list(
+                        strlit_collector,
                         previous_declarations,
                         tokens,
                         filename,
@@ -283,6 +288,7 @@ pub fn parse_toplevel_definition(
                         tokens.next(); // consume `void`
                         tokens.next(); // consume `)`
                         return after_param_list(
+                            strlit_collector,
                             previous_declarations,
                             tokens,
                             filename,
@@ -310,6 +316,7 @@ pub fn parse_toplevel_definition(
                         } => {
                             tokens.next();
                             return after_param_list(
+                                strlit_collector,
                                 previous_declarations,
                                 tokens,
                                 filename,
@@ -473,6 +480,7 @@ pub fn parse_toplevel_struct_definition(
 }
 
 pub fn parse_all(
+    strlit_collector: &mut HashSet<String>,
     global_declarations: &mut GlobalDeclarations,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -515,7 +523,7 @@ pub fn parse_all(
         }
 
         let new_def_or_decl =
-            parse_toplevel_definition(global_declarations, tokens, filename, input)?;
+            parse_toplevel_definition(strlit_collector, global_declarations, tokens, filename, input)?;
         match new_def_or_decl {
             ToplevelDefOrDecl::FuncDef(new_def) => {
                 let (name, signature) = new_def.clone().into();
@@ -529,12 +537,19 @@ pub fn parse_all(
                     .symbols
                     .insert(gvar.name, SymbolDeclaration::GVar(gvar.typ));
             }
-            ToplevelDefOrDecl::FuncDecl { func_name, params, return_type } => {
-                global_declarations.symbols.insert(func_name, SymbolDeclaration::Func(FunctionSignature {
-                    params,
-                    pos: 0,
-                    return_type,
-                }));
+            ToplevelDefOrDecl::FuncDecl {
+                func_name,
+                params,
+                return_type,
+            } => {
+                global_declarations.symbols.insert(
+                    func_name,
+                    SymbolDeclaration::Func(FunctionSignature {
+                        params,
+                        pos: 0,
+                        return_type,
+                    }),
+                );
             }
         }
     }

@@ -5,6 +5,7 @@ use crate::parse::context::Context;
 use crate::parse::toplevel::TypeAndSize;
 use crate::parse::typ::Type;
 use crate::token::*;
+use std::collections::HashSet;
 use std::{iter::Peekable, slice::Iter};
 
 use super::combinator::satisfy;
@@ -22,6 +23,7 @@ fn parse_test() {
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
         parse_statement(
+            &mut HashSet::new(),
             &mut Context::new(
                 Vec::new(),
                 GlobalDeclarations {
@@ -57,6 +59,7 @@ fn parse_test() {
 }
 
 pub fn parse_statement_or_declaration(
+    strlit_collector: &mut HashSet<String>,
     context: &mut Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -89,7 +92,13 @@ pub fn parse_statement_or_declaration(
                 pos,
             } => {
                 tokens.next();
-                let expr = Box::new(parse_expr(context, tokens, filename, input)?);
+                let expr = Box::new(parse_expr(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 match tokens.peek().unwrap() {
                     Token {
                         tok: Tok::Semicolon,
@@ -130,7 +139,8 @@ pub fn parse_statement_or_declaration(
             }),
         }
     } else {
-        parse_statement(context, tokens, filename, input).map(StatementOrDeclaration::Statement)
+        parse_statement(strlit_collector, context, tokens, filename, input)
+            .map(StatementOrDeclaration::Statement)
     }
 }
 
@@ -147,6 +157,7 @@ pub fn return_void(pos: usize) -> Statement {
 }
 
 fn parse_statement(
+    strlit_collector: &mut HashSet<String>,
     context: &mut Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -158,7 +169,13 @@ fn parse_statement(
             tok: Tok::Throw, ..
         } => {
             tokens.next();
-            let expr = Box::new(parse_expr(context, tokens, filename, input)?);
+            let expr = Box::new(parse_expr(
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
+            )?);
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {
                 Token {
@@ -218,7 +235,13 @@ fn parse_statement(
                 return Ok(return_void(pos));
             }
 
-            let expr = Box::new(parse_expr(context, tokens, filename, input)?);
+            let expr = Box::new(parse_expr(
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
+            )?);
             let tok = tokens.peek().unwrap();
             let semicolon_pos = match tok {
                 Token {
@@ -262,7 +285,13 @@ fn parse_statement(
                     })
                 }
             }
-            let cond = Box::new(parse_expr(context, tokens, filename, input)?);
+            let cond = Box::new(parse_expr(
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
+            )?);
 
             let tok = tokens.peek().unwrap();
             match tok {
@@ -282,14 +311,22 @@ fn parse_statement(
                 }
             }
             let then = Box::new(parse_statement_or_declaration(
-                context, tokens, filename, input,
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
             )?);
             let tok = tokens.peek().unwrap();
             let else_ = match tok {
                 Token { tok: Tok::Else, .. } => {
                     tokens.next();
                     Some(Box::new(parse_statement_or_declaration(
-                        context, tokens, filename, input,
+                        strlit_collector,
+                        context,
+                        tokens,
+                        filename,
+                        input,
                     )?))
                 }
                 _ => None,
@@ -313,7 +350,13 @@ fn parse_statement(
                 |tok| tok == &Tok::開き丸括弧,
                 "期待された開き括弧が来ませんでした",
             )?;
-            let cond = Box::new(parse_expr(context, tokens, filename, input)?);
+            let cond = Box::new(parse_expr(
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
+            )?);
 
             satisfy(
                 tokens,
@@ -323,7 +366,11 @@ fn parse_statement(
                 "期待された閉じ括弧が来ませんでした",
             )?;
             let body = Box::new(parse_statement_or_declaration(
-                context, tokens, filename, input,
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
             )?);
             Ok(Statement::While {
                 cond,
@@ -378,7 +425,8 @@ fn parse_statement(
                                 tok: Tok::Assign, ..
                             } => {
                                 tokens.next();
-                                let expr = parse_expr(context, tokens, filename, input)?;
+                                let expr =
+                                    parse_expr(strlit_collector, context, tokens, filename, input)?;
                                 satisfy(
                                     tokens,
                                     filename,
@@ -414,7 +462,7 @@ fn parse_statement(
                             }
                         }
                     } else {
-                        let expr = parse_expr(context, tokens, filename, input)?;
+                        let expr = parse_expr(strlit_collector, context, tokens, filename, input)?;
                         satisfy(
                             tokens,
                             filename,
@@ -437,7 +485,13 @@ fn parse_statement(
                     tok: Tok::Semicolon,
                     ..
                 } => None,
-                _ => Some(Box::new(parse_expr(context, tokens, filename, input)?)),
+                _ => Some(Box::new(parse_expr(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?)),
             };
             satisfy(
                 tokens,
@@ -452,7 +506,13 @@ fn parse_statement(
                     tok: Tok::閉じ丸括弧,
                     ..
                 } => None,
-                _ => Some(Box::new(parse_expr(context, tokens, filename, input)?)),
+                _ => Some(Box::new(parse_expr(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?)),
             };
             satisfy(
                 tokens,
@@ -462,7 +522,11 @@ fn parse_statement(
                 "期待された閉じ括弧が来ませんでした",
             )?;
             let body = Box::new(parse_statement_or_declaration(
-                context, tokens, filename, input,
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
             )?);
 
             context.pop_scope();
@@ -501,7 +565,11 @@ fn parse_statement(
                         break;
                     }
                     _ => statements.push(parse_statement_or_declaration(
-                        context, tokens, filename, input,
+                        strlit_collector,
+                        context,
+                        tokens,
+                        filename,
+                        input,
                     )?),
                 }
             }
@@ -511,7 +579,13 @@ fn parse_statement(
             })
         }
         _ => {
-            let expr = Box::new(parse_expr(context, tokens, filename, input)?);
+            let expr = Box::new(parse_expr(
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
+            )?);
             let semicolon_pos = tokens.peek().unwrap().pos;
             satisfy(
                 tokens,
