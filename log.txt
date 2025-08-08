@@ -2450,3 +2450,9 @@ check 101 "int main(int argc, char **argv) { return argc + argv[1][2]; }" "" "ab
 ```
 
 hsjoihs「これでちゃんとコマンドライン引数が渡っている。OK。」
+
+hsjoihs「となると、残りは文字列リテラルとプロトタイプ宣言か」
+
+hsjoihs「まあプロトタイプ宣言考えるか。要は『名前付き穴』であって、」
+hsjoihs「現状は関数の position が発生するたびにそれをグローバル関数テーブルに突っ込んでいく実装だけど、」
+hsjoihs「単純に Buf にひと細工すればいいか」
