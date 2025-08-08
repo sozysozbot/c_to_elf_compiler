@@ -412,6 +412,97 @@ run_test 257 'int main(){int x = 86;int *y = &x; return (*y) + (*y) + 2;}' 174
 run_test 258 'int main(){int x = 86;int *y = &x;int **z = &y;return (*y) + (**z) + 2;}' 174
 run_test 259 'int main(){int x = 86;int *y = &x;int **z = &y;return*y+**z+2;}' 174
 
+run_test 133 'char foo(){char a; return a;} int main(){foo(); return 174;}' 174
+run_test 134 'char foo(char *p){char a; return a;} int main(){char q; foo(&q); return 174;}' 174
+run_test 135 'char foo(char *p){char a; a = 5; return a;} int main(){char q; foo(&q); return 174;}' 174
+run_test 136 'int main(){char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y + 171;}' 174
+run_test 137 'char foo(char *p){*p = 5; char a;a = 3; return a;} int main(){char q; char r; r = foo(&q); return 172-r+q;}' 174
+run_test 139 'int foo(char a){int d;d = 3;char c;c = a+d;return c;} int main(){char f;f=3;return foo(f)*4+150;}' 174
+run_test 140 'int foo(char a){int d;d = 3;char c;c = a+d;return c*4;} int main(){char f;f=3;return foo(f)+150;}' 174
+run_test 143 'int foo(char a, char b){return 23;} int main(){char f;f=3;return foo(f,4)+151;}' 174
+run_test 144 'int foo(char a, char b){return a*4+11;} int main(){char f;f=3;return foo(f,4)+151;}' 174
+run_test 145 'int foo(char a, char b){return a*4+12;} int main(){char f;f=3;return foo(f,4)+150;}' 174
+run_test 146 'int foo(char a, char b){return (a+3)*4;} int main(){char f;f=3;return foo(f,4)+150;}' 174
+run_test 147 'int foo(char a, char b){char c;c = a+3;return c*4;} int main(){char f;f=3;return foo(f,4)+150;}' 174
+run_test 148 'int foo(char a, char b){int d;d = 3;char c;c = a+d;return c*4;} int main(){char f;f=3;return foo(f,4)+150;}' 174
+run_test 149 'int foo(char a, char b){int d;d = 3;char c;c = a+d;return c*b;} int main(){char f;f=3;return foo(f,4)+150;}' 174
+run_test 156 'int main(){/**/return 123;}' 123
+run_test 157 'int main(){/*u89g3wihu-@w3erolk*/ return (123);}' 123
+run_test 161 'int main(){int a[10]; a[5] = 173; int b; b = a[5]++; return a[5]*!(a[5]-b-1);}' 174
+
+run_test 001 'int main(){return 123;}' 123
+run_test 002 'int main(){return (123);}' 123
+run_test 003 'int main(){return ((((123))));}' 123
+run_test 004 'int main(){return 123+51;}' 174
+run_test 005 'int main(){return 123+56-5;}' 174
+run_test 006 'int main(){return 175-(4-3);}' 174
+run_test 007 'int main(){return 181-4-3;}' 174
+run_test 009 'int main(){return 6*(3+7)-5*1;}' 55
+run_test 018 'int main(){return +174;}' 174
+run_test 019 'int main(){return -(1-175);}' 174
+run_test 020 'int main(){23; 45+37; ((12-1)*75); return -(1-175);}' 174
+run_test 021 'int main(){23; 45+37; return -(1-175); ((12-1)*75);}' 174
+
+
+run_test 034 'int add_(int x, int y){4; return x+y;} int main(){3; return add_(87,87);}' 174
+run_test 037 'int main() { return (3 && 2 && 5) + 173; }' 174
+run_test 038 'int main() { return (3 && 2) + !(3 && 0) + !(0 && 3)+ !(0 && 0) + 170; }' 174
+run_test 039 'int main() { return (3 || 2 || 5) + 173; }' 174
+run_test 040 'int main() { return (3 || 2) + (3 || 0) + (0 || 3)+ !(0 || 0) + 170; }' 174
+run_test 041 'int main() {int a; a = 3; a += 5;  return a + 166; }' 174
+run_test 042 'int main() {int a; int b; a = 3; b = (a += 5);  return a + b + 158; }' 174
+run_test 046 'int foo(){ return 2;} int main() {int a; int b; int c; a = 3;b = 5;c = 2;if(a) {b = foo();} else { }    return 172+b;}' 174
+run_test 047 'int foo(){ return 2;} int main() {int a; int b; int c; a = 3;b = 5;c = 2;if(a) {b = foo();}   return 172+b;}' 174
+run_test 048 'int foo(){ return 2;} int bar(){ return 7;} int main() {int a; int b; int c; a = 3;b = 5;c = 2;if(a) {b = foo();} else { c = bar();}    return 172+b;}' 174
+run_test 049 'int foo(){ return 2;} int bar(){ return 7;} int main() {int a; int b; int c; a = 0;b = 5;c = 2;if(a) {b = foo();} else { c = bar();}    return 162+b+c;}' 174
+run_test 050 'int foo(){ return 2;} int bar(){ return 7;} int main() {int a; int b; int c; a = 3;b = 5;c = 2;if(a) if(0) { b = foo(); } else {  c = bar(); }    return 162+b+c;}' 174
+run_test 051 'int foo(){ return 2;} int bar(){ return 7;} int main() {int a; int b; int c; a = 3;b = 5;c = 2;if(a) if(0)b=foo();else c = bar();return 162+b+c;}' 174
+run_test 052 'int main() {int a; a = 4; if(1){return 170+a; a = 7; }else{return 170-a; a = 9;} a = 5; return a;}' 174
+run_test 056 'int foo(){return 3;} int main() {int a; a = 0;while(a == foo()) {a = 3;}return 174;}' 174
+run_test 057 'int main(){int a; int b; a = 0; b = 0; while(a <= 10) {b += a; a += 1;}return b;}' 55
+run_test 064 'int main(){int a; int b; a =-3; b=-6; return a*b*10+a+b+3;}' 174
+run_test 074 'int main(){int a; int b; a=3; b=0; b+= ++a; return a*b*11-2;}' 174
+run_test 075 'int main(){int a; int b; a=3; b=0; b+= a++; return !(b-3)+!(a-4)+172;}' 174
+run_test 085 'int main(){int a; a = 174; {int a; a = 3;} return a;}' 174
+run_test 086 'int main(){int a; a = 3; { a = 174;} return a;}' 174
+run_test 087 'int main() {int *b; int a; a = 3; a += 5;  return a + 166; }' 174
+run_test 088 'int main() {int *******b; int a; a = 3; a += 5;  return a + 166; }' 174
+run_test 089 'int main() {int a; a = 174; int *b; b = &a; return a;}' 174
+run_test 090 'int main(){int x;x = 86;int *y;y = &x; return (*y) + x + 2;}' 174
+run_test 091 'int main(){int x;x = 86;int *y;y = &x; return (*y) + (*y) + 2;}' 174
+run_test 092 'int main(){int x;x = 86;int *y;y = &x;int **z;z = &y;return (*y) + (**z) + 2;}' 174
+run_test 093 'int main(){int x;x = 86;int *y;y = &x;int **z;z = &y;return*y+**z+2;}' 174
+run_test 094 'int main() {int x;int *y;x = 3;y = &x;*y = 174;return x;}' 174
+run_test 095 'int main() {int x;int *y;x = 3;y = &x;*y = 171;*y += 3;return x;}' 174
+run_test 096 'int main(){int x; int y; int *z; int*a; z=&x; a=&y; *z=*a=87; return(x+y);}' 174
+run_test 097 'int main(){int x; int *y; int **z; z = &y; *z = &x; *y = 174; return x;}' 174
+run_test 098 'int foo(int* p){return 3;} int main(){int x; return 174;}' 174
+run_test 099 'int foo(int* p){return *p;} int main(){int x; x = 174; return foo(&x);}' 174
+run_test 100 'int foo(int* p){*p = 172; return *p+2;} int main(){int x; return foo(&x);}' 174
+run_test 114 'int main(){int a[2][3]; return 174;}' 174
+run_test 184 'struct A{int a; int b;}; int main(){ struct A a; return 174;}' 174
+run_test 185 'struct A{int a; int b;}; int main(){ struct A a[10]; return 174;}' 174
+run_test 186 'struct A{int a; int b;};  struct A a[10]; int main(){return 174;}' 174
+run_test 192 'struct A{int a; int b;}; int main(){ return sizeof(struct A);}' 8
+run_test 193 'struct A{int a; char c; char d; int b;}; int main(){ return sizeof(struct A);}' 12
+
+run_test 190 'int main(){return sizeof(int);}' 4
+run_test 191 'int main(){return sizeof(int*);}' 8
+run_test 269 'int main(void){int a[5]; a[3] = 174; int *p = a + 2; p++; return *p;}' 174
+run_test 270 'int main(void){int a[5]; a[3] = 174; int *p = a + 2; ++p; return *p;}' 174
+run_test 271 'int main(void){int a[5]; a[3] = 174; int *p = a + 2; return *++p;}' 174
+run_test 272 'int main(void){int a[5]; a[3] = 174; int *p = a + 3; return *p++;}' 174
+run_test 273 'int main(void){char a[5]; a[1] = 74; char *p = a + 2; return *--p;}' 74
+
+run_test 264 'int main(void){int a[5]; a[3] = 174; int *p = a; p += 3; return *p;}' 174
+run_test 266 'int main(void){int a[5]; a[1] = 174; int *p = a + 3; p -= 2; return *p;}' 174
+run_test 267 'int main(void){char a[5]; a[1] = 74; char *p = a + 3; p -= 2; return *p;}' 74
+
+run_test 101 'int *foo(int *p){*p = 4;return p;} int main(){int x;int *y;y = foo(&x); *y+= 170;return x;}' 174
+run_test 102 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y;*foo(&x) += 170;return x;}' 174
+run_test 113 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y; int **z; *foo(&x) += 170;return x;}' 174
+
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

@@ -2332,3 +2332,27 @@ hsjoihs「一旦 hsjoihs-c-compiler のテストケースとか足しておく�
 hsjoihs「とりあえず『構造体のメンバに配列』『関数宣言』『引数が char』『グローバル変数の読み書き』とかが対処できていない。」
 hsjoihs「『構造体のメンバに配列』は 2kmcc に無いので一旦無視するとして、『引数が char』はどうにかしないとな」
 hsjoihs「引数が char の場合に対応した。」
+
+$source
+```
+run_test 101 'int *foo(int *p){*p = 4;return p;} int main(){int x;int *y;y = foo(&x); *y+= 170;return x;}' 174
+run_test 102 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y;*foo(&x) += 170;return x;}' 174
+run_test 113 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y; int **z; *foo(&x) += 170;return x;}' 174
+```
+
+hsjoihs「こいつらがセグフォで落ちる。よろしくない。」
+
+$source
+```
+[FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 3; return *p++;} => 174 expected, but got 0
+[FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 2; return *++p;} => 174 expected, but got 0
+[PASS] int main(){return sizeof(int*);} => 8
+[FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 2; p++; return *p;} => 174 expected, but got 0
+[FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 2; ++p; return *p;} => 174 expected, but got 0
+[PASS] int main(void){char a[5]; a[1] = 74; char *p = a + 2; return *--p;} => 74
+[PASS] int main(void){int a[5]; a[3] = 174; int *p = a; p += 3; return *p;} => 174
+[PASS] int main(void){char a[5]; a[1] = 74; char *p = a + 3; p -= 2; return *p;} => 74
+[FAIL] int main(void){int a[5]; a[1] = 174; int *p = a + 3; p -= 2; return *p;} => 174 expected, but got 0
+```
+
+hsjoihs「これもよろしくない。ポインタ演算が中途半端にバグってる？」
