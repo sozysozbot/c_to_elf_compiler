@@ -107,40 +107,33 @@ pub fn builtin_alloc4関数を生成() -> Buf {
         .join(エピローグ())
 }
 
-
-pub fn builtin_strlit_0関数を生成() -> Buf {
-    const STR_SIZE: u32 = 4;
-    プロローグ(WORD_SIZE_AS_I32 * 4)
+pub fn builtin_strlit_n関数を生成(str_without_null_terminator: &[u8]) -> Buf {
+    let str_size = str_without_null_terminator.len() as u32 + 1; // +1 for null terminator
+    let mut buf = プロローグ(WORD_SIZE_AS_I32 * 4)
         .join(eaxに即値をセット(12)) // sys_brk
         .join(ediに代入(0)) // NULL
         .join(syscall()) // rax: br
         .join(raxをプッシュ())
         .join(rdiへとポップ()) // rdi: br,
-        .join(eaxに即値をセット(STR_SIZE)) // rax: 4, rdi: br
-        .join(rdiにraxを足し合わせる()) // rdi: br + 4
-        .join(eaxに即値をセット(12)) // rax: 12(sys_brk), rdi: br + 4
-        .join(syscall()) // rax: br + 4
-        //
-        // br[3] = 0
-        .join(raxから即値を引く(1)) // rax: br + 3
-        .join(ediに代入(0)) // edi: 0
-        .join(raxが指す位置にdilを代入()) // *(br + 3) = 0;
-        //
-        // br[2] = 'c'
-        .join(raxから即値を引く(1)) // rax: br + 2
-        .join(ediに代入('c' as u32))
-        .join(raxが指す位置にdilを代入()) // *(br + 2) = 'c';
-        //
-        // br[1] = 'b'
-        .join(raxから即値を引く(1)) // rax: br + 1
-        .join(ediに代入('b' as u32)) 
-        .join(raxが指す位置にdilを代入()) // *(br + 1) = 'b';
-        //
-        // br[0] = 'a'
-        .join(raxから即値を引く(1)) // rax: br + 12
-        .join(ediに代入('a' as u32)) 
-        .join(raxが指す位置にdilを代入()) // *br = 'a';
-        .join(エピローグ())
+        .join(eaxに即値をセット(str_size)) // rax: str_size, rdi: br
+        .join(rdiにraxを足し合わせる()) // rdi: br + str_size
+        .join(eaxに即値をセット(12)) // rax: 12(sys_brk), rdi: br + str_size
+        .join(syscall()); // rax: br + str_size
+                         
+    // insert null terminator                      
+    buf.append(raxから即値を引く(1)); // rax: br + str_size - 1
+    buf.append(ediに代入(0)); // edi: 0
+    buf.append(raxが指す位置にdilを代入()); // *(br + str_size - 1) = 0;
+
+    for byte in str_without_null_terminator.iter().rev() {
+        buf.append(raxから即値を引く(1)); // rax: br + i
+        buf.append(ediに代入(*byte as u32));
+        buf.append(raxが指す位置にdilを代入()); // *(br + i) = byte;
+    }
+
+    buf.append(エピローグ());
+
+    buf
 }
 
 pub struct LocalVarTable {
@@ -437,7 +430,9 @@ impl<'a> FunctionGen<'a> {
 
     #[allow(clippy::too_many_lines)]
     pub fn exprを評価してediレジスタへ(&mut self, buf: &mut Buf, expr: &Expr) {
-        if matches!(expr.typ(), Type::Arr(_, _)) && !matches!(expr, Expr::Call { .. }) /* not a builtin string literal */ {
+        if matches!(expr.typ(), Type::Arr(_, _)) && !matches!(expr, Expr::Call { .. })
+        /* not a builtin string literal */
+        {
             self.exprを左辺値として評価してアドレスをrdiレジスタへ(buf, expr);
             return;
         }
@@ -971,7 +966,6 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
             .map(|stmt| function_gen.statement_or_declarationを評価(stmt))
             .fold(Buf::new(), Buf::join);
 
-        
         main_buf.append(content_buf);
 
         return func_pos;

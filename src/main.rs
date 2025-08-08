@@ -114,7 +114,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
     global_function_table.insert("__builtin_alloc4".to_string(), builtin_alloc4_pos);
 
     let builtin_strlit_0_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
-    buf.append(codegen::builtin_strlit_0関数を生成());
+    buf.append(codegen::builtin_strlit_n関数を生成(b"abc"));
     global_function_table.insert("__builtin_strlit_0".to_string(), builtin_strlit_0_pos);
 
     for definition in function_definitions {
