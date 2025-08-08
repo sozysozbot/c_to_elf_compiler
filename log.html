@@ -3678,8 +3678,8 @@ check 101 &quot;int main(int argc, char **argv) { return argc + argv[1][2]; }&qu
 <h3 class="date">2025年8月9日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_26299957615dac3d274a232ba2c489ae').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_26299957615dac3d274a232ba2c489ae').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_26299957615dac3d274a232ba2c489ae" href="#permalink_26299957615dac3d274a232ba2c489ae" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_2531aa26df6fb832e6e14c815148e745').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_2531aa26df6fb832e6e14c815148e745').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_2531aa26df6fb832e6e14c815148e745" href="#permalink_2531aa26df6fb832e6e14c815148e745" class="permalink">¶</a>
 		<div class="content">ところで printf ってのもあるよな。現状使ってるのは %c %d %s %*s %.*s の 5 種類だけか。じゃあ自前で一応組めるっちゃ組める。</div>
 		<div class="content">とりあえずはプロトタイプ宣言。int foo(); と int foo(int a, int b); の両方が必要。</div>
 		<div class="content">両方実装した。</div>
@@ -3710,6 +3710,31 @@ check 101 &quot;int main(int argc, char **argv) { return argc + argv[1][2]; }&qu
 		<div class="content">とりあえず、文字列リテラルを集めるだけ集める strlit_collector という引数をあちこちにばらまいたが、実はこれ集めるだけじゃなくて ID も振った方がいいな</div>
 		<div class="content">文字列リテラルを集めるたびに ID を配る。これを引換券として後で __builtin_strlit_n() への呼び出しをしてもらう目論見</div>
 		<div class="content">__builtin_strlit_n の形の名前の関数を型解決しようとする場合は strlit_collector を読みに行くようにする。これにより、シグネチャを事前登録したりする必要が無い</div>
+		<div class="content">こうすれば一般の文字列リテラルが……あれ？『関数の戻り値の型のサイズがよろしくない』と言われた</div>
+		<div class="content">ああそうか、char 配列が関数の戻り値として返ってきている関係による不都合か。この場合は特別扱いで見逃すということにすると、</div>
+		<pre><code class="language-">[PASS] int main() { const char *s = &quot;abc&quot;; return s[0]; } =&gt; 97
+[PASS] int main() { return sizeof(&quot;abc&quot;); } =&gt; 4
+[PASS] int main() { const char *s = &quot;abc&quot;; return s[1]; } =&gt; 98
+[PASS] int main() { const char *s = &quot;!&quot;; return s[0]; } =&gt; 33
+[PASS] int main() { const char *s = &quot;abc&quot;; return s[3]; } =&gt; 0
+[PASS] int main() { const char *s = &quot;abc&quot;; return s[2]; } =&gt; 99
+</code></pre>
+		<div class="content">よし、文字列リテラルができた！</div>
+		<div class="content">次はエスケープシーケンス付きの文字列リテラルを実装する。つまりトークナイザに手を入れる</div>
+		<div class="content">できた。テストケースを追加。</div>
+		<pre><code class="language-">[PASS] int main() { const char *s = &quot;abc&quot;; return s[0]; } =&gt; 97
+[PASS] int main() { return sizeof(&quot;abc&quot;); } =&gt; 4
+[PASS] int main() { const char *s = &quot;abc&quot;; return s[1]; } =&gt; 98
+[PASS] int main() { const char *s = &quot;abc&quot;; return s[3]; } =&gt; 0
+[PASS] int main() { const char *s = &quot;abc&quot;; return s[2]; } =&gt; 99
+[PASS] int main() { const char *s = &quot;!&quot;; return s[0]; } =&gt; 33
+[PASS] int main() { const char *s = &quot;\&quot;&quot;; return s[0]; } =&gt; 34
+[PASS] int main() { const char *s = &quot;\n&quot;; return s[0]; } =&gt; 10
+[PASS] int main() { return sizeof(&quot;\na&quot;); } =&gt; 3
+[PASS] int main() { const char *s = &quot;\&#x27;&quot;; return s[0]; } =&gt; 39
+[PASS] int main() { const char *s = &quot;\\&quot;; return s[0]; } =&gt; 92
+</code></pre>
+		<div class="content">よ～しよしよし</div>
 	</div>
 </div>
 
