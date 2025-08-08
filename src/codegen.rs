@@ -108,7 +108,7 @@ pub fn builtin_alloc4関数を生成() -> Buf {
 }
 
 
-pub fn builtin_abc関数を生成() -> Buf {
+pub fn builtin_strlit_0関数を生成() -> Buf {
     const STR_SIZE: u32 = 4;
     プロローグ(WORD_SIZE_AS_I32 * 4)
         .join(eaxに即値をセット(12)) // sys_brk

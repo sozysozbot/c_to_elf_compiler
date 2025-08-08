@@ -34,9 +34,9 @@ fn parse_primary(
             pos,
         } => {
             if val == "abc" {
-                // ビルトイン関数 __builtin_abc を呼び出す
+                // ビルトイン関数 __builtin_strlit_0 を呼び出す
                 return Ok(Expr::Call {
-                    ident: "__builtin_abc".to_string(),
+                    ident: "__builtin_strlit_0".to_string(),
                     args: Vec::new(),
                     pos: *pos,
                     typ: Type::Arr(Box::new(Type::Char), 4),

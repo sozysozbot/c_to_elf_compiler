@@ -71,7 +71,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
             },
         ),
         (
-            "__builtin_abc".to_string(),
+            "__builtin_strlit_0".to_string(),
             FunctionSignature {
                 params: Some(vec![]),
                 pos: 0,
@@ -113,9 +113,9 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
     buf.append(codegen::builtin_alloc4関数を生成());
     global_function_table.insert("__builtin_alloc4".to_string(), builtin_alloc4_pos);
 
-    let builtin_abc_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
-    buf.append(codegen::builtin_abc関数を生成());
-    global_function_table.insert("__builtin_abc".to_string(), builtin_abc_pos);
+    let builtin_strlit_0_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
+    buf.append(codegen::builtin_strlit_0関数を生成());
+    global_function_table.insert("__builtin_strlit_0".to_string(), builtin_strlit_0_pos);
 
     for definition in function_definitions {
         codegen::関数をコード生成しメインバッファとグローバル関数テーブルに挿入(
