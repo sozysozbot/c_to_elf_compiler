@@ -2547,3 +2547,47 @@ hsjoihs「さ～～て、ラスボスを倒すか」
 hsjoihs「ラスボスは、グローバル変数の読み書きです」
 hsjoihs「リンカが無いんでね」
 KOBA789「リンカが無いもんな」
+
+hsjoihs「いや待てよ？　先に 2kmcc step1 を倒してもよいな。倒すか。」
+hsjoihs「2kmcc step1 は、以下のコード」
+
+$source
+```c
+int printf();
+int atoi(); 
+
+int main(int argc, char **argv) {
+    if (argc != 2) {
+        return 3;
+    }
+    printf(".intel_syntax noprefix\n");
+    printf(".globl main\n");
+    printf("main:\n");
+    printf("  mov rax, %d\n", atoi(argv[1]));
+    printf("  ret\n");
+    return 0;
+}
+```
+
+hsjoihs「とりあえず atoi を自前で実装してみるか、今回使う分なら」
+
+$source
+```c
+int atoi(const char *s) {
+    int n = 0;
+    while (*s >= '0' && *s <= '9') {
+        n = n * 10 + (*s - '0');
+        s++;
+    }
+    return n;
+}
+```
+
+hsjoihs「ぐらいの素朴な実装で十分。標準ライブラリをリンクする仕組みなど無いので、入力のソースを改竄して先頭に貼り付けることで解決。」
+
+$source
+```
+[PASS] int main() { return atoi("123"); } => 123
+```
+
+hsjoihs「よ～し。」

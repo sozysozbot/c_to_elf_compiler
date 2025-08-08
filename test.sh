@@ -578,6 +578,9 @@ check 39 "int main() { const char *s = \"\\'\"; return s[0]; }"
 check 92 "int main() { const char *s = \"\\\\\"; return s[0]; }"
 check 3 "int main() { return sizeof(\"\\na\"); }"
 
+# atoi
+check 123 "int atoi(); int main() { return atoi(\"123\"); }"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

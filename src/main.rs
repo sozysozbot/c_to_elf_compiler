@@ -25,6 +25,20 @@ fn main() -> std::io::Result<()> {
         input.push('\n');
     }
 
+    input = format!(
+        "{}{input}",
+        r"
+int atoi(const char *s) {
+    int n = 0;
+    while (*s >= '0' && *s <= '9') {
+        n = n * 10 + (*s - '0');
+        s++;
+    }
+    return n;
+}
+    ",
+    );
+
     let tokens = tokenize::tokenize(&input, &filename).unwrap();
 
     let file = std::fs::File::create("a.out")?;
