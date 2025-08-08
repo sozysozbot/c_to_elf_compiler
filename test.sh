@@ -544,7 +544,14 @@ run_test 248 'struct A {int a;};int main(){const struct A *a; return 174;}' 174
 run_test 249 'struct A {int a;};int main(){const struct A const *const a; return 174;}' 174
 run_test 250 'struct A {int a;};int f(int *const b){return 0;}int main(){const struct A const *const a; return 174;}' 174
 run_test 251 'struct A {int a;};const int f(const int *const b){return 0;}int main(){const struct A const *const a; return 174;}' 174
-
+run_test 286 'int main(); int main(void){return 174;} int main(void);' 174
+run_test 306 'int main(void) {char a = 74; char *p = &a; return *p+100;} ' 174
+run_test 313 'int main(void){int p = 0; return (!p)*174; }' 174
+run_test 314 'int main(void){int *p = 0; return (!p)*174; }' 174
+run_test 315 'int main(void){int q; int *p = &q; return (1+!p)*174;}' 174
+run_test 225 'int main(){return _Alignof(int);}' 4
+run_test 226 'int main(){return _Alignof(int*);}' 8
+run_test 344 'int main(){char a[456]; return a + 3 - a; }' 3
 
 # argc and argv
 

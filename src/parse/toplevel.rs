@@ -14,8 +14,13 @@ use std::{iter::Peekable, slice::Iter};
 
 #[derive(Debug, Clone)]
 pub enum ToplevelDefOrDecl {
-    Func(FunctionDefinition),
+    FuncDef(FunctionDefinition),
     GVar(GlobalVariableDefinition),
+    FuncDecl {
+        func_name: String,
+        params: Option<Vec<Type>>,
+        return_type: Type,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -184,7 +189,7 @@ fn after_param_list(
                     .push(StatementOrDeclaration::Statement(return_void(pos)));
             }
 
-            Ok(ToplevelDefOrDecl::Func(FunctionDefinition {
+            Ok(ToplevelDefOrDecl::FuncDef(FunctionDefinition {
                 func_name: func_name.to_string(),
                 params,
                 pos,
@@ -200,12 +205,19 @@ fn after_param_list(
         } => {
             tokens.next();
             // If we reach here, it means we have a function declaration
-            /*Ok(FunctionDeclaration {
+
+            // strip the parameter names
+            let params = params.map(|p| {
+                p.into_iter()
+                    .map(|(typ, _)| typ)
+                    .collect::<Vec<_>>()
+            });
+
+            Ok(ToplevelDefOrDecl::FuncDecl {
                 func_name: func_name.to_string(),
                 params,
                 return_type,
-            })*/
-            todo!()
+            })
         }
 
         Token { pos, .. } => Err(AppError {
@@ -505,7 +517,7 @@ pub fn parse_all(
         let new_def_or_decl =
             parse_toplevel_definition(global_declarations, tokens, filename, input)?;
         match new_def_or_decl {
-            ToplevelDefOrDecl::Func(new_def) => {
+            ToplevelDefOrDecl::FuncDef(new_def) => {
                 let (name, signature) = new_def.clone().into();
                 global_declarations
                     .symbols
@@ -516,6 +528,13 @@ pub fn parse_all(
                 global_declarations
                     .symbols
                     .insert(gvar.name, SymbolDeclaration::GVar(gvar.typ));
+            }
+            ToplevelDefOrDecl::FuncDecl { func_name, params, return_type } => {
+                global_declarations.symbols.insert(func_name, SymbolDeclaration::Func(FunctionSignature {
+                    params,
+                    pos: 0,
+                    return_type,
+                }));
             }
         }
     }

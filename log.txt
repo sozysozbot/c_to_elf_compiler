@@ -2458,5 +2458,8 @@ hsjoihs「現状は関数の position が発生するたびにそれをグロー
 hsjoihs「単純に Buf にひと細工すればいいか」
 hsjoihs「とりあえず NamedHole というのを作った」
 
+$DATE「2025年8月9日」
+
 hsjoihs「ところで printf ってのもあるよな。現状使ってるのは %c %d %s %*s %.*s の 5 種類だけか。じゃあ自前で一応組めるっちゃ組める。」
 hsjoihs「とりあえずはプロトタイプ宣言。int foo(); と int foo(int a, int b); の両方が必要。」
+hsjoihs「両方実装した。」

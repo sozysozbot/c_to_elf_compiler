@@ -126,7 +126,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         )]
         .into_iter()
         .collect();
-        if let ToplevelDefOrDecl::Func(entry) = parse_toplevel_definition(
+        if let ToplevelDefOrDecl::FuncDef(entry) = parse_toplevel_definition(
             &GlobalDeclarations {
                 symbols: previous_symbol_declarations,
                 struct_names: HashMap::new(),
