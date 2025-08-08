@@ -3,7 +3,7 @@ use crate::ast::*;
 use crate::parse::toplevel::StructMember;
 use crate::parse::toplevel::TypeAndSize;
 use crate::token::*;
-use std::collections::HashSet;
+use crate::strlit_collector::StrLitCollector;
 use std::{iter::Peekable, slice::Iter};
 
 use super::combinator::recover;
@@ -13,7 +13,7 @@ use super::toplevel::SymbolDeclaration;
 use super::typ::parse_type;
 use super::typ::Type;
 fn parse_primary(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -278,7 +278,7 @@ fn arrow_expr(op_pos: usize, expr: Expr, offset: i32, typ_of_member: Type) -> Ex
 }
 
 fn parse_suffix_op(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -517,7 +517,7 @@ fn parse_suffix_op(
 }
 
 fn parse_unary(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -743,7 +743,7 @@ fn parse_unary(
 }
 
 fn parse_multiplicative(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -891,7 +891,7 @@ fn subtract_with_potential_scaling_by_sizeof(
 }
 
 fn parse_additive(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -963,7 +963,7 @@ fn parse_additive(
 }
 
 fn parse_relational(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -1041,7 +1041,7 @@ fn parse_relational(
 }
 
 fn parse_equality(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -1101,7 +1101,7 @@ fn parse_equality(
 }
 
 fn parse_logical_and(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -1140,7 +1140,7 @@ fn parse_logical_and(
 }
 
 fn parse_logical_or(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -1179,7 +1179,7 @@ fn parse_logical_or(
 }
 
 pub fn parse_expr(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,

@@ -7,4 +7,5 @@ pub mod x86_64_with_arg;
 pub mod parse;
 pub mod token;
 pub mod tokenize;
+pub mod strlit_collector;
 pub use buf::Buf;

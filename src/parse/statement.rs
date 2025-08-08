@@ -5,7 +5,7 @@ use crate::parse::context::Context;
 use crate::parse::toplevel::TypeAndSize;
 use crate::parse::typ::Type;
 use crate::token::*;
-use std::collections::HashSet;
+use crate::strlit_collector::StrLitCollector;
 use std::{iter::Peekable, slice::Iter};
 
 use super::combinator::satisfy;
@@ -23,7 +23,7 @@ fn parse_test() {
     let mut tokens = tokens.iter().peekable();
     assert_eq!(
         parse_statement(
-            &mut HashSet::new(),
+            &mut StrLitCollector::new(),
             &mut Context::new(
                 Vec::new(),
                 GlobalDeclarations {
@@ -59,7 +59,7 @@ fn parse_test() {
 }
 
 pub fn parse_statement_or_declaration(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &mut Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -157,7 +157,7 @@ pub fn return_void(pos: usize) -> Statement {
 }
 
 fn parse_statement(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     context: &mut Context,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,

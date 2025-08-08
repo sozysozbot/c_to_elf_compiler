@@ -1,9 +1,4 @@
 #![warn(clippy::pedantic)]
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::hash::Hash;
-use std::io::Write;
-
 use c_to_elf_compiler::apperror::AppError;
 use c_to_elf_compiler::codegen;
 use c_to_elf_compiler::parse::toplevel;
@@ -14,9 +9,12 @@ use c_to_elf_compiler::parse::toplevel::GlobalDeclarations;
 use c_to_elf_compiler::parse::toplevel::SymbolDeclaration;
 use c_to_elf_compiler::parse::toplevel::ToplevelDefOrDecl;
 use c_to_elf_compiler::parse::typ::Type;
+use c_to_elf_compiler::strlit_collector::StrLitCollector;
 use c_to_elf_compiler::token::Token;
 use c_to_elf_compiler::tokenize;
 use c_to_elf_compiler::Buf;
+use std::collections::HashMap;
+use std::io::Write;
 
 fn main() -> std::io::Result<()> {
     let filename = std::env::args()
@@ -94,10 +92,15 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
             .map(|(name, signature)| (name, SymbolDeclaration::Func(signature))),
     );
 
-    let mut strlit_collector: HashSet<String> = HashSet::new();
+    let mut strlit_collector: StrLitCollector = StrLitCollector::new();
 
-    let function_definitions =
-        toplevel::parse_all(&mut strlit_collector, &mut global_declarations, &mut tokens, filename, input)?;
+    let function_definitions = toplevel::parse_all(
+        &mut strlit_collector,
+        &mut global_declarations,
+        &mut tokens,
+        filename,
+        input,
+    )?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let mut buf = Buf::from(&tiny[0..0x78]);
@@ -117,7 +120,8 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
     buf.append(codegen::builtin_alloc4関数を生成());
     global_function_table.insert("__builtin_alloc4".to_string(), builtin_alloc4_pos);
 
-    let builtin_strlit_0_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
+    let builtin_strlit_0_pos =
+        u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     buf.append(codegen::builtin_strlit_n関数を生成(b"abc"));
     global_function_table.insert("__builtin_strlit_0".to_string(), builtin_strlit_0_pos);
 
@@ -131,7 +135,11 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
 
     let entry: FunctionDefinition = {
         // スタートアップ処理はここに C のソースコードとして実装
-        let tokens = tokenize::tokenize("int __start() { __builtin_populate_argc_argv; __throw main(); }", filename).unwrap();
+        let tokens = tokenize::tokenize(
+            "int __start() { __builtin_populate_argc_argv; __throw main(); }",
+            filename,
+        )
+        .unwrap();
         let mut tokens = tokens.iter().peekable();
         let previous_symbol_declarations: HashMap<String, SymbolDeclaration> = [(
             "main".to_string(),
@@ -144,7 +152,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         .into_iter()
         .collect();
         if let ToplevelDefOrDecl::FuncDef(entry) = parse_toplevel_definition(
-            &mut HashSet::new(), // should not collect string literals in startup code
+            &mut strlit_collector,
             &GlobalDeclarations {
                 symbols: previous_symbol_declarations,
                 struct_names: HashMap::new(),

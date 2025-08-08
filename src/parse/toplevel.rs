@@ -10,7 +10,7 @@ use crate::parse::context::Context;
 use crate::parse::statement::return_void;
 use crate::token::*;
 use std::collections::HashMap;
-use std::collections::HashSet;
+use crate::strlit_collector::StrLitCollector;
 use std::{iter::Peekable, slice::Iter};
 
 #[derive(Debug, Clone)]
@@ -95,7 +95,7 @@ pub struct TypeAndSize {
 
 #[allow(clippy::too_many_arguments)]
 fn after_param_list(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     previous_global_declarations: &GlobalDeclarations,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -233,7 +233,7 @@ fn after_param_list(
 }
 
 pub fn parse_toplevel_definition(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     previous_declarations: &GlobalDeclarations,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -480,7 +480,7 @@ pub fn parse_toplevel_struct_definition(
 }
 
 pub fn parse_all(
-    strlit_collector: &mut HashSet<String>,
+    strlit_collector: &mut StrLitCollector,
     global_declarations: &mut GlobalDeclarations,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
