@@ -2513,3 +2513,22 @@ $source
 ```
 
 hsjoihs「よし、文字列リテラルができた！」
+hsjoihs「次はエスケープシーケンス付きの文字列リテラルを実装する。つまりトークナイザに手を入れる」
+hsjoihs「できた。テストケースを追加。」
+
+$source
+```
+[PASS] int main() { const char *s = "abc"; return s[0]; } => 97
+[PASS] int main() { return sizeof("abc"); } => 4
+[PASS] int main() { const char *s = "abc"; return s[1]; } => 98
+[PASS] int main() { const char *s = "abc"; return s[3]; } => 0
+[PASS] int main() { const char *s = "abc"; return s[2]; } => 99
+[PASS] int main() { const char *s = "!"; return s[0]; } => 33
+[PASS] int main() { const char *s = "\""; return s[0]; } => 34
+[PASS] int main() { const char *s = "\n"; return s[0]; } => 10
+[PASS] int main() { return sizeof("\na"); } => 3
+[PASS] int main() { const char *s = "\'"; return s[0]; } => 39
+[PASS] int main() { const char *s = "\\"; return s[0]; } => 92
+```
+
+hsjoihs「よ～しよしよし」

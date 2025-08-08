@@ -39,7 +39,31 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     if c == '"' {
                         break;
                     } else if c == '\\' {
-                        panic!("エスケープシーケンスは未対応です");
+                        // escape sequence
+                        match iter.next() {
+                            Some((_, 'n')) => string_content.push('\n'),
+                            Some((_, '"')) => string_content.push('"'),
+                            Some((_, '\'')) => string_content.push('\''),
+                            Some((_, '\\')) => string_content.push('\\'),
+                            Some((_, c)) => {
+                                return Err(AppError {
+                                    message: format!(
+                                        "文字列リテラルのエスケープシーケンス '\\{c}' は未対応です",
+                                    ),
+                                    input: input.to_string(),
+                                    filename: filename.to_string(),
+                                    pos,
+                                });
+                            }
+                            None => {
+                                return Err(AppError {
+                                    message: "文字列リテラルが終了する前にEOFが来ました".to_string(),
+                                    input: input.to_string(),
+                                    filename: filename.to_string(),
+                                    pos,
+                                });
+                            }
+                        }
                     } else {
                         string_content.push(c);
                     }

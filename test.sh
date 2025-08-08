@@ -565,6 +565,11 @@ check 98 "int main() { const char *s = \"abc\"; return s[1]; }"
 check 99 "int main() { const char *s = \"abc\"; return s[2]; }"
 check 0 "int main() { const char *s = \"abc\"; return s[3]; }"
 check 33 "int main() { const char *s = \"!\"; return s[0]; }"
+check 10 "int main() { const char *s = \"\\n\"; return s[0]; }"
+check 34 "int main() { const char *s = \"\\\"\"; return s[0]; }"
+check 39 "int main() { const char *s = \"\\'\"; return s[0]; }"
+check 92 "int main() { const char *s = \"\\\\\"; return s[0]; }"
+check 3 "int main() { return sizeof(\"\\na\"); }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then
