@@ -6,6 +6,7 @@ pub enum BinaryOp {
     Sub,
     Mul,
     Div,
+    Remainder,
     LessThan,
     LessThanOrEqual,
     Equal,

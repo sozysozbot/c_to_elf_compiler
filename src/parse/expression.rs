@@ -815,6 +815,27 @@ fn parse_multiplicative(
                     typ: Type::Int,
                 };
             }
+            Some(Token {
+                tok: Tok::Percent,
+                pos: op_pos,
+            }) => {
+                tokens.next();
+                let 左辺 = decay_if_arr(expr);
+                let 右辺 = decay_if_arr(parse_unary(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
+                expr = Expr::BinaryExpr {
+                    op: BinaryOp::Remainder,
+                    op_pos: *op_pos,
+                    左辺,
+                    右辺,
+                    typ: Type::Int,
+                };
+            }
 
             _ => {
                 return Ok(expr);

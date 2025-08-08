@@ -2591,3 +2591,107 @@ $source
 ```
 
 hsjoihs「よ～し。」
+
+hsjoihs「この調子で、1 引数または 2 引数の printf を突っ込んで step 1 をクリアしよう」
+
+$source
+```c
+int printf(const char *fmt, void *arg1) {
+    while (*fmt) {
+        if (*fmt == '%') {
+            fmt++;
+            if (*fmt == 'd') {
+                fmt++;
+                void *arg = &arg1;
+                int *p = arg;
+                int n = *p;
+                // convert to decimal string
+                char buf[20];
+                int i = 0;
+                if (n < 0) {
+                    __builtin_putchar('-');
+                    n = -n;
+                }
+                buf[i++] = '0' + n % 10;
+                n /= 10;
+                while (n) {
+                    buf[i++] = '0' + n % 10;
+                    n /= 10;
+                }
+                while (i) {
+                    __builtin_putchar(buf[--i]);
+                }
+            }
+        } else {
+            __builtin_putchar(*fmt);
+        }
+        fmt++;
+    }
+    return 0;
+}
+```
+
+hsjoihs「こんなもんだろう。」
+hsjoihs「おっと！　剰余演算子が無い。作るか。作った。n /= 10; とか書いてしまってたのを n = n / 10; に置き換えると…？」
+
+$source
+```
+[PASS] int atoi(); int main() { return atoi("123"); } => 123
+[FAIL] int printf(); int main() { return printf("a%dbc", 123); } => a123bc expected, but got a123c
+[PASS] int printf(); int main() { return printf("a"); } => stdout: a
+[PASS] int printf(); int main() { return printf("a"); } => 0
+```
+
+hsjoihs「あ～～トークンを喰いすぎているから 1 文字欠けてる」
+Kory「『トークンを喰いすぎ』、LLM の話かと思った」
+KOBA789「こちらもちょうど『こちらの Claude もトークンを喰いすぎています』とか言おうと思った」
+hsjoihs「ということで、実装を直して、」
+
+$source
+```c
+int printf(const char *fmt, void *arg1) {
+    while (*fmt) {
+        if (*fmt == '%') {
+            fmt++;
+            if (*fmt == 'd') {
+                void *arg = &arg1;
+                int *p = arg;
+                int n = *p;
+                // convert to decimal string
+                char buf[20];
+                int i = 0;
+                if (n < 0) {
+                    __builtin_putchar('-');
+                    n = -n;
+                }
+                buf[i++] = '0' + n % 10;
+                n = n / 10;
+                while (n) {
+                    buf[i++] = '0' + n % 10;
+                    n = n / 10;
+                }
+                while (i) {
+                    __builtin_putchar(buf[--i]);
+                }
+            }
+        } else {
+            __builtin_putchar(*fmt);
+        }
+        fmt++;
+    }
+    return 0;
+}
+```
+
+$source
+```
+[PASS] int atoi(); int main() { return atoi("123"); } => 123
+[PASS] int main() { const char *s = "\'"; return s[0]; } => 39
+[PASS] int main() { const char *s = "\\"; return s[0]; } => 92
+[PASS] int printf(); int main() { return printf("a"); } => stdout: a
+[PASS] int printf(); int main() { return printf("a"); } => 0
+[PASS] int printf(); int main() { return printf("a%dbc", 123); } => stdout: a123bc
+[PASS] int printf(); int main() { return printf("a%dbc", 123); } => 0
+```
+
+hsjoihs「よ～～～し printf が動いていると主張できる。」

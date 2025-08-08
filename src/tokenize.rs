@@ -146,6 +146,13 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     pos,
                 });
             }
+            '%' => {
+                iter.next();
+                ans.push(Token {
+                    tok: Tok::Percent,
+                    pos,
+                });
+            }
             '.' => {
                 iter.next();
                 ans.push(Token { tok: Tok::Dot, pos });

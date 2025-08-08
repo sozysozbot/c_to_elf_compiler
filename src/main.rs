@@ -36,6 +36,39 @@ int atoi(const char *s) {
     }
     return n;
 }
+
+int printf(const char *fmt, void *arg1) {
+    while (*fmt) {
+        if (*fmt == '%') {
+            fmt++;
+            if (*fmt == 'd') {
+                void *arg = &arg1;
+                int *p = arg;
+                int n = *p;
+                // convert to decimal string
+                char buf[20];
+                int i = 0;
+                if (n < 0) {
+                    __builtin_putchar('-');
+                    n = -n;
+                }
+                buf[i++] = '0' + n % 10;
+                n = n / 10;
+                while (n) {
+                    buf[i++] = '0' + n % 10;
+                    n = n / 10;
+                }
+                while (i) {
+                    __builtin_putchar(buf[--i]);
+                }
+            }
+        } else {
+            __builtin_putchar(*fmt);
+        }
+        fmt++;
+    }
+    return 0;
+}
     ",
     );
 

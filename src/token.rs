@@ -45,7 +45,8 @@ pub enum Tok {
     LogicalOr,
     Void,
     Const,
-    BuiltinPopulateArgcArgv
+    BuiltinPopulateArgcArgv,
+    Percent,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

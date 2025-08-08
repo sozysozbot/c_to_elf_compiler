@@ -742,6 +742,33 @@ impl<'a> FunctionGen<'a> {
                 buf.append(rdiへとポップ());
             }
             Expr::BinaryExpr {
+                op: BinaryOp::Remainder,
+                op_pos: _,
+                左辺,
+                右辺,
+                typ: _,
+            } => {
+                self.exprを評価してediレジスタへ(buf, 左辺);
+                buf.append(rdiをプッシュ());
+                self.stack_size += WORD_SIZE_AS_U32;
+                self.exprを評価してediレジスタへ(buf, 右辺);
+                buf.append(rdiをプッシュ());
+                self.stack_size += WORD_SIZE_AS_U32;
+
+                // 右辺を edi に、左辺を eax に入れる必要がある
+                buf.append(rdiへとポップ());
+                self.stack_size -= WORD_SIZE_AS_U32;
+                buf.append(raxへとポップ());
+                self.stack_size -= WORD_SIZE_AS_U32;
+
+                buf.append(eaxの符号ビットをedxへ拡張());
+                buf.append(edx_eaxをediで割る_商はeaxに_余りはedxに());
+
+                // 結果は edx レジスタに入るので、ediに移し替える
+                buf.append(rdxをプッシュ());
+                buf.append(rdiへとポップ());
+            }
+            Expr::BinaryExpr {
                 op: BinaryOp::Equal,
                 op_pos: _,
                 左辺,

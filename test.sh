@@ -581,6 +581,10 @@ check 3 "int main() { return sizeof(\"\\na\"); }"
 # atoi
 check 123 "int atoi(); int main() { return atoi(\"123\"); }"
 
+# printf
+check 0 "int printf(); int main() { return printf(\"a\"); }" "a"
+check 0 "int printf(); int main() { return printf(\"a%dbc\", 123); }" "a123bc"
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"
