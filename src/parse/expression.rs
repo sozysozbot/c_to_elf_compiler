@@ -36,25 +36,16 @@ fn parse_primary(
             tok: Tok::StringLiteral(val),
             pos,
         } => {
-            if val == "abc" {
-                // ビルトイン関数 __builtin_strlit_0 を呼び出す
-                return Ok(Expr::Call {
-                    ident: "__builtin_strlit_0".to_string(),
-                    args: Vec::new(),
-                    pos: *pos,
-                    typ: Type::Arr(Box::new(Type::Char), 4),
-                });
-            }
-
             let id = strlit_collector.insert_and_get_id(val.clone());
 
-            let expr = Expr::StringLiteral {
-                val: val.clone(),
+            // ビルトイン関数 __builtin_strlit_{id} を呼び出す
+            Ok(Expr::Call {
+                ident: format!("__builtin_strlit_{id}"),
+                args: Vec::new(),
                 pos: *pos,
-                id,
-                typ: Type::Arr(Box::new(Type::Char), (val.len() + 1).try_into().unwrap()),
-            };
-            Ok(expr)
+                typ: Type::Arr(Box::new(Type::Char), (val.len() + 1) as i32),
+            })
+
         }
         Token {
             tok: Tok::Identifier(ident),

@@ -2499,3 +2499,17 @@ hsjoihs「そうしたら、今度は因果の矢を逆転させて、『ソー�
 hsjoihs「とりあえず、文字列リテラルを集めるだけ集める strlit_collector という引数をあちこちにばらまいたが、実はこれ集めるだけじゃなくて ID も振った方がいいな」
 hsjoihs「文字列リテラルを集めるたびに ID を配る。これを引換券として後で __builtin_strlit_n() への呼び出しをしてもらう目論見」
 hsjoihs「__builtin_strlit_n の形の名前の関数を型解決しようとする場合は strlit_collector を読みに行くようにする。これにより、シグネチャを事前登録したりする必要が無い」
+hsjoihs「こうすれば一般の文字列リテラルが……あれ？『関数の戻り値の型のサイズがよろしくない』と言われた」
+hsjoihs「ああそうか、char 配列が関数の戻り値として返ってきている関係による不都合か。この場合は特別扱いで見逃すということにすると、」
+
+$source
+```
+[PASS] int main() { const char *s = "abc"; return s[0]; } => 97
+[PASS] int main() { return sizeof("abc"); } => 4
+[PASS] int main() { const char *s = "abc"; return s[1]; } => 98
+[PASS] int main() { const char *s = "!"; return s[0]; } => 33
+[PASS] int main() { const char *s = "abc"; return s[3]; } => 0
+[PASS] int main() { const char *s = "abc"; return s[2]; } => 99
+```
+
+hsjoihs「よし、文字列リテラルができた！」

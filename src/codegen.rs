@@ -119,8 +119,8 @@ pub fn builtin_strlit_n関数を生成(str_without_null_terminator: &[u8]) -> Bu
         .join(rdiにraxを足し合わせる()) // rdi: br + str_size
         .join(eaxに即値をセット(12)) // rax: 12(sys_brk), rdi: br + str_size
         .join(syscall()); // rax: br + str_size
-                         
-    // insert null terminator                      
+
+    // insert null terminator
     buf.append(raxから即値を引く(1)); // rax: br + str_size - 1
     buf.append(ediに代入(0)); // edi: 0
     buf.append(raxが指す位置にdilを代入()); // *(br + str_size - 1) = 0;
@@ -804,14 +804,7 @@ impl<'a> FunctionGen<'a> {
             } => {
                 buf.append(ediに代入(*val as u32));
             }
-            Expr::StringLiteral {
-                val: _,
-                pos: _,
-                typ: _,
-                id: _,
-            } => {
-                unimplemented!("文字列リテラルを値として扱うのは未実装です（必ず sizeof のオペランドにしてください）");
-            }
+
             Expr::Call {
                 ident,
                 args,
@@ -870,11 +863,17 @@ impl<'a> FunctionGen<'a> {
 
                 buf.append(eaxに即値をセット(function + 0x00400000));
                 buf.append(call_rax());
-                match return_type.sizeof_primitive("g") {
-                    8 => buf.append(raxをrdiにコピー()),
-                    4 => buf.append(eaxをediにコピー()),
-                    1 => buf.append(alをediに符号拡張してmov()),
-                    _ => panic!("関数の戻り値の型のサイズがよろしくない"),
+
+                if let Type::Arr { .. } = return_type {
+                    // これは「文字列リテラルを返すビルトイン関数」でしか起きない
+                    buf.append(raxをrdiにコピー());
+                } else {
+                    match return_type.sizeof_primitive("g") {
+                        8 => buf.append(raxをrdiにコピー()),
+                        4 => buf.append(eaxをediにコピー()),
+                        1 => buf.append(alをediに符号拡張してmov()),
+                        _ => panic!("関数の戻り値の型のサイズがよろしくない"),
+                    }
                 }
 
                 buf.append(rspに即値を足す(stack_size_adjustment as i32).to_vec());

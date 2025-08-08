@@ -564,6 +564,7 @@ check 97 "int main() { const char *s = \"abc\"; return s[0]; }"
 check 98 "int main() { const char *s = \"abc\"; return s[1]; }"
 check 99 "int main() { const char *s = \"abc\"; return s[2]; }"
 check 0 "int main() { const char *s = \"abc\"; return s[3]; }"
+check 33 "int main() { const char *s = \"!\"; return s[0]; }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then

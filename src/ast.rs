@@ -42,12 +42,6 @@ pub enum Expr {
         pos: usize,
         typ: Type,
     },
-    StringLiteral {
-        val: String,
-        pos: usize,
-        typ: Type,
-        id: usize, // ID for the string literal in the constant pool
-    },
     Identifier {
         ident: String,
         pos: usize,
@@ -98,7 +92,6 @@ impl Expr {
         match self {
             Expr::BinaryExpr { typ, .. }
             | Expr::Numeric { typ, .. }
-            | Expr::StringLiteral { typ, .. }
             | Expr::Identifier { typ, .. }
             | Expr::Call { typ, .. }
             | Expr::DecayedArr { typ, .. }

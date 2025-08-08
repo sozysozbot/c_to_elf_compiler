@@ -114,10 +114,12 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
     buf.append(codegen::builtin_alloc4関数を生成());
     global_function_table.insert("__builtin_alloc4".to_string(), builtin_alloc4_pos);
 
-    let builtin_strlit_0_pos =
-        u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
-    buf.append(codegen::builtin_strlit_n関数を生成(b"abc"));
-    global_function_table.insert("__builtin_strlit_0".to_string(), builtin_strlit_0_pos);
+    let strlit_constant_pool = strlit_collector.to_pool();
+    for (id, string) in strlit_constant_pool.iter().enumerate() {
+        let pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
+        buf.append(codegen::builtin_strlit_n関数を生成(string.as_bytes()));
+        global_function_table.insert(format!("__builtin_strlit_{id}"), pos);
+    }
 
     for definition in function_definitions {
         codegen::関数をコード生成しメインバッファとグローバル関数テーブルに挿入(

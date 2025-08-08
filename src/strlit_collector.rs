@@ -6,12 +6,21 @@ pub struct StrLitCollector {
 }
 
 impl StrLitCollector {
+    pub fn to_pool(self) -> Vec<String> {
+        let mut pool: Vec<String> = vec![];        
+        for (s, &i) in &self.constant_pool_indices {
+            if i >= pool.len() {
+                pool.resize(i + 1, String::new());
+            }
+            pool[i] = s.clone();
+        }
+        pool
+    } 
+
     pub fn new() -> Self {
-        let mut constant_pool_indices = HashMap::new();
-        constant_pool_indices.insert("abc".to_string(), 0);
-        StrLitCollector {
-            constant_pool_indices,
-            next_index: 1,
+        Self {
+            constant_pool_indices: HashMap::new(),
+            next_index: 0,
         }
     }
 
