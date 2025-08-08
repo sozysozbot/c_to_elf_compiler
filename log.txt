@@ -2440,3 +2440,13 @@ lea rsi, QWORD PTR [rsp+0x8]
 ```
 
 hsjoihs「を吐くという処理を実装。さてこれで main に引数が渡ってくれるかな？」
+
+$source
+```sh
+# argc and argv
+
+check 2 "int main(int argc, char **argv) { return argc; }" "" "abc"
+check 101 "int main(int argc, char **argv) { return argc + argv[1][2]; }" "" "abc"
+```
+
+hsjoihs「これでちゃんとコマンドライン引数が渡っている。OK。」

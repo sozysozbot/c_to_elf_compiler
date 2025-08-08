@@ -12,29 +12,42 @@ check_inner() {
   input="$2"
   set +u
   stdout_expected="$3"
+
+  args=("${@:4}")  # everything from the 4th argument onward
   set -u
+
+  # Build suffix if args exist
+  if [ "${#args[@]}" -gt 0 ]; then
+      args_str=" [args:"
+      for a in "${args[@]}"; do
+          args_str+=" $(printf %q "$a")"
+      done
+      args_str+="]"
+  else
+      args_str=""
+  fi
 
   (cd $TMPDIR && ../../target/debug/c_to_elf_compiler <(echo "$input"))
   chmod 755 $TMPDIR/a.out
   set +e
-  stdout_actual=$(./run-on-linux.sh $TMPDIR/a.out)
+  stdout_actual=$("$TMPDIR/a.out" "${args[@]}")
   actual="$?"
   set -e
   
   if [ "$actual" != "$expected" ]; then
-    printf "\033[31m[FAIL]\033[m %s => %s expected, but got %s\n" "$input" "$expected" "$actual"
+    printf "\033[31m[FAIL]\033[m %s%s => %s expected, but got %s\n" "$input" "$args_str" "$expected" "$actual"
     exit 1
   fi
 
   if [ "$stdout_expected" != "" ]; then
     if [ "$stdout_expected" != "$stdout_actual" ]; then
-      printf "\033[31m[FAIL]\033[m %s => %s expected, but got %s\n" "$input" "$stdout_expected" "$stdout_actual"
+      printf "\033[31m[FAIL]\033[m %s%s => %s expected, but got %s\n" "$input" "$args_str" "$stdout_expected" "$stdout_actual"
       exit 1
     fi
-    printf "\033[32m[PASS]\033[m %s => \033[32mstdout:\033[m %s\n" "$input" "$stdout_actual"
+    printf "\033[32m[PASS]\033[m %s%s => \033[32mstdout:\033[m %s\n" "$input" "$args_str" "$stdout_actual"
   fi
 
-  printf "\033[32m[PASS]\033[m %s => %s\n" "$input" "$actual"
+  printf "\033[32m[PASS]\033[m %s%s => %s\n" "$input" "$args_str" "$actual"
   rm -rf $TMPDIR
 }
 
@@ -531,6 +544,12 @@ run_test 248 'struct A {int a;};int main(){const struct A *a; return 174;}' 174
 run_test 249 'struct A {int a;};int main(){const struct A const *const a; return 174;}' 174
 run_test 250 'struct A {int a;};int f(int *const b){return 0;}int main(){const struct A const *const a; return 174;}' 174
 run_test 251 'struct A {int a;};const int f(const int *const b){return 0;}int main(){const struct A const *const a; return 174;}' 174
+
+
+# argc and argv
+
+check 2 "int main(int argc, char **argv) { return argc; }" "" "abc"
+check 101 "int main(int argc, char **argv) { return argc + argv[1][2]; }" "" "abc"
 
 
 wait_jobs

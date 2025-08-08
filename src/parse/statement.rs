@@ -197,12 +197,12 @@ fn parse_statement(
                 return Ok(Statement::BuiltinPopulateArgcArgv { pos });
             }
 
-            return Err(AppError {
+            Err(AppError {
                 message: "期待されたセミコロンが来ませんでした".to_string(),
                 input: input.to_string(),
                 filename: filename.to_string(),
                 pos,
-            });
+            })
         }
         Token {
             tok: Tok::Return, ..
