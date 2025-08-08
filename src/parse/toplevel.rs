@@ -27,15 +27,15 @@ pub struct GlobalVariableDefinition {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct StructDefinition {
     pub struct_name: String,
-    pub size: u8,
-    pub align: u8,
+    pub size: i32,
+    pub align: i32,
     pub members: HashMap<String, StructMember>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct StructMember {
     pub member_type: Type,
-    pub offset: u8,
+    pub offset: i32,
 }
 
 #[derive(Debug, Clone)]
@@ -83,7 +83,7 @@ pub struct GlobalDeclarations {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TypeAndSize {
     pub typ: Type,
-    pub size: u8,
+    pub size: i32,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -369,7 +369,7 @@ pub fn parse(
 
                     let mut members = HashMap::new();
                     let mut overall_alignment = 1;
-                    let mut next_member_offset = 0;
+                    let mut next_member_offset: i32 = 0;
 
                     loop {
                         match tokens.peek() {
@@ -453,7 +453,7 @@ pub fn parse(
                         struct_name.clone(),
                         StructDefinition {
                             struct_name: struct_name.clone(),
-                            size: next_member_offset.div_ceil(overall_alignment)
+                            size: (next_member_offset as u32).div_ceil(overall_alignment as u32) as i32
                                 * overall_alignment,
                             align: overall_alignment,
                             members,

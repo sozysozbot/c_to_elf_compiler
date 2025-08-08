@@ -1,6 +1,6 @@
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Tok {
-    Num(u8),
+    Num(i32),
     Add,
     Sub,
     Asterisk,

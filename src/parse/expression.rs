@@ -244,7 +244,7 @@ fn search_struct_member<'a>(
     Ok(member)
 }
 
-fn arrow_expr(op_pos: usize, expr: Expr, offset: u8, typ_of_member: Type) -> Expr {
+fn arrow_expr(op_pos: usize, expr: Expr, offset: i32, typ_of_member: Type) -> Expr {
     Expr::UnaryExpr {
         op: UnaryOp::Deref,
         op_pos,

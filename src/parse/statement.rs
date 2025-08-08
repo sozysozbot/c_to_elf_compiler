@@ -508,7 +508,7 @@ fn consume_num(
     filename: &str,
     input: &str,
     msg: &str,
-) -> Result<u8, AppError> {
+) -> Result<i32, AppError> {
     match tokens.peek().unwrap() {
         Token {
             tok: Tok::Num(n), ..

@@ -34,7 +34,7 @@ pub enum Expr {
         typ: Type,
     },
     Numeric {
-        val: u8,
+        val: i32,
         pos: usize,
         typ: Type,
     },

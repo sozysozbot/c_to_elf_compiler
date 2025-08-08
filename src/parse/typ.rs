@@ -11,7 +11,7 @@ pub enum Type {
     Int,
     Char,
     Ptr(Box<Type>),
-    Arr(Box<Type>, u8),
+    Arr(Box<Type>, i32),
     Struct { struct_name: String },
     Void,
 }
@@ -24,7 +24,7 @@ impl Type {
         }
     }
 
-    pub fn sizeof_primitive(&self, msg: &str) -> u8 {
+    pub fn sizeof_primitive(&self, msg: &str) -> i32 {
         match self {
             Type::Int => 4,
             Type::Char => 1,
@@ -37,7 +37,7 @@ impl Type {
         }
     }
 
-    pub fn sizeof(&self, struct_def_table: &HashMap<String, StructDefinition>) -> u8 {
+    pub fn sizeof(&self, struct_def_table: &HashMap<String, StructDefinition>) -> i32 {
         match self {
             Type::Int => 4,
             Type::Char => 1,
@@ -46,7 +46,7 @@ impl Type {
             Type::Arr(t, len) => t
                 .sizeof(struct_def_table)
                 .checked_mul(*len)
-                .expect("型のサイズが u8 に収まりません"),
+                .expect("型のサイズが i32 に収まりません"),
             Type::Struct { struct_name } => struct_def_table.get(struct_name).map_or_else(
                 || {
                     panic!("構造体 {struct_name} の定義が見つかりません");
@@ -56,7 +56,7 @@ impl Type {
         }
     }
 
-    pub fn alignof(&self, struct_def_table: &HashMap<String, StructDefinition>) -> u8 {
+    pub fn alignof(&self, struct_def_table: &HashMap<String, StructDefinition>) -> i32 {
         match self {
             Type::Int => 4,
             Type::Char => 1,

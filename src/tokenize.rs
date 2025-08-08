@@ -362,7 +362,7 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                         }
 
                         ans.push(Token {
-                            tok: Tok::Num(charcode as u8),
+                            tok: Tok::Num(charcode as i32),
                             pos,
                         });
                         expect_end_of_char_lit(input, filename, pos, &mut iter)?;
@@ -377,15 +377,20 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     }
                 }
             }
-            '0'..='9' => ans.push(Token {
-                tok: Tok::Num(parse_num(&mut iter).map_err(|message| AppError {
-                    message,
-                    input: input.to_string(),
-                    filename: filename.to_string(),
+            '0'..='9' => {
+                let num = parse_num(&mut iter);
+
+                let new_tok = Token {
+                    tok: Tok::Num(num.map_err(|message| AppError {
+                        message,
+                        input: input.to_string(),
+                        filename: filename.to_string(),
+                        pos,
+                    })?),
                     pos,
-                })?),
-                pos,
-            }),
+                };
+                ans.push(new_tok);
+            }
             ',' => {
                 iter.next();
                 ans.push(Token {
@@ -472,7 +477,7 @@ fn expect_end_of_char_lit(
 
 fn parse_num(
     iter: &mut std::iter::Peekable<impl Iterator<Item = (usize, char)>>,
-) -> Result<u8, String> {
+) -> Result<i32, String> {
     let mut s = String::new();
 
     while let Some(&(_, c)) = iter.peek() {
@@ -484,6 +489,6 @@ fn parse_num(
         }
     }
 
-    s.parse::<u8>()
-        .map_err(|_| "入力が符号なし8bit整数ではありません".to_string())
+    s.parse::<i32>()
+        .map_err(|_| "入力が i32 に収まりません".to_string())
 }

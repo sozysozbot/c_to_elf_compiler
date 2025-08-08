@@ -11,6 +11,7 @@ use std::collections::HashMap;
 const WORD_SIZE: u8 = 8;
 const WORD_SIZE_AS_I8: i8 = WORD_SIZE as i8;
 const WORD_SIZE_AS_U32: u32 = WORD_SIZE as u32;
+const WORD_SIZE_AS_I32: i32 = WORD_SIZE as i32;
 
 
 pub fn builtin_three関数を生成() -> Buf {
@@ -19,7 +20,7 @@ pub fn builtin_three関数を生成() -> Buf {
 
 
 pub fn builtin_putchar関数を生成() -> Buf {
-    プロローグ(WORD_SIZE)
+    プロローグ(WORD_SIZE_AS_I32)
         .join(rbpにoffsetを足した位置にediを代入(
             -WORD_SIZE_AS_I8,
         ))
@@ -49,7 +50,7 @@ pub fn builtin_putchar関数を生成() -> Buf {
  * }
  */
 pub fn builtin_alloc4関数を生成() -> Buf {
-    プロローグ(WORD_SIZE * 4)
+    プロローグ(WORD_SIZE_AS_I32 * 4)
         .join(rbpにoffsetを足した位置にediを代入(
             -WORD_SIZE_AS_I8, // a
         ))
@@ -107,17 +108,17 @@ pub fn builtin_alloc4関数を生成() -> Buf {
 }
 
 pub struct LocalVarTable {
-    pub offsets: Vec<(String, u64, u8)>,
-    pub max_offset: u8,
+    pub offsets: Vec<(String, u64, i32)>,
+    pub max_offset: i32,
 }
 
 impl LocalVarTable {
-    pub fn allocate(&mut self, ident: &str, id: u64, size: u8) -> u8 {
-        let size = size.div_ceil(WORD_SIZE) * WORD_SIZE;
+    pub fn allocate(&mut self, ident: &str, id: u64, size: i32) -> i32 {
+        let size = ((size as u32).div_ceil(WORD_SIZE_AS_U32) * WORD_SIZE_AS_U32) as i32;
         let offset = self
             .max_offset
             .checked_add(size)
-            .expect("オフセットが u8 に収まりません");
+            .expect("オフセットが i32 に収まりません");
         self.max_offset = offset;
         self.offsets.push((ident.to_owned(), id, offset));
         offset
@@ -152,7 +153,7 @@ impl<'a> FunctionGen<'a> {
                     .filter(|(i, _, _)| i == &ident.to_owned())
                     .collect::<Vec<_>>();
 
-                let offset = self
+                let offset: i32 = self
                     .local_var_table
                     .offsets
                     .iter()
@@ -735,7 +736,7 @@ impl<'a> FunctionGen<'a> {
                 pos: _,
                 typ: _,
             } => {
-                buf.append(ediに代入(*val));
+                buf.append(ediに代入(*val as u32));
             }
             Expr::StringLiteral {
                 val: _,
@@ -759,7 +760,7 @@ impl<'a> FunctionGen<'a> {
 
                 let stack_size_adjustment =
                     self.stack_size + WORD_SIZE_AS_U32 * stack_args_len as u32 % 16;
-                buf.append(rspから即値を引く(stack_size_adjustment as u8).to_vec());
+                buf.append(rspから即値を引く(stack_size_adjustment as i32).to_vec());
                 self.stack_size += stack_size_adjustment;
 
                 // 引数の評価順序変わるけど未規定のはずなのでよし
@@ -803,7 +804,7 @@ impl<'a> FunctionGen<'a> {
                 buf.append(eaxに即値をセット(function + 0x00400000));
                 buf.append(call_rax());
                 buf.append(eaxをediにmov());
-                buf.append(rspに即値を足す(stack_size_adjustment as u8).to_vec());
+                buf.append(rspに即値を足す(stack_size_adjustment as i32).to_vec());
                 self.stack_size -= stack_size_adjustment;
             }
             Expr::UnaryExpr {
@@ -988,8 +989,8 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         .fold(parameter_buf, Buf::join);
 
     main_buf.append(rspから即値を引く(
-        u8::try_from(function_gen.local_var_table.max_offset as usize)
-            .expect("ローカル変数のオフセットが u8 に収まりません"),
+        i32::try_from(function_gen.local_var_table.max_offset as usize)
+            .expect("ローカル変数のオフセットが i32 に収まりません"),
     ));
     main_buf.append(content_buf);
 

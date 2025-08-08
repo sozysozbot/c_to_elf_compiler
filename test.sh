@@ -510,7 +510,7 @@ run_test 119 'int main(){int a[1]; *(a+0)=2;return 174;}' 174
 
 run_test 123 'int main(){int a[1][2];int *q;q = *a;return 174;}' 174
 run_test 124 'int main(){int a[1][2];int *q;q = *a; *q=174; return **a;}' 174
-# run_test 125 'int main(){int a[86][2];int *q;q = *(a+1); *q=174; return **(a+1);}' 174
+run_test 125 'int main(){int a[86][2];int *q;q = *(a+1); *q=174; return **(a+1);}' 174
 run_test 126 'int main(){int a[5][6];int *q;q = *(a+1); *(2+q)=174; return *(*(1+a)+2);}' 174
 
 # run_test 101 'int *foo(int *p){*p = 4;return p;} int main(){int x;int *y;y = foo(&x); *y+= 170;return x;}' 174
