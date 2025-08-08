@@ -2,6 +2,8 @@ pub mod apperror;
 pub mod ast;
 mod buf;
 pub mod codegen;
+pub mod x86_64_no_arg;
+pub mod x86_64_with_arg;
 pub mod parse;
 pub mod token;
 pub mod tokenize;
