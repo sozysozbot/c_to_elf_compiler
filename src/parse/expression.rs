@@ -2,8 +2,8 @@ use crate::apperror::*;
 use crate::ast::*;
 use crate::parse::toplevel::StructMember;
 use crate::parse::toplevel::TypeAndSize;
-use crate::token::*;
 use crate::strlit_collector::StrLitCollector;
+use crate::token::*;
 use std::{iter::Peekable, slice::Iter};
 
 use super::combinator::recover;
@@ -45,11 +45,12 @@ fn parse_primary(
                 });
             }
 
-            strlit_collector.insert(val.clone());
+            let id = strlit_collector.insert_and_get_id(val.clone());
 
             let expr = Expr::StringLiteral {
                 val: val.clone(),
                 pos: *pos,
+                id,
                 typ: Type::Arr(Box::new(Type::Char), (val.len() + 1).try_into().unwrap()),
             };
             Ok(expr)
@@ -979,7 +980,13 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(strlit_collector, context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_additive(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThan,
                     op_pos: *op_pos,
@@ -994,7 +1001,13 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(strlit_collector, context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_additive(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThanOrEqual,
                     op_pos: *op_pos,
@@ -1009,7 +1022,13 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(strlit_collector, context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_additive(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThan, // ここを逆転させ、
                     op_pos: *op_pos,
@@ -1024,7 +1043,13 @@ fn parse_relational(
             } => {
                 tokens.next();
                 let 左辺 = decay_if_arr(expr);
-                let 右辺 = decay_if_arr(parse_additive(strlit_collector, context, tokens, filename, input)?);
+                let 右辺 = decay_if_arr(parse_additive(
+                    strlit_collector,
+                    context,
+                    tokens,
+                    filename,
+                    input,
+                )?);
                 expr = Expr::BinaryExpr {
                     op: BinaryOp::LessThanOrEqual, // ここを逆転させ、
                     op_pos: *op_pos,
@@ -1194,7 +1219,13 @@ pub fn parse_expr(
         } => {
             tokens.next();
             let 左辺 = decay_if_arr(expr);
-            let 右辺 = decay_if_arr(parse_expr(strlit_collector, context, tokens, filename, input)?);
+            let 右辺 = decay_if_arr(parse_expr(
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
+            )?);
 
             // special case for assigning 0 to a pointer
             if let Type::Ptr(_) = 左辺.typ() {
@@ -1222,7 +1253,13 @@ pub fn parse_expr(
         } => {
             tokens.next();
             let 左辺 = decay_if_arr(expr);
-            let 右辺 = decay_if_arr(parse_expr(strlit_collector, context, tokens, filename, input)?);
+            let 右辺 = decay_if_arr(parse_expr(
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
+            )?);
 
             Ok(add_assign_with_potential_scaling(
                 context, *op_pos, 左辺, 右辺,
@@ -1234,7 +1271,13 @@ pub fn parse_expr(
         } => {
             tokens.next();
             let 左辺 = decay_if_arr(expr);
-            let 右辺 = decay_if_arr(parse_expr(strlit_collector, context, tokens, filename, input)?);
+            let 右辺 = decay_if_arr(parse_expr(
+                strlit_collector,
+                context,
+                tokens,
+                filename,
+                input,
+            )?);
 
             Ok(sub_assign_with_potential_scaling(
                 context, *op_pos, 左辺, 右辺,

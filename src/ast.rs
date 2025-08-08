@@ -46,6 +46,7 @@ pub enum Expr {
         val: String,
         pos: usize,
         typ: Type,
+        id: usize, // ID for the string literal in the constant pool
     },
     Identifier {
         ident: String,

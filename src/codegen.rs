@@ -808,6 +808,7 @@ impl<'a> FunctionGen<'a> {
                 val: _,
                 pos: _,
                 typ: _,
+                id: _,
             } => {
                 unimplemented!("文字列リテラルを値として扱うのは未実装です（必ず sizeof のオペランドにしてください）");
             }
