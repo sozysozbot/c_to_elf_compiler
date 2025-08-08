@@ -10,7 +10,7 @@ use c_to_elf_compiler::parse::toplevel::FunctionDefinition;
 use c_to_elf_compiler::parse::toplevel::FunctionSignature;
 use c_to_elf_compiler::parse::toplevel::GlobalDeclarations;
 use c_to_elf_compiler::parse::toplevel::SymbolDeclaration;
-use c_to_elf_compiler::parse::toplevel::ToplevelDefinition;
+use c_to_elf_compiler::parse::toplevel::ToplevelDefOrDecl;
 use c_to_elf_compiler::parse::typ::Type;
 use c_to_elf_compiler::token::Token;
 use c_to_elf_compiler::tokenize;
@@ -48,7 +48,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         (
             "__builtin_three".to_string(),
             FunctionSignature {
-                params: Vec::new(),
+                params: Some(Vec::new()),
                 pos: 0,
                 return_type: Type::Int,
             },
@@ -56,7 +56,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         (
             "__builtin_putchar".to_string(),
             FunctionSignature {
-                params: vec![Type::Int],
+                params: Some(vec![Type::Int]),
                 pos: 0,
                 return_type: Type::Int,
             },
@@ -64,7 +64,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         (
             "__builtin_alloc4".to_string(),
             FunctionSignature {
-                params: vec![Type::Int, Type::Int, Type::Int, Type::Int],
+                params: Some(vec![Type::Int, Type::Int, Type::Int, Type::Int]),
                 pos: 0,
                 return_type: Type::Ptr(Box::new(Type::Int)),
             },
@@ -119,14 +119,14 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         let previous_symbol_declarations: HashMap<String, SymbolDeclaration> = [(
             "main".to_string(),
             SymbolDeclaration::Func(FunctionSignature {
-                params: vec![],
+                params: Some(vec![]), // todo: possible argc and argv
                 pos: 0,
                 return_type: Type::Int,
             }),
         )]
         .into_iter()
         .collect();
-        if let ToplevelDefinition::Func(entry) = parse_toplevel_definition(
+        if let ToplevelDefOrDecl::Func(entry) = parse_toplevel_definition(
             &GlobalDeclarations {
                 symbols: previous_symbol_declarations,
                 struct_names: HashMap::new(),

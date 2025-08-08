@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::{iter::Peekable, slice::Iter};
 
 #[derive(Debug, Clone)]
-pub enum ToplevelDefinition {
+pub enum ToplevelDefOrDecl {
     Func(FunctionDefinition),
     GVar(GlobalVariableDefinition),
 }
@@ -55,7 +55,7 @@ impl From<FunctionDefinition> for (String, FunctionSignature) {
             FunctionSignature {
                 pos: s.pos,
                 return_type: s.return_type,
-                params: s.params.into_iter().map(|(typ, _)| typ).collect(),
+                params: Some(s.params.into_iter().map(|(typ, _)| typ).collect()),
             },
         )
     }
@@ -63,7 +63,8 @@ impl From<FunctionDefinition> for (String, FunctionSignature) {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FunctionSignature {
-    pub params: Vec<Type>,
+    /// `None` if it is a declaration of the form `int foo();`, which prior to C23 means "parameter types are unspecified"
+    pub params: Option<Vec<Type>>, 
     pub pos: usize,
     pub return_type: Type,
 }
@@ -133,7 +134,7 @@ fn after_param_list(
             let mut global_declarations = (*previous_global_declarations).clone();
 
             let signature = FunctionSignature {
-                params: params.iter().map(|(typ, _)| (*typ).clone()).collect(),
+                params: Some(params.iter().map(|(typ, _)| (*typ).clone()).collect()),
                 pos,
                 return_type: return_type.clone(),
             };
@@ -199,7 +200,7 @@ pub fn parse_toplevel_definition(
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
-) -> Result<ToplevelDefinition, AppError> {
+) -> Result<ToplevelDefOrDecl, AppError> {
     let mut return_type = parse_type(tokens, filename, input)?;
     match tokens.next().unwrap() {
         Token {
@@ -220,7 +221,7 @@ pub fn parse_toplevel_definition(
                         ..
                     } = tokens.peek().unwrap() {
                     tokens.next();
-                    return Ok(ToplevelDefinition::Func(after_param_list(
+                    return Ok(ToplevelDefOrDecl::Func(after_param_list(
                         previous_declarations,
                         tokens,
                         filename,
@@ -247,7 +248,7 @@ pub fn parse_toplevel_definition(
                     {
                         tokens.next(); // consume `void`
                         tokens.next(); // consume `)`
-                        return Ok(ToplevelDefinition::Func(after_param_list(
+                        return Ok(ToplevelDefOrDecl::Func(after_param_list(
                             previous_declarations,
                             tokens,
                             filename,
@@ -274,7 +275,7 @@ pub fn parse_toplevel_definition(
                             ..
                         } => {
                             tokens.next();
-                            return Ok(ToplevelDefinition::Func(after_param_list(
+                            return Ok(ToplevelDefOrDecl::Func(after_param_list(
                                 previous_declarations,
                                 tokens,
                                 filename,
@@ -308,7 +309,7 @@ pub fn parse_toplevel_definition(
                 ..
             } => {
                 tokens.next();
-                Ok(ToplevelDefinition::GVar(GlobalVariableDefinition { name: ident.to_string(), typ: return_type }))
+                Ok(ToplevelDefOrDecl::GVar(GlobalVariableDefinition { name: ident.to_string(), typ: return_type }))
             }
             Token {
                 tok: Tok::開き角括弧,
@@ -316,7 +317,7 @@ pub fn parse_toplevel_definition(
             } => {
                 parse_角括弧に包まれた数の列(tokens, filename,input, &mut return_type)?;
                 satisfy(tokens,filename, input, |t| *t == Tok::Semicolon, "グローバルな配列宣言の後のセミコロンが期待されていました")?;
-                Ok(ToplevelDefinition::GVar(GlobalVariableDefinition { name: ident.to_string(), typ: return_type }))
+                Ok(ToplevelDefOrDecl::GVar(GlobalVariableDefinition { name: ident.to_string(), typ: return_type }))
             }
             _ => Err(AppError {
                 message: "トップレベルに識別子がありますが、その後に来たものが「関数引数の丸括弧」でも「グローバル変数定義を終わらせるセミコロン」でも「グローバル変数として配列を定義するための開き角括弧」でもありません"
@@ -473,16 +474,16 @@ pub fn parse_all(
             }
         }
 
-        let new_def = parse_toplevel_definition(global_declarations, tokens, filename, input)?;
-        match new_def {
-            ToplevelDefinition::Func(new_def) => {
+        let new_def_or_decl = parse_toplevel_definition(global_declarations, tokens, filename, input)?;
+        match new_def_or_decl {
+            ToplevelDefOrDecl::Func(new_def) => {
                 let (name, signature) = new_def.clone().into();
                 global_declarations
                     .symbols
                     .insert(name, SymbolDeclaration::Func(signature));
                 function_definitions.push(new_def);
             }
-            ToplevelDefinition::GVar(gvar) => {
+            ToplevelDefOrDecl::GVar(gvar) => {
                 global_declarations
                     .symbols
                     .insert(gvar.name, SymbolDeclaration::GVar(gvar.typ));
