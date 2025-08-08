@@ -160,4 +160,7 @@ pub enum Statement {
         statements: Vec<StatementOrDeclaration>,
         pos: usize,
     },
+    BuiltinPopulateArgcArgv {
+        pos: usize,
+    },
 }

@@ -114,7 +114,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
 
     let entry: FunctionDefinition = {
         // スタートアップ処理はここに C のソースコードとして実装
-        let tokens = tokenize::tokenize("int __start() { __throw main(); }", filename).unwrap();
+        let tokens = tokenize::tokenize("int __start() { __builtin_populate_argc_argv; __throw main(); }", filename).unwrap();
         let mut tokens = tokens.iter().peekable();
         let previous_symbol_declarations: HashMap<String, SymbolDeclaration> = [(
             "main".to_string(),

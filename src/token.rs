@@ -45,6 +45,7 @@ pub enum Tok {
     LogicalOr,
     Void,
     Const,
+    BuiltinPopulateArgcArgv
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

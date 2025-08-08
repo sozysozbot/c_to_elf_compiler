@@ -81,6 +81,7 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     "struct" => Tok::Struct,
                     "void" => Tok::Void,
                     "const" => Tok::Const,
+                    "__builtin_populate_argc_argv" => Tok::BuiltinPopulateArgcArgv,
                     _ => Tok::Identifier(ident),
                 };
 

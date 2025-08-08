@@ -225,6 +225,10 @@ impl<'a> FunctionGen<'a> {
     }
     pub fn statementを評価(&mut self, stmt: &Statement) -> Buf {
         match stmt {
+            Statement::BuiltinPopulateArgcArgv { .. } => {
+                // do nothing
+                Buf::new()
+            }
             Statement::Expr {
                 expr,
                 semicolon_pos: _,
@@ -918,6 +922,25 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         global_function_table,
         function_name: &definition.func_name,
     };
+
+    if let StatementOrDeclaration::Statement(Statement::BuiltinPopulateArgcArgv { .. }) =
+        definition.statements[0]
+    {
+        main_buf.append(ebpに即値をセット(0));
+        main_buf.append(rspにoffsetを足したアドレスをrdiに代入(0));
+        main_buf.append(rspにoffsetを足したアドレスをrsiに代入(8));
+        let content_buf = definition
+            .statements
+            .iter()
+            .map(|stmt| function_gen.statement_or_declarationを評価(stmt))
+            .fold(Buf::new(), Buf::join);
+
+        
+        main_buf.append(content_buf);
+
+        return func_pos;
+    }
+
     main_buf.append(rbpをプッシュ());
     function_gen.stack_size += 8;
     main_buf.append(rspをrbpにコピー());

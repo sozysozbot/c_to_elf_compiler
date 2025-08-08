@@ -2422,3 +2422,21 @@ main:
 ```
 
 hsjoihs「引数つき main！　そういうのもあるんだった」
+hsjoihs「main 関数内で情報を受け取る方は素直に rdi と rsi を読めばいいだけ。問題はスタートアップ処理。」 
+$HTML「えーと、現状の <code>c_to_elf_compiler</code> は <code>int __start() { __throw main(); }</code> という C のコードを自前でコンパイルしてスタートアップ処理を書いているんだった」
+hsjoihs「つまり、これを変更するには、ソースコードを一回 parse して、main の引数が何個であるかを検査して、それに基づいて自前でスタートアップ処理を選んでコンパイルする、というわけか」
+hsjoihs「うお～～ ここに来て c_to_elf の step1 をもう一度する必要がある。伏線回収だ」
+hsjoihs「えーと main 関数の argc と argv って誰が渡してるんだっけ」
+KOBA789「CRT ですね」
+hsjoihs「CRT って何の略だろう…ああ『C ランタイム』、まあそれはそう」
+hsjoihs「 https://stackoverflow.com/questions/50260855/how-to-get-arguments-value-in-start-and-call-main-using-inline-assembly-in-c を読む。ああこれこんなに簡単なのか。 _start に到達したタイミングでは 0(%rsp) に argc があり、8(%rsp) に argv があるらしい。それぞれ mov と lea で rdi と rsi に取ってくれば解決か。」
+hsjoihs「とりあえず、先頭に __builtin_populate_argc_argv; という文がある関数は、プロローグがすり替わって」
+
+$source
+```asm
+mov ebp, 0
+mov rdi, QWORD PTR [rsp+0x0]
+lea rsi, QWORD PTR [rsp+0x8]
+```
+
+hsjoihs「を吐くという処理を実装。さてこれで main に引数が渡ってくれるかな？」

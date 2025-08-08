@@ -183,6 +183,28 @@ fn parse_statement(
             })
         }
         Token {
+            tok: Tok::BuiltinPopulateArgcArgv,
+            ..
+        } => {
+            let pos = tok.pos;
+            tokens.next();
+            if let Some(Token {
+                tok: Tok::Semicolon,
+                ..
+            }) = tokens.peek()
+            {
+                tokens.next();
+                return Ok(Statement::BuiltinPopulateArgcArgv { pos });
+            }
+
+            return Err(AppError {
+                message: "期待されたセミコロンが来ませんでした".to_string(),
+                input: input.to_string(),
+                filename: filename.to_string(),
+                pos,
+            });
+        }
+        Token {
             tok: Tok::Return, ..
         } => {
             let pos = tok.pos;
@@ -218,7 +240,7 @@ fn parse_statement(
             Ok(Statement::Return {
                 semicolon_pos,
                 expr,
-                return_type: context.return_type.clone(), 
+                return_type: context.return_type.clone(),
             })
         }
         Token { tok: Tok::If, pos } => {
