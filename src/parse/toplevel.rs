@@ -64,7 +64,7 @@ impl From<FunctionDefinition> for (String, FunctionSignature) {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FunctionSignature {
     /// `None` if it is a declaration of the form `int foo();`, which prior to C23 means "parameter types are unspecified"
-    pub params: Option<Vec<Type>>, 
+    pub params: Option<Vec<Type>>,
     pub pos: usize,
     pub return_type: Type,
 }
@@ -93,23 +93,26 @@ fn after_param_list(
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
     input: &str,
-    params: Vec<(Type, String)>,
+    params: Option<Vec<(Type, String)>>, // `None` if it is a declaration/definition of the form `int foo()`
     pos: usize,
     return_type: Type,
     func_name: &str,
-) -> Result<FunctionDefinition, AppError> {
+) -> Result<ToplevelDefOrDecl, AppError> {
     // First, we check that params list has no duplicates
     let mut param_names = HashMap::new();
-    for (typ, ident) in &params {
-        if param_names.contains_key(ident) {
-            return Err(AppError {
-                message: format!("関数 {func_name} の引数 {ident} が重複しています"),
-                input: input.to_string(),
-                filename: filename.to_string(),
-                pos,
-            });
+
+    if let Some(params) = &params {
+        for (typ, ident) in params {
+            if param_names.contains_key(ident) {
+                return Err(AppError {
+                    message: format!("関数 {func_name} の引数 {ident} が重複しています"),
+                    input: input.to_string(),
+                    filename: filename.to_string(),
+                    pos,
+                });
+            }
+            param_names.insert(ident.clone(), typ.clone());
         }
-        param_names.insert(ident.clone(), typ.clone());
     }
 
     // Then we parse
@@ -123,6 +126,10 @@ fn after_param_list(
             let mut statements_or_declarations: Vec<StatementOrDeclaration> = vec![];
 
             let mut param_declarations: Vec<(String, TypeAndSize)> = Vec::new();
+
+            // 波括弧が後に続く場合は、() は (void) の意味
+            let params = params.unwrap_or_default();
+
             for (typ, ident) in &params {
                 let typ_and_size = TypeAndSize {
                     typ: typ.clone(),
@@ -177,15 +184,30 @@ fn after_param_list(
                     .push(StatementOrDeclaration::Statement(return_void(pos)));
             }
 
-            Ok(FunctionDefinition {
+            Ok(ToplevelDefOrDecl::Func(FunctionDefinition {
                 func_name: func_name.to_string(),
                 params,
                 pos,
                 statements: statements_or_declarations,
                 return_type,
                 all_local_var_declarations: context.all_local_var_declarations_cloned(),
-            })
+            }))
         }
+
+        Token {
+            tok: Tok::Semicolon,
+            ..
+        } => {
+            tokens.next();
+            // If we reach here, it means we have a function declaration
+            /*Ok(FunctionDeclaration {
+                func_name: func_name.to_string(),
+                params,
+                return_type,
+            })*/
+            todo!()
+        }
+
         Token { pos, .. } => Err(AppError {
             message: "仮引数リストの後に、開き波括弧以外のトークンが来ました".to_string(),
             input: input.to_string(),
@@ -221,16 +243,16 @@ pub fn parse_toplevel_definition(
                         ..
                     } = tokens.peek().unwrap() {
                     tokens.next();
-                    return Ok(ToplevelDefOrDecl::Func(after_param_list(
+                    return after_param_list(
                         previous_declarations,
                         tokens,
                         filename,
                         input,
-                        params,
+                        None,
                         *pos,
                         return_type,
                         ident,
-                    )?));
+                    );
                 }
 
                 // check whether the following two tokens are `void` and `)`
@@ -248,16 +270,16 @@ pub fn parse_toplevel_definition(
                     {
                         tokens.next(); // consume `void`
                         tokens.next(); // consume `)`
-                        return Ok(ToplevelDefOrDecl::Func(after_param_list(
+                        return after_param_list(
                             previous_declarations,
                             tokens,
                             filename,
                             input,
-                            vec![],
+                            Some(vec![]), // definitely no parameters
                             *pos,
                             return_type,
                             ident,
-                        )?));
+                        );
                     }
                 }
 
@@ -275,16 +297,16 @@ pub fn parse_toplevel_definition(
                             ..
                         } => {
                             tokens.next();
-                            return Ok(ToplevelDefOrDecl::Func(after_param_list(
+                            return after_param_list(
                                 previous_declarations,
                                 tokens,
                                 filename,
                                 input,
-                                params,
+                                Some(params),
                                 *pos,
                                 return_type,
                                 ident,
-                            )?));
+                            );
                         }
                         Token {
                             tok: Tok::Comma, ..
@@ -467,14 +489,21 @@ pub fn parse_all(
                 }) = duplicated_iter.next()
                 {
                     // We have a struct definition
-                    parse_toplevel_struct_definition(global_declarations, tokens, filename, input, struct_name)?;
+                    parse_toplevel_struct_definition(
+                        global_declarations,
+                        tokens,
+                        filename,
+                        input,
+                        struct_name,
+                    )?;
 
                     continue; // skip to the next iteration
                 }
             }
         }
 
-        let new_def_or_decl = parse_toplevel_definition(global_declarations, tokens, filename, input)?;
+        let new_def_or_decl =
+            parse_toplevel_definition(global_declarations, tokens, filename, input)?;
         match new_def_or_decl {
             ToplevelDefOrDecl::Func(new_def) => {
                 let (name, signature) = new_def.clone().into();
