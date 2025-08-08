@@ -1,5 +1,6 @@
 use crate::apperror::*;
 use crate::ast::*;
+use crate::parse::toplevel::FunctionSignature;
 use crate::parse::toplevel::StructMember;
 use crate::parse::toplevel::TypeAndSize;
 use crate::strlit_collector::StrLitCollector;
@@ -88,27 +89,55 @@ fn parse_primary(
                 })?)
                 .is_some()
                 {
-                    let func_decl = match context.global_declarations.symbols.get(ident) {
-                        Some(SymbolDeclaration::Func(f)) => f.clone(),
-                        Some(SymbolDeclaration::GVar(_)) => {
-                            return Err(AppError {
-                                message: format!(
+                    let func_decl = {
+                        if ident.starts_with("__builtin_strlit_") {
+                            // 文字列リテラルを召喚するビルトイン関数
+
+                            let id: usize = ident
+                                .strip_prefix("__builtin_strlit_")
+                                .unwrap()
+                                .parse()
+                                .unwrap();
+                            let string =
+                                strlit_collector.search_string_from_id(id).ok_or(AppError {
+                                    message: format!("文字列リテラル ID {id} が見つかりません"),
+                                    input: input.to_string(),
+                                    filename: filename.to_string(),
+                                    pos: *ident_pos,
+                                })?;
+
+                            FunctionSignature {
+                                params: Some(Vec::new()),
+                                pos: *ident_pos,
+                                return_type: Type::Arr(
+                                    Box::new(Type::Char),
+                                    (string.len() /* length in bytes */ + 1) as i32,
+                                ),
+                            }
+                        } else {
+                            match context.global_declarations.symbols.get(ident) {
+                                Some(SymbolDeclaration::Func(f)) => f.clone(),
+                                Some(SymbolDeclaration::GVar(_)) => {
+                                    return Err(AppError {
+                                        message: format!(
                                     "{ident} は関数ではなくグローバル変数であり、呼び出せません",
                                 ),
-                                input: input.to_string(),
-                                filename: filename.to_string(),
-                                pos: *ident_pos,
-                            })
-                        }
-                        None => {
-                            return Err(AppError {
-                                message: format!(
-                                    "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
-                                ),
-                                input: input.to_string(),
-                                filename: filename.to_string(),
-                                pos: *ident_pos,
-                            })
+                                        input: input.to_string(),
+                                        filename: filename.to_string(),
+                                        pos: *ident_pos,
+                                    })
+                                }
+                                None => {
+                                    return Err(AppError {
+                                        message: format!(
+                                        "関数 {ident} は宣言されておらず、戻り値の型が分かりません",
+                                    ),
+                                        input: input.to_string(),
+                                        filename: filename.to_string(),
+                                        pos: *ident_pos,
+                                    })
+                                }
+                            }
                         }
                     };
                     let expr = Expr::Call {

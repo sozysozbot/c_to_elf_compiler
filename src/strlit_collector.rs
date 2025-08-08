@@ -7,9 +7,11 @@ pub struct StrLitCollector {
 
 impl StrLitCollector {
     pub fn new() -> Self {
+        let mut constant_pool_indices = HashMap::new();
+        constant_pool_indices.insert("abc".to_string(), 0);
         StrLitCollector {
-            constant_pool_indices: HashMap::new(),
-            next_index: 0,
+            constant_pool_indices,
+            next_index: 1,
         }
     }
 
@@ -19,6 +21,10 @@ impl StrLitCollector {
             self.next_index += 1;
             idx
         })
+    }
+
+    pub fn search_string_from_id(&self, id: usize) -> Option<&String> {
+        self.constant_pool_indices.iter().find_map(|(s, &i)| if i == id { Some(s) } else { None })
     }
 
     pub fn contains(&self, s: &str) -> bool {

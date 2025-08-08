@@ -45,7 +45,7 @@ fn main() -> std::io::Result<()> {
 #[allow(clippy::too_many_lines)]
 fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Vec<u8>, AppError> {
     let mut tokens = tokens.iter().peekable();
-    let function_declarations: HashMap<String, FunctionSignature> = [
+    let signatures_of_builtin_functions: HashMap<String, FunctionSignature> = [
         (
             "__builtin_three".to_string(),
             FunctionSignature {
@@ -70,14 +70,6 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
                 return_type: Type::Ptr(Box::new(Type::Int)),
             },
         ),
-        (
-            "__builtin_strlit_0".to_string(),
-            FunctionSignature {
-                params: Some(vec![]),
-                pos: 0,
-                return_type: Type::Arr(Box::new(Type::Char), 4),
-            },
-        ),
     ]
     .into_iter()
     .collect();
@@ -87,7 +79,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         struct_names: HashMap::new(),
     };
     global_declarations.symbols.extend(
-        function_declarations
+        signatures_of_builtin_functions
             .into_iter()
             .map(|(name, signature)| (name, SymbolDeclaration::Func(signature))),
     );
@@ -101,6 +93,8 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         filename,
         input,
     )?;
+
+    // strlit_collector is fully populated here
 
     let tiny = include_bytes!("../experiment/tiny");
     let mut buf = Buf::from(&tiny[0..0x78]);
@@ -152,7 +146,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
         .into_iter()
         .collect();
         if let ToplevelDefOrDecl::FuncDef(entry) = parse_toplevel_definition(
-            &mut strlit_collector,
+            &mut StrLitCollector::new(), // do not collect any string literals from the startup code
             &GlobalDeclarations {
                 symbols: previous_symbol_declarations,
                 struct_names: HashMap::new(),

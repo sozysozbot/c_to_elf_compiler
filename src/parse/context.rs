@@ -1,6 +1,9 @@
 use std::{collections::HashMap, vec};
 
-use crate::parse::{toplevel::{GlobalDeclarations, SymbolDeclaration, TypeAndSize}, typ::Type};
+use crate::parse::{
+    toplevel::{GlobalDeclarations, SymbolDeclaration, TypeAndSize},
+    typ::Type,
+};
 
 type ID = u64;
 
@@ -93,6 +96,12 @@ impl Context {
             if let Some((id, typ_and_size)) = scope.get(ident) {
                 return Ok((Some(*id), typ_and_size.clone()));
             }
+        }
+
+        if ident.starts_with("__builtin_strlit_") {
+            return Err(format!(
+                "識別子 {ident} は文字列リテラルのための組み込み関数であり、関数ポインタとしては使用できません",
+            ));
         }
 
         match self.global_declarations.symbols.get(ident) {

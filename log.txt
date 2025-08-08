@@ -2498,3 +2498,4 @@ $HTML「とりあえず <code>__builtin_abc</code> は <code>__builtin_strlit_0<
 hsjoihs「そうしたら、今度は因果の矢を逆転させて、『ソースコード中に出てくる文字列リテラルは、codegen する』とすればよい」
 hsjoihs「とりあえず、文字列リテラルを集めるだけ集める strlit_collector という引数をあちこちにばらまいたが、実はこれ集めるだけじゃなくて ID も振った方がいいな」
 hsjoihs「文字列リテラルを集めるたびに ID を配る。これを引換券として後で __builtin_strlit_n() への呼び出しをしてもらう目論見」
+hsjoihs「__builtin_strlit_n の形の名前の関数を型解決しようとする場合は strlit_collector を読みに行くようにする。これにより、シグネチャを事前登録したりする必要が無い」
