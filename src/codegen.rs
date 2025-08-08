@@ -1,33 +1,33 @@
 use crate::{
-    ast::*, parse::{
+    ast::*,
+    parse::{
         toplevel::{FunctionDefinition, TypeAndSize},
         typ::Type,
-    }, x86_64_no_arg::*, x86_64_with_arg::*, Buf
+    },
+    x86_64_no_arg::*,
+    x86_64_with_arg::*,
+    Buf,
 };
 use core::panic;
 use std::collections::HashMap;
 
-
 const WORD_SIZE: u8 = 8;
-const WORD_SIZE_AS_I8: i8 = WORD_SIZE as i8;
 const WORD_SIZE_AS_U32: u32 = WORD_SIZE as u32;
 const WORD_SIZE_AS_I32: i32 = WORD_SIZE as i32;
-
 
 pub fn builtin_three関数を生成() -> Buf {
     プロローグ(0).join(eaxに即値をセット(3)).join(エピローグ())
 }
 
-
 pub fn builtin_putchar関数を生成() -> Buf {
     プロローグ(WORD_SIZE_AS_I32)
         .join(rbpにoffsetを足した位置にediを代入(
-            -WORD_SIZE_AS_I8,
+            -WORD_SIZE_AS_I32,
         ))
         .join(eaxに即値をセット(1)) // write
         .join(ediに代入(1)) // fd
         .join(rbpにoffsetを足したアドレスをrsiに代入(
-            -WORD_SIZE_AS_I8,
+            -WORD_SIZE_AS_I32,
         )) // buf
         .join(edxに即値をセット(1)) // count
         .join(syscall())
@@ -52,16 +52,16 @@ pub fn builtin_putchar関数を生成() -> Buf {
 pub fn builtin_alloc4関数を生成() -> Buf {
     プロローグ(WORD_SIZE_AS_I32 * 4)
         .join(rbpにoffsetを足した位置にediを代入(
-            -WORD_SIZE_AS_I8, // a
+            -WORD_SIZE_AS_I32, // a
         ))
         .join(rbpにoffsetを足した位置にesiを代入(
-            -WORD_SIZE_AS_I8 * 2, // b
+            -WORD_SIZE_AS_I32 * 2, // b
         ))
         .join(rbpにoffsetを足した位置にedxを代入(
-            -WORD_SIZE_AS_I8 * 3, // c
+            -WORD_SIZE_AS_I32 * 3, // c
         ))
         .join(rbpにoffsetを足した位置にecxを代入(
-            -WORD_SIZE_AS_I8 * 4, // d
+            -WORD_SIZE_AS_I32 * 4, // d
         ))
         .join(eaxに即値をセット(12)) // sys_brk
         .join(ediに代入(0)) // NULL
@@ -76,7 +76,7 @@ pub fn builtin_alloc4関数を生成() -> Buf {
         // br[3] = d
         .join(raxから即値を引く(4)) // rax: br + 12
         .join(rbpにoffsetを足したアドレスをrdiに代入(
-            -WORD_SIZE_AS_I8 * 4,
+            -WORD_SIZE_AS_I32 * 4,
         )) // rax: br + 12, rdi: &d
         .join(rdiを間接参照()) // rax: br + 12, rdi: d
         .join(raxが指す位置にediを代入()) // *(br + 12) = d;
@@ -84,7 +84,7 @@ pub fn builtin_alloc4関数を生成() -> Buf {
         // br[2] = c
         .join(raxから即値を引く(4)) // rax: br + 8
         .join(rbpにoffsetを足したアドレスをrdiに代入(
-            -WORD_SIZE_AS_I8 * 3,
+            -WORD_SIZE_AS_I32 * 3,
         )) // rax: br + 12, rdi: &c
         .join(rdiを間接参照()) // rax: br + 8, rdi: c
         .join(raxが指す位置にediを代入()) // *(br + 8) = c;
@@ -92,7 +92,7 @@ pub fn builtin_alloc4関数を生成() -> Buf {
         // br[1] = b
         .join(raxから即値を引く(4)) // rax: br + 4
         .join(rbpにoffsetを足したアドレスをrdiに代入(
-            -WORD_SIZE_AS_I8 * 2,
+            -WORD_SIZE_AS_I32 * 2,
         )) // rax: br + 12, rdi: &b
         .join(rdiを間接参照()) // rax: br + 4, rdi: b
         .join(raxが指す位置にediを代入()) // *(br + 4) = b;
@@ -100,7 +100,7 @@ pub fn builtin_alloc4関数を生成() -> Buf {
         // br[0] = a
         .join(raxから即値を引く(4)) // rax: br
         .join(rbpにoffsetを足したアドレスをrdiに代入(
-            -WORD_SIZE_AS_I8,
+            -WORD_SIZE_AS_I32,
         )) // rax: br, rdi: &a
         .join(rdiを間接参照()) // rax: br, rdi: a
         .join(raxが指す位置にediを代入()) // *br = a;
@@ -897,7 +897,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
         );
         // rbp から offset を引いた値のアドレスに、レジスタから読んできた値を入れる必要がある
         // （関数 `exprを左辺値として評価してアドレスをrdiレジスタへ` も参照）
-        let negative_offset: i8 = -(offset as i8);
+        let negative_offset = -offset;
         match (i, param_type.sizeof_primitive("n")) {
             (0, 8) => parameter_buf.append(rbpにoffsetを足した位置にrdiを代入(
                 negative_offset,
