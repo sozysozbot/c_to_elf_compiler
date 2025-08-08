@@ -33,6 +33,16 @@ fn parse_primary(
             tok: Tok::StringLiteral(val),
             pos,
         } => {
+            if val == "abc" {
+                // ビルトイン関数 __builtin_abc を呼び出す
+                return Ok(Expr::Call {
+                    ident: "__builtin_abc".to_string(),
+                    args: Vec::new(),
+                    pos: *pos,
+                    typ: Type::Arr(Box::new(Type::Char), 4),
+                });
+            }
+
             let expr = Expr::StringLiteral {
                 val: val.clone(),
                 pos: *pos,

@@ -2481,3 +2481,15 @@ $source
 ```
 
 hsjoihs「よし、『呼び出すと文字列リテラルとして振る舞うビルトイン関数』が実装できた。」
+hsjoihs「次に、これの存在を隠蔽し、 "abc" と書いたら (__builtin_abc()) に展開されるようにする」
+
+$source
+```
+[PASS] int main() { const char *s = "abc"; return s[1]; } => 98
+[PASS] int main() { const char *s = "abc"; return s[0]; } => 97
+[PASS] int main() { const char *s = "abc"; return s[2]; } => 99
+[PASS] int main() { const char *s = "abc"; return s[3]; } => 0
+[PASS] int main() { return sizeof("abc"); } => 4
+```
+
+hsjoihs「よし。さてこれを一般の文字列リテラルに対して行えばいい」

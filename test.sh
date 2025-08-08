@@ -559,11 +559,11 @@ check 2 "int main(int argc, char **argv) { return argc; }" "" "abc"
 check 101 "int main(int argc, char **argv) { return argc + argv[1][2]; }" "" "abc"
 
 # string literals
-check 4 "int main() { return sizeof(__builtin_abc()); }"
-check 97 "int main() { const char *s = __builtin_abc(); return s[0]; }"
-check 98 "int main() { const char *s = __builtin_abc(); return s[1]; }"
-check 99 "int main() { const char *s = __builtin_abc(); return s[2]; }"
-check 0 "int main() { const char *s = __builtin_abc(); return s[3]; }"
+check 4 "int main() { return sizeof(\"abc\"); }"
+check 97 "int main() { const char *s = \"abc\"; return s[0]; }"
+check 98 "int main() { const char *s = \"abc\"; return s[1]; }"
+check 99 "int main() { const char *s = \"abc\"; return s[2]; }"
+check 0 "int main() { const char *s = \"abc\"; return s[3]; }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then
