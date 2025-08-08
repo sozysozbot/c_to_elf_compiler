@@ -143,7 +143,8 @@ fn after_param_list(
                 SymbolDeclaration::Func(signature.clone()),
             );
 
-            let mut context = Context::new(param_declarations, global_declarations, return_type.clone());
+            let mut context =
+                Context::new(param_declarations, global_declarations, return_type.clone());
 
             loop {
                 match tokens.peek() {
@@ -334,7 +335,109 @@ pub fn parse_toplevel_definition(
     }
 }
 
-pub fn parse(
+pub fn parse_toplevel_struct_definition(
+    global_declarations: &mut GlobalDeclarations,
+    tokens: &mut Peekable<Iter<Token>>,
+    filename: &str,
+    input: &str,
+    struct_name: &str,
+) -> Result<(), AppError> {
+    tokens.next(); // consume `struct`
+    tokens.next(); // consume `struct_name`
+    tokens.next(); // consume `{`
+
+    let mut members = HashMap::new();
+    let mut overall_alignment = 1;
+    let mut next_member_offset: i32 = 0;
+
+    loop {
+        match tokens.peek() {
+            None => {
+                return Err(AppError {
+                    message: "期待された閉じ波括弧が来ませんでした".to_string(),
+                    input: input.to_string(),
+                    filename: filename.to_string(),
+                    pos: input.len(),
+                })
+            }
+            Some(Token {
+                tok: Tok::閉じ波括弧,
+                ..
+            }) => {
+                tokens.next();
+
+                break;
+            }
+            _ => {
+                let member_type = parse_type(tokens, filename, input)?;
+                match tokens.next().unwrap() {
+                    Token {
+                        tok: Tok::Identifier(member_name),
+                        ..
+                    } => {
+                        satisfy(
+                            tokens,
+                            filename,
+                            input,
+                            |tok| tok == &Tok::Semicolon,
+                            "メンバーの後にセミコロンがありません",
+                        )?;
+                        let member_size = member_type.sizeof(&global_declarations.struct_names);
+                        if next_member_offset
+                            % member_type.alignof(&global_declarations.struct_names)
+                            != 0
+                        {
+                            next_member_offset += member_type
+                                .alignof(&global_declarations.struct_names)
+                                - (next_member_offset
+                                    % member_type.alignof(&global_declarations.struct_names));
+                        }
+                        overall_alignment = overall_alignment
+                            .max(member_type.alignof(&global_declarations.struct_names));
+                        members.insert(
+                            member_name.to_owned(),
+                            StructMember {
+                                member_type,
+                                offset: next_member_offset,
+                            },
+                        );
+                        next_member_offset += member_size;
+                    }
+                    Token { pos, .. } => {
+                        return Err(AppError {
+                            message: "構造体のメンバー名がありません".to_string(),
+                            input: input.to_string(),
+                            filename: filename.to_string(),
+                            pos: *pos,
+                        })
+                    }
+                }
+            }
+        }
+    }
+
+    satisfy(
+        tokens,
+        filename,
+        input,
+        |tok| tok == &Tok::Semicolon,
+        "構造体定義の終わりの直後にセミコロンがありません",
+    )?;
+
+    global_declarations.struct_names.insert(
+        struct_name.to_owned(),
+        StructDefinition {
+            struct_name: struct_name.to_owned(),
+            size: (next_member_offset as u32).div_ceil(overall_alignment as u32) as i32
+                * overall_alignment,
+            align: overall_alignment,
+            members,
+        },
+    );
+    Ok(())
+}
+
+pub fn parse_all(
     global_declarations: &mut GlobalDeclarations,
     tokens: &mut Peekable<Iter<Token>>,
     filename: &str,
@@ -363,103 +466,8 @@ pub fn parse(
                 }) = duplicated_iter.next()
                 {
                     // We have a struct definition
-                    tokens.next(); // consume `struct`
-                    tokens.next(); // consume `struct_name`
-                    tokens.next(); // consume `{`
+                    parse_toplevel_struct_definition(global_declarations, tokens, filename, input, struct_name)?;
 
-                    let mut members = HashMap::new();
-                    let mut overall_alignment = 1;
-                    let mut next_member_offset: i32 = 0;
-
-                    loop {
-                        match tokens.peek() {
-                            None => {
-                                return Err(AppError {
-                                    message: "期待された閉じ波括弧が来ませんでした".to_string(),
-                                    input: input.to_string(),
-                                    filename: filename.to_string(),
-                                    pos: input.len(),
-                                })
-                            }
-                            Some(Token {
-                                tok: Tok::閉じ波括弧,
-                                ..
-                            }) => {
-                                tokens.next();
-
-                                break;
-                            }
-                            _ => {
-                                let member_type = parse_type(tokens, filename, input)?;
-                                match tokens.next().unwrap() {
-                                    Token {
-                                        tok: Tok::Identifier(member_name),
-                                        ..
-                                    } => {
-                                        satisfy(
-                                            tokens,
-                                            filename,
-                                            input,
-                                            |tok| tok == &Tok::Semicolon,
-                                            "メンバーの後にセミコロンがありません",
-                                        )?;
-                                        let member_size =
-                                            member_type.sizeof(&global_declarations.struct_names);
-                                        if next_member_offset
-                                            % member_type.alignof(&global_declarations.struct_names)
-                                            != 0
-                                        {
-                                            next_member_offset += member_type
-                                                .alignof(&global_declarations.struct_names)
-                                                - (next_member_offset
-                                                    % member_type.alignof(
-                                                        &global_declarations.struct_names,
-                                                    ));
-                                        }
-                                        overall_alignment = overall_alignment.max(
-                                            member_type.alignof(&global_declarations.struct_names),
-                                        );
-                                        members.insert(
-                                            member_name.to_owned(),
-                                            StructMember {
-                                                member_type,
-                                                offset: next_member_offset,
-                                            },
-                                        );
-                                        next_member_offset += member_size;
-                                    }
-                                    Token { pos, .. } => {
-                                        return Err(AppError {
-                                            message: "構造体のメンバー名がありません".to_string(),
-                                            input: input.to_string(),
-                                            filename: filename.to_string(),
-                                            pos: *pos,
-                                        })
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    satisfy(
-                        tokens,
-                        filename,
-                        input,
-                        |tok| tok == &Tok::Semicolon,
-                        "構造体定義の終わりの直後にセミコロンがありません",
-                    )?;
-
-                    global_declarations.struct_names.insert(
-                        struct_name.clone(),
-                        StructDefinition {
-                            struct_name: struct_name.clone(),
-                            size: (next_member_offset as u32).div_ceil(overall_alignment as u32)
-                                as i32
-                                * overall_alignment,
-                            align: overall_alignment,
-                            members,
-                        },
-                    );
                     continue; // skip to the next iteration
                 }
             }

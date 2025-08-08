@@ -84,7 +84,7 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
     );
 
     let function_definitions =
-        toplevel::parse(&mut global_declarations, &mut tokens, filename, input)?;
+        toplevel::parse_all(&mut global_declarations, &mut tokens, filename, input)?;
 
     let tiny = include_bytes!("../experiment/tiny");
     let mut buf = Buf::from(&tiny[0..0x78]);

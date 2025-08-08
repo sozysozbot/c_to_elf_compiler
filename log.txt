@@ -2457,3 +2457,6 @@ hsjoihs「まあプロトタイプ宣言考えるか。要は『名前付き穴�
 hsjoihs「現状は関数の position が発生するたびにそれをグローバル関数テーブルに突っ込んでいく実装だけど、」
 hsjoihs「単純に Buf にひと細工すればいいか」
 hsjoihs「とりあえず NamedHole というのを作った」
+
+hsjoihs「ところで printf ってのもあるよな。現状使ってるのは %c %d %s %*s %.*s の 5 種類だけか。じゃあ自前で一応組めるっちゃ組める。」
+hsjoihs「とりあえずはプロトタイプ宣言。int foo(); と int foo(int a, int b); の両方が必要。」
