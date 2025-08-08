@@ -3652,8 +3652,8 @@ main:
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_9c314e092a481b6c773612d11d5c6136').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_9c314e092a481b6c773612d11d5c6136').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_9c314e092a481b6c773612d11d5c6136" href="#permalink_9c314e092a481b6c773612d11d5c6136" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_de98bad20662cf51ec424721de47c485').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_de98bad20662cf51ec424721de47c485').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_de98bad20662cf51ec424721de47c485" href="#permalink_de98bad20662cf51ec424721de47c485" class="permalink">¶</a>
 		<div class="content">CRT って何の略だろう…ああ『C ランタイム』、まあそれはそう</div>
 		<div class="content"> <a href="https://stackoverflow.com/questions/50260855/how-to-get-arguments-value-in-start-and-call-main-using-inline-assembly-in-c" target="_blank" rel="noopener noreferrer">https://stackoverflow.com/questions/50260855/how-to-get-arguments-value-in-start-and-call-main-using-inline-assembly-in-c</a> を読む。ああこれこんなに簡単なのか。 _start に到達したタイミングでは 0(%rsp) に argc があり、8(%rsp) に argv があるらしい。それぞれ mov と lea で rdi と rsi に取ってくれば解決か。</div>
 		<div class="content">とりあえず、先頭に __builtin_populate_argc_argv; という文がある関数は、プロローグがすり替わって</div>
@@ -3668,6 +3668,10 @@ check 2 &quot;int main(int argc, char **argv) { return argc; }&quot; &quot;&quot
 check 101 &quot;int main(int argc, char **argv) { return argc + argv[1][2]; }&quot; &quot;&quot; &quot;abc&quot;
 </code></pre>
 		<div class="content">これでちゃんとコマンドライン引数が渡っている。OK。</div>
+		<div class="content">となると、残りは文字列リテラルとプロトタイプ宣言か</div>
+		<div class="content">まあプロトタイプ宣言考えるか。要は『名前付き穴』であって、</div>
+		<div class="content">現状は関数の position が発生するたびにそれをグローバル関数テーブルに突っ込んでいく実装だけど、</div>
+		<div class="content">単純に Buf にひと細工すればいいか</div>
 	</div>
 </div>
 
