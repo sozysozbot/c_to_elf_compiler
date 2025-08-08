@@ -339,6 +339,74 @@ check 43 "int main() { int a = 3; int b; { int a = 4; b = a; } return b * 10 + a
 # for loop with an initialization statement
 check 45 "int main() { int b; for (int a = 0; a < 10; a++) { b = b + a; } return b; }"
 
+# tests taken from hsjoihs-c-compiler
+
+
+run_test() {
+  id="$1"
+  content="$2"
+  expected="$3"
+  check "$expected" "$content" 
+}
+
+run_test 371 'int main() { int a; if (1) { a = 3; } else { a = 7; } return a; }' 3
+run_test 372 'void foo(int*p) {*p=3;} int main() { int a; if (0) { foo(&a); } else { a = 7; } return a; }' 7
+run_test 373 'void foo(int*p) {*p=7;} int main() { int a; if (0) { a = 3; } else { foo(&a); } return a; }' 7
+run_test 376 'int main() { int a; return sizeof a; }' 4
+run_test 377 "int main() { return sizeof 'C'; }" 4
+run_test 378 "int main() { char a; return sizeof a; }" 1
+run_test 379 "int main() { char a; return sizeof +a; }" 4
+run_test 380 'int main() { int *a; return sizeof a; }' 8
+run_test 381 'int main() { int *a; return sizeof (a+0); }' 8
+run_test 382 'int main() { int a[2][3]; return sizeof a; }' 24
+run_test 383 'int main() { int a[2][3]; return sizeof (a+0); }' 8
+run_test 357 'int main() {return 0;} //nfsjdgkssfdvc' 0
+
+run_test 3440 'int main(){char a[45]; return a + 3 - a; }' 3
+
+run_test 352 'struct A {int a; int b; int c;}; int main(){struct A a[5]; return a + 3 - a;}' 3
+
+
+run_test 204 'int main(){int *p; p = 0; if(p) {return 4; } return 174;}' 174
+run_test 205 'int main(){int *p; int a; p = &a; if(p) {return 4; } return 174;}' 4
+run_test 206 'int main(){int *p; int a; p = &a; return p && &p;}' 1
+run_test 207 'int main(){int *p; int a; p = &a; return p || &p;}' 1
+run_test 210 'int main(void){return 174;}' 174
+run_test 211 'int main(void){void *p; p = 0; p = p; return 174;}' 174
+
+run_test 291 'int *foo(){return 0;} int main(){int *p = foo(); if (p == 0) {return 174;} else {return 1;} }' 174
+
+run_test 287 'int main(){int a[5];int *p = a;if (p == 0) {return 174;} else {return 1;}}' 1
+run_test 288 'int main(){int a[5];int *p = 0;if (p == 0) {return 174;} else {return 1;}}' 174
+run_test 289 'int main(){int a[5];int *p = 0;if (p != 0) {return 174;} else {return 1;}}' 1
+run_test 290 'int main(){int a[5];int *p = a;if (p != 0) {return 174;} else {return 1;}}' 174
+
+
+run_test 274 'int main(){int a[5];int *p = a;int *q = a+3;if (p < q) {return 174;} else {return 1;}}' 174
+run_test 275 'int main(){int a[5];int *p = a;int *q = a+3;if (p > q) {return 174;} else {return 1;}}' 1
+run_test 276 'int main(){int a[5];int *p = a;int *q = a+3;if (p <= q) {return 174;} else {return 1;}}' 174
+run_test 277 'int main(){int a[5];int *p = a;int *q = a+3;if (p >= q) {return 174;} else {return 1;}}' 1
+run_test 278 'int main(){int a[5];int *p = a;int *q = a;if (p < q) {return 174;} else {return 1;}}' 1
+run_test 279 'int main(){int a[5];int *p = a;int *q = a;if (p > q) {return 174;} else {return 1;}}' 1
+run_test 280 'int main(){int a[5];int *p = a;int *q = a;if (p <= q) {return 174;} else {return 1;}}' 174
+run_test 281 'int main(){int a[5];int *p = a;int *q = a;if (p >= q) {return 174;} else {return 1;}}' 174
+run_test 282 'int main(){int a[5];int *p = a;int *q = a;if (p == q) {return 174;} else {return 1;}}' 174
+run_test 283 'int main(){int a[5];int *p = a;int *q = a;if (p != q) {return 174;} else {return 1;}}' 1
+run_test 284 'int main(){int a[5];int *p = a;int *q = a+3;if (p == q) {return 174;} else {return 1;}}' 1
+run_test 285 'int main(){int a[5];int *p = a;int *q = a+3;if (p != q) {return 174;} else {return 1;}}' 174
+
+run_test 261 'int main(void){int a = 5; return 174;}' 174
+run_test 262 'int main(void){int u = 0; for(int a = 0; a < 10; a++){ u += a; } return 174+u-45;}' 174
+
+run_test 252 'int main(void){int a = 5; int *p = &a; return 174;}' 174
+run_test 253 'int main(void){int a = 4; int *p = &a; *p += 170; return a;}' 174
+run_test 254 'int main(){int a; int *p = &a; *p = 2; int *q = &*p; *q = 174; return a;}' 174
+run_test 255 'int main(){int a; int *p = &a; *p = 2; int *q = &(*p); *q = 174; return a;}' 174
+run_test 256 'int main(){int x = 86;int *y = &x; return (*y) + x + 2;}' 174
+run_test 257 'int main(){int x = 86;int *y = &x; return (*y) + (*y) + 2;}' 174
+run_test 258 'int main(){int x = 86;int *y = &x;int **z = &y;return (*y) + (**z) + 2;}' 174
+run_test 259 'int main(){int x = 86;int *y = &x;int **z = &y;return*y+**z+2;}' 174
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"
