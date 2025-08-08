@@ -3525,8 +3525,8 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 <h3 class="date">2025年8月8日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_4518d7350c928cfb3023b11d030e5977').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4518d7350c928cfb3023b11d030e5977').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_4518d7350c928cfb3023b11d030e5977" href="#permalink_4518d7350c928cfb3023b11d030e5977" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_ef781aa8125274e9d6bdf55ef98b0be1').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_ef781aa8125274e9d6bdf55ef98b0be1').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_ef781aa8125274e9d6bdf55ef98b0be1" href="#permalink_ef781aa8125274e9d6bdf55ef98b0be1" class="permalink">¶</a>
 		<div class="content">食事をした。やるぞ。</div>
 		<div class="content">とりあえず現状では関数の先頭でしか変数が宣言できず、たとえばブロック頭とかで変数を宣言しようとすると『数値リテラルでも開き丸括弧でもないものが来ました』と言われる</div>
 		<div class="content">さ～てどうしようかな</div>
@@ -3559,6 +3559,43 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 		<div class="content">そして、全てのローカル変数に連番を振るようにした</div>
 		<div class="content">なんか ID の resolve が上手くいかないと思ったら、引数リストが HashMap になっているから、引数の個数が 2 以上だと引数に正しく連番が振れている保証がなかったのか。直した。これでスコープチェーンもできた。</div>
 		<div class="content">じゃあ変数宣言付き for を作りましょう。</div>
+		<div class="content">実装した。残るは</div>
+		<div class="content"><ul><li><code>int foo();</code></li><li>文字列リテラルから値が読めるように</li><li>グローバル変数に対する値の読み書きができるように</li></ul></div>
+		<div class="content">要するに、リンカの領分のものが残っているわけですね</div>
+		<div class="content">一旦 hsjoihs-c-compiler のテストケースとか足しておくか。</div>
+		<div class="content">とりあえず『構造体のメンバに配列』『関数宣言』『引数が char』『グローバル変数の読み書き』とかが対処できていない。</div>
+		<div class="content">『構造体のメンバに配列』は 2kmcc に無いので一旦無視するとして、『引数が char』はどうにかしないとな</div>
+		<div class="content">引数が char の場合に対応した。</div>
+		<pre><code class="language-">run_test 101 &#x27;int *foo(int *p){*p = 4;return p;} int main(){int x;int *y;y = foo(&amp;x); *y+= 170;return x;}&#x27; 174
+run_test 102 &#x27;int *foo(int *p){*p = 4;return p;} int main(){int x;int y;*foo(&amp;x) += 170;return x;}&#x27; 174
+run_test 113 &#x27;int *foo(int *p){*p = 4;return p;} int main(){int x;int y; int **z; *foo(&amp;x) += 170;return x;}&#x27; 174
+</code></pre>
+		<div class="content">こいつらがセグフォで落ちる。よろしくない。</div>
+		<pre><code class="language-">[FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 3; return *p++;} =&gt; 174 expected, but got 0
+[FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 2; return *++p;} =&gt; 174 expected, but got 0
+[PASS] int main(){return sizeof(int*);} =&gt; 8
+[FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 2; p++; return *p;} =&gt; 174 expected, but got 0
+[FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 2; ++p; return *p;} =&gt; 174 expected, but got 0
+[PASS] int main(void){char a[5]; a[1] = 74; char *p = a + 2; return *--p;} =&gt; 74
+[PASS] int main(void){int a[5]; a[3] = 174; int *p = a; p += 3; return *p;} =&gt; 174
+[PASS] int main(void){char a[5]; a[1] = 74; char *p = a + 3; p -= 2; return *p;} =&gt; 74
+[FAIL] int main(void){int a[5]; a[1] = 174; int *p = a + 3; p -= 2; return *p;} =&gt; 174 expected, but got 0
+</code></pre>
+		<div class="content">これもよろしくない。ポインタ演算が中途半端にバグってる？</div>
+		<div class="content">あ～分かった。インクリメントをインクリメント命令に翻訳したり、複合代入演算子でポインタ幅の掛け算を忘れたりしているのが原因だ</div>
+		<pre><code class="language-">[PASS] int main(void){int a[5]; *(a + 3) = 174; int *p = a + 2; p = p + 1; return *p;} =&gt; 174
+[FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 2; p = p + 1; return *p;} =&gt; 174 expected, but got 0
+</code></pre>
+		<div class="content">なるほどね。角括弧を直した。</div>
+		<div class="content">あ～『型のサイズが u8 に収まりません』の類い、あったねぇ</div>
+		<div class="content">でかい型のサイズがあると、まずもってローカル変数のオフセットで詰むんだよな</div>
+		<div class="content">よ～し、デカいオフセットに対応しよう</div>
+		<div class="content">現状、u8 や i8 のオフセットを要求している x86_64 コードは 27 種類</div>
+		<div class="content">これら全てに対して、32 ビットの値を渡す方法を defuse.ca で調べて、ペタペタ貼り付ければよい</div>
+		<div class="content">とりあえず、AST 構成までは全て i32 にした。『rbpにoffsetを足した位置に（レジスタ名）を代入』系統はまだだけど、これって関数の引数用だからそもそもオフセットがデカくなることはない気もする</div>
+		<div class="content">まあ不統一なのもよろしくないし、これも i32 にしておこう</div>
+		<div class="content">あとはジャンプを処理すれば OK</div>
+		<div class="content">ジャンプのオフセットも i32 にした</div>
 	</div>
 </div>
 
