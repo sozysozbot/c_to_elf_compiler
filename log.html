@@ -3525,8 +3525,8 @@ check 42 &quot;int update(int *p) { *p = 3; return 1; }  int main() { int a; int
 <h3 class="date">2025年8月8日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_ef781aa8125274e9d6bdf55ef98b0be1').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_ef781aa8125274e9d6bdf55ef98b0be1').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_ef781aa8125274e9d6bdf55ef98b0be1" href="#permalink_ef781aa8125274e9d6bdf55ef98b0be1" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_704955d9366fb2d03fc7fea05cd45e9f').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_704955d9366fb2d03fc7fea05cd45e9f').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_704955d9366fb2d03fc7fea05cd45e9f" href="#permalink_704955d9366fb2d03fc7fea05cd45e9f" class="permalink">¶</a>
 		<div class="content">食事をした。やるぞ。</div>
 		<div class="content">とりあえず現状では関数の先頭でしか変数が宣言できず、たとえばブロック頭とかで変数を宣言しようとすると『数値リテラルでも開き丸括弧でもないものが来ました』と言われる</div>
 		<div class="content">さ～てどうしようかな</div>
@@ -3582,7 +3582,7 @@ run_test 113 &#x27;int *foo(int *p){*p = 4;return p;} int main(){int x;int y; in
 [FAIL] int main(void){int a[5]; a[1] = 174; int *p = a + 3; p -= 2; return *p;} =&gt; 174 expected, but got 0
 </code></pre>
 		<div class="content">これもよろしくない。ポインタ演算が中途半端にバグってる？</div>
-		<div class="content">あ～分かった。インクリメントをインクリメント命令に翻訳したり、複合代入演算子でポインタ幅の掛け算を忘れたりしているのが原因だ</div>
+		<div class="content">あ～分かった。インクリメントをインクリメント命令に翻訳してしまっていたり、複合代入演算子でポインタ幅の掛け算を忘れたりしているのが原因だ</div>
 		<pre><code class="language-">[PASS] int main(void){int a[5]; *(a + 3) = 174; int *p = a + 2; p = p + 1; return *p;} =&gt; 174
 [FAIL] int main(void){int a[5]; a[3] = 174; int *p = a + 2; p = p + 1; return *p;} =&gt; 174 expected, but got 0
 </code></pre>
@@ -3596,6 +3596,8 @@ run_test 113 &#x27;int *foo(int *p){*p = 4;return p;} int main(){int x;int y; in
 		<div class="content">まあ不統一なのもよろしくないし、これも i32 にしておこう</div>
 		<div class="content">あとはジャンプを処理すれば OK</div>
 		<div class="content">ジャンプのオフセットも i32 にした</div>
+		<div class="content">しかし結構な数のテストケースが通るようになってきたな</div>
+		<div class="content">そういや『const を全部読み飛ばす』という処理が必要。書くか。書いた。</div>
 	</div>
 </div>
 
