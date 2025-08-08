@@ -523,6 +523,15 @@ run_test 101 'int *foo(int *p){*p = 4;return p;} int main(){int x;int *y;y = foo
 run_test 102 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y;*foo(&x) += 170;return x;}' 174
 run_test 113 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y; int **z; *foo(&x) += 170;return x;}' 174
 
+run_test 197 'struct A{char a; int b;}; int main(){struct A a; a.a = 74; return a.a;}' 74
+run_test 198 'struct A{int a; int b;}; int main(){struct A a; a.a = 174; return a.a;}' 174
+run_test 199 'struct A{int a; int b;}; int main(){struct A a; a.a = 174; return a.a;}' 174
+
+run_test 248 'struct A {int a;};int main(){const struct A *a; return 174;}' 174
+run_test 249 'struct A {int a;};int main(){const struct A const *const a; return 174;}' 174
+run_test 250 'struct A {int a;};int f(int *const b){return 0;}int main(){const struct A const *const a; return 174;}' 174
+run_test 251 'struct A {int a;};const int f(const int *const b){return 0;}int main(){const struct A const *const a; return 174;}' 174
+
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then

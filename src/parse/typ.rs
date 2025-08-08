@@ -82,6 +82,12 @@ pub fn parse_type(
     input: &str,
 ) -> Result<Type, AppError> {
     let mut typ = match tokens.peek().unwrap() {
+        Token {
+            tok: Tok::Const, ..
+        } => {
+            tokens.next().unwrap();
+            return parse_type(tokens, filename, input); // ignore const for now
+        }
         Token { tok: Tok::Int, .. } => {
             tokens.next().unwrap();
             Type::Int
@@ -140,6 +146,11 @@ pub fn parse_type(
             } => {
                 typ = Type::Ptr(Box::new(typ));
                 tokens.next().unwrap();
+            }
+            Token {
+                tok: Tok::Const, ..
+            } => {
+                tokens.next().unwrap(); // ignore const for now
             }
             _ => return Ok(typ),
         }

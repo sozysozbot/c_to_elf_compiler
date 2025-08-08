@@ -80,6 +80,7 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
                     "_Alignof" => Tok::Alignof,
                     "struct" => Tok::Struct,
                     "void" => Tok::Void,
+                    "const" => Tok::Const,
                     _ => Tok::Identifier(ident),
                 };
 
