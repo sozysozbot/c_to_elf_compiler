@@ -13,6 +13,10 @@ pub enum Buf {
         right: Box<Buf>,
         len: usize,
     },
+    NamedHole {
+        name: String,
+        len: usize,
+    }
 }
 
 impl Default for Buf {
@@ -24,6 +28,29 @@ impl Default for Buf {
 impl Buf {
     pub fn new() -> Self {
         Self::from(Vec::new())
+    }
+
+    pub fn fill_hole_with_vec(&mut self, search_name: String, vec: Vec<u8>) {
+        match *self {
+            Self::Leaf { .. } => {
+                // do nothing, as leaf cannot have holes
+            }
+            Self::Branch { ref mut left, ref mut right, .. } => {
+                left.fill_hole_with_vec(search_name.clone(), vec.clone());
+                right.fill_hole_with_vec(search_name, vec);
+            }
+            Self::NamedHole { ref mut name, ref mut len } => {
+                if *name == search_name {
+                    if *len != vec.len() {
+                        panic!("名前 {} に対する穴の長さが一致しません: {} != {}", name, len, vec.len());
+                    }
+                    *self = Buf::from(vec);
+                } else {
+                    // do nothing, as this hole is not the one we are looking for
+                }
+            }
+        }
+        
     }
 
     #[must_use]
@@ -38,6 +65,7 @@ impl Buf {
         match &self {
             Self::Leaf { buf } => buf.is_empty(),
             Self::Branch { len, .. } => *len == 0,
+            Self::NamedHole { len, .. } => *len == 0,
         }
     }
 
@@ -46,6 +74,7 @@ impl Buf {
         match &self {
             Self::Leaf { buf } => buf.len(),
             Self::Branch { len, .. } => *len,
+            Self::NamedHole { len, .. } => *len,
         }
     }
 
@@ -78,6 +107,9 @@ impl Buf {
             } => {
                 left.write_to_vec(buf);
                 right.write_to_vec(buf);
+            }
+            Self::NamedHole { name, len } => {
+                panic!("長さ {len} の名前付き穴 {name} を埋める必要がありますが、まだ埋められていません");
             }
         }
     }
