@@ -2542,3 +2542,8 @@ run_test 238 'int main(){int a[5]; if(a){return 174;} return 0;}' 174
 
 hsjoihs「あ～たしかにそこの decay_if_arr を忘れていた。」
 hsjoihs「statement.rs の各所に decay_if_arr をばらまいて、解決。」
+
+hsjoihs「さ～～て、ラスボスを倒すか」
+hsjoihs「ラスボスは、グローバル変数の読み書きです」
+hsjoihs「リンカが無いんでね」
+KOBA789「リンカが無いもんな」
