@@ -151,7 +151,7 @@ pub enum Statement {
         pos: usize,
     },
     For {
-        init: Option<Box<Expr>>,
+        init: Box<StatementOrDeclaration>,
         cond: Option<Box<Expr>>,
         update: Option<Box<Expr>>,
         body: Box<StatementOrDeclaration>,

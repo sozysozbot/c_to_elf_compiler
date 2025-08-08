@@ -316,20 +316,96 @@ fn parse_statement(
                 "期待された開き括弧が来ませんでした",
             )?;
             let tok = tokens.peek().unwrap();
+
+            context.push_new_scope();
+
             let init = match tok {
                 Token {
                     tok: Tok::Semicolon,
                     ..
-                } => None,
-                _ => Some(Box::new(parse_expr(context, tokens, filename, input)?)),
+                } => {
+                    tokens.next();
+                    Box::new(StatementOrDeclaration::Statement(Statement::Expr {
+                        expr: Box::new(Expr::Numeric {
+                            val: 0,
+                            pos: *pos,
+                            typ: Type::Int,
+                        }),
+                        semicolon_pos: *pos,
+                    }))
+                }
+                _ => {
+                    // either an expression or a declaration
+
+                    if let Some((local_var_type, local_var_name)) = recover(tokens, |tokens| {
+                        parse_type_and_identifier(tokens, filename, input)
+                    })? {
+                        let typ_and_size = TypeAndSize {
+                            typ: local_var_type.clone(),
+                            size: local_var_type.sizeof(&context.global_declarations.struct_names),
+                        };
+
+                        let id =
+                            context.insert_local_var(local_var_name.clone(), typ_and_size.clone());
+
+                        match tokens.peek().unwrap() {
+                            Token {
+                                tok: Tok::Assign, ..
+                            } => {
+                                tokens.next();
+                                let expr = parse_expr(context, tokens, filename, input)?;
+                                satisfy(
+                                    tokens,
+                                    filename,
+                                    input,
+                                    |tok| tok == &Tok::Semicolon,
+                                    "期待されたセミコロンが来ませんでした",
+                                )?;
+                                Box::new(StatementOrDeclaration::DeclarationWithInitializer {
+                                    name: local_var_name,
+                                    id,
+                                    typ_and_size,
+                                    initializer: Box::new(expr),
+                                })
+                            }
+                            Token {
+                                tok: Tok::Semicolon,
+                                ..
+                            } => {
+                                tokens.next();
+                                Box::new(StatementOrDeclaration::Declaration {
+                                    name: local_var_name,
+                                    id,
+                                    typ_and_size,
+                                })
+                            }
+                            _ => {
+                                return Err(AppError {
+                                    message: "for の初期化で ; か = が来ませんでした".to_string(),
+                                    input: input.to_string(),
+                                    filename: filename.to_string(),
+                                    pos: tokens.peek().unwrap().pos,
+                                })
+                            }
+                        }
+                    } else {
+                        let expr = parse_expr(context, tokens, filename, input)?;
+                        satisfy(
+                            tokens,
+                            filename,
+                            input,
+                            |tok| tok == &Tok::Semicolon,
+                            "期待されたセミコロンが来ませんでした",
+                        )?;
+
+                        Box::new(StatementOrDeclaration::Statement(Statement::Expr {
+                            expr: Box::new(expr),
+                            semicolon_pos: tokens.peek().unwrap().pos,
+                        }))
+                    }
+                }
             };
-            satisfy(
-                tokens,
-                filename,
-                input,
-                |tok| tok == &Tok::Semicolon,
-                "期待されたセミコロンが来ませんでした",
-            )?;
+
             let tok = tokens.peek().unwrap();
             let cond = match tok {
                 Token {
@@ -363,6 +439,8 @@ fn parse_statement(
             let body = Box::new(parse_statement_or_declaration(
                 context, tokens, filename, input,
             )?);
+
+            context.pop_scope();
             Ok(Statement::For {
                 init,
                 cond,

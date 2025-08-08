@@ -642,12 +642,9 @@ impl<'a> FunctionGen<'a> {
                         .collect::<Vec<_>>(),
                         pos: *pos,
                     }));
-                let statements: Vec<Statement> = vec![
-                    init.clone().map(|init| Statement::Expr {
-                        expr: init,
-                        semicolon_pos: *pos,
-                    }),
-                    Some(Statement::While {
+                let statements: Vec<StatementOrDeclaration> = vec![
+                    *init.clone(),
+                    StatementOrDeclaration::Statement(Statement::While {
                         cond: cond.clone().unwrap_or_else(|| {
                             Box::new(Expr::Numeric {
                                 val: 1,
@@ -658,15 +655,9 @@ impl<'a> FunctionGen<'a> {
                         body,
                         pos: *pos,
                     }),
-                ]
-                .into_iter()
-                .flatten()
-                .collect::<Vec<_>>();
+                ];
                 self.statementを評価(&Statement::Block {
-                    statements: statements
-                        .into_iter()
-                        .map(StatementOrDeclaration::Statement)
-                        .collect(),
+                    statements,
                     pos: *pos,
                 })
             }

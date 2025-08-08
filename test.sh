@@ -336,6 +336,8 @@ check 3 "int main() { int a; a = 3; { int a; a = 4; } { int a; a = 5; } return a
 check 4 "int main() { int a = 3; int b; { int a = 4; b = a; } return b; }"
 check 43 "int main() { int a = 3; int b; { int a = 4; b = a; } return b * 10 + a; }"
 
+# for loop with an initialization statement
+check 45 "int main() { int b; for (int a = 0; a < 10; a++) { b = b + a; } return b; }"
 
 wait_jobs
 if [ $fail_count -gt 0 ]; then
