@@ -146,12 +146,28 @@ pub fn ret() -> [u8; 1] {
     [0xc3]
 }
 
-pub fn eaxをediにmov() -> [u8; 2] {
+pub fn eaxをediにコピー() -> [u8; 2] {
     [0x89, 0xc7]
 }
 
-pub fn ediをeaxにmov() -> [u8; 2] {
+pub fn raxをrdiにコピー() -> [u8; 3] {
+    [0x48, 0x89, 0xc7]
+}
+
+pub fn alをediに符号拡張してmov() -> [u8; 3] {
+    [0x0f, 0xbe, 0xf8]
+}
+
+pub fn ediをeaxにコピー() -> [u8; 2] {
     [0x89, 0xf8]
+}
+
+pub fn rdiをraxにコピー() -> [u8; 3] {
+    [0x48, 0x89, 0xf8]
+}
+
+pub fn dilをeaxに符号拡張してmov() -> [u8; 4] {
+    [0x40, 0x0f, 0xbe, 0xc7]
 }
 
 pub fn leave_ret() -> [u8; 2] {

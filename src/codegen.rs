@@ -246,10 +246,21 @@ impl<'a> FunctionGen<'a> {
             Statement::Return {
                 expr,
                 semicolon_pos: _,
+                return_type,
             } => {
+                // TODO: If the expression has a type different from the return type of the function in which it appears,
+                // the value is converted as if by assignment to an object having the return type of the function.
+
                 let mut buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut buf, expr);
-                buf.append(ediをeaxにmov());
+
+                match return_type.sizeof_primitive("return") {
+                    8 => buf.append(rdiをraxにコピー()),
+                    4 => buf.append(ediをeaxにコピー()),
+                    1 => buf.append(dilをeaxに符号拡張してmov()),
+                    _ => panic!("return の型のサイズがよろしくない"),
+                }
+
                 buf.append(leave_ret());
                 buf
             }
@@ -769,7 +780,7 @@ impl<'a> FunctionGen<'a> {
                 ident,
                 args,
                 pos: _,
-                typ: _,
+                typ: return_type,
             } => {
                 let function = *self
                     .global_function_table
@@ -823,7 +834,13 @@ impl<'a> FunctionGen<'a> {
 
                 buf.append(eaxに即値をセット(function + 0x00400000));
                 buf.append(call_rax());
-                buf.append(eaxをediにmov());
+                match return_type.sizeof_primitive("g") {
+                    8 => buf.append(raxをrdiにコピー()),
+                    4 => buf.append(eaxをediにコピー()),
+                    1 => buf.append(alをediに符号拡張してmov()),
+                    _ => panic!("関数の戻り値の型のサイズがよろしくない"),
+                }
+
                 buf.append(rspに即値を足す(stack_size_adjustment as i32).to_vec());
                 self.stack_size -= stack_size_adjustment;
             }
@@ -906,7 +923,6 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
     main_buf.append(rspをrbpにコピー());
 
     let mut parameter_buf = Buf::new();
-    let _return_type = &definition.return_type;
 
     // context.rs の実装詳細「param には 0 番から順番に ID が振られている」に依存
     for (i, (param_type, param)) in definition.params.iter().enumerate() {

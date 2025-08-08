@@ -28,6 +28,7 @@ fn parse_test() {
                     symbols: HashMap::new(),
                     struct_names: HashMap::new()
                 },
+                Type::Void
             ),
             &mut tokens,
             "test.c",
@@ -141,6 +142,7 @@ pub fn return_void(pos: usize) -> Statement {
             pos: 0,
             typ: Type::Void,
         }),
+        return_type: Type::Void,
     }
 }
 
@@ -216,6 +218,7 @@ fn parse_statement(
             Ok(Statement::Return {
                 semicolon_pos,
                 expr,
+                return_type: context.return_type.clone(), 
             })
         }
         Token { tok: Tok::If, pos } => {

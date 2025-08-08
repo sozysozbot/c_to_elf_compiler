@@ -343,6 +343,9 @@ check 45 "int main() { int b; for (int a = 0; a < 10; a++) { b = b + a; } return
 check 3 "int foo(char a) { return a; } int main() { return foo(3); }"
 check 29 "int foo(char a) { return a; } int main() { return foo(7*7*7) / 3; }"
 
+# functions returning a pointer
+check 174 'int *foo(int *p){*p = 4;return p;} int main(){int x;int *y;y = foo(&x); *y = 174;return x;}'
+
 
 # tests taken from hsjoihs-c-compiler
 
@@ -516,9 +519,9 @@ run_test 126 'int main(){int a[5][6];int *q;q = *(a+1); *(2+q)=174; return *(*(1
 # run_test 163 'int foo(char *a, int b, int c){return 0;} int a(int N) {return 3;}int main() {int i; foo("%d %d", i, a(i)); return 0;}' 0
 
 
-# run_test 101 'int *foo(int *p){*p = 4;return p;} int main(){int x;int *y;y = foo(&x); *y+= 170;return x;}' 174
-# run_test 102 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y;*foo(&x) += 170;return x;}' 174
-# run_test 113 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y; int **z; *foo(&x) += 170;return x;}' 174
+run_test 101 'int *foo(int *p){*p = 4;return p;} int main(){int x;int *y;y = foo(&x); *y+= 170;return x;}' 174
+run_test 102 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y;*foo(&x) += 170;return x;}' 174
+run_test 113 'int *foo(int *p){*p = 4;return p;} int main(){int x;int y; int **z; *foo(&x) += 170;return x;}' 174
 
 
 wait_jobs

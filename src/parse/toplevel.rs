@@ -143,7 +143,7 @@ fn after_param_list(
                 SymbolDeclaration::Func(signature.clone()),
             );
 
-            let mut context = Context::new(param_declarations, global_declarations);
+            let mut context = Context::new(param_declarations, global_declarations, return_type.clone());
 
             loop {
                 match tokens.peek() {
@@ -453,7 +453,8 @@ pub fn parse(
                         struct_name.clone(),
                         StructDefinition {
                             struct_name: struct_name.clone(),
-                            size: (next_member_offset as u32).div_ceil(overall_alignment as u32) as i32
+                            size: (next_member_offset as u32).div_ceil(overall_alignment as u32)
+                                as i32
                                 * overall_alignment,
                             align: overall_alignment,
                             members,

@@ -1,11 +1,12 @@
 use std::{collections::HashMap, vec};
 
-use crate::parse::toplevel::{GlobalDeclarations, SymbolDeclaration, TypeAndSize};
+use crate::parse::{toplevel::{GlobalDeclarations, SymbolDeclaration, TypeAndSize}, typ::Type};
 
 type ID = u64;
 
 pub struct Context {
     currently_active_local_var_and_param_declarations: Vec<HashMap<String, (ID, TypeAndSize)>>,
+    pub return_type: Type,
     pub global_declarations: GlobalDeclarations,
 
     // The list of all local variable declarations, including those that went out of scope.
@@ -21,6 +22,7 @@ impl Context {
     pub fn new(
         param_declarations: Vec<(String, TypeAndSize)>,
         global_declarations: GlobalDeclarations,
+        return_type: Type,
     ) -> Self {
         let mut next_local_var_id = 0;
         let mut param_declarations_with_ids = HashMap::new();
@@ -35,6 +37,7 @@ impl Context {
             global_declarations,
             all_local_var_declarations: vec![],
             next_local_var_id,
+            return_type,
         }
     }
 

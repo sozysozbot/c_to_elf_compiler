@@ -28,12 +28,15 @@ impl Type {
         match self {
             Type::Int => 4,
             Type::Char => 1,
+            Type::Void => 1,
             Type::Ptr(_) => 8,
             Type::Arr(t, len) => t
                 .sizeof_primitive(msg)
                 .checked_mul(*len)
                 .expect("型のサイズが u8 に収まりません"),
-            _ => panic!("sizeof_primitive() は構造体に対しては定義されていません。 msg: {msg}"),
+            Type::Struct { .. } => {
+                panic!("sizeof_primitive() は構造体に対しては定義されていません。 msg: {msg}")
+            }
         }
     }
 

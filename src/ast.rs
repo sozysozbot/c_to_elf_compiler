@@ -136,6 +136,7 @@ pub enum Statement {
     Return {
         expr: Box<Expr>,
         semicolon_pos: usize,
+        return_type: Type,
     },
     If {
         cond: Box<Expr>,
