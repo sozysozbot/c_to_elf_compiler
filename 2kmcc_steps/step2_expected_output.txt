@@ -1,0 +1,7 @@
+.intel_syntax noprefix
+.globl main
+main:
+  mov rax, 111
+  add rax, 10
+  sub rax, 42
+  ret

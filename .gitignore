@@ -1,3 +1,4 @@
 /target
 /testwork/**
 !/testwork/.gitkeep
+/2kmcc_steps/tmp/**
