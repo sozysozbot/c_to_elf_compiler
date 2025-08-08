@@ -413,7 +413,7 @@ pub fn builtin_alloc4関数を生成() -> Buf {
 }
 
 pub struct LocalVarTable {
-    pub offsets: HashMap<(String, u64), u8>,
+    pub offsets: Vec<(String, u64, u8)>,
     pub max_offset: u8,
 }
 
@@ -425,7 +425,7 @@ impl LocalVarTable {
             .checked_add(size)
             .expect("オフセットが u8 に収まりません");
         self.max_offset = offset;
-        self.offsets.insert((ident.to_owned(), id), offset);
+        self.offsets.push((ident.to_owned(), id, offset));
         offset
     }
 }
@@ -450,19 +450,29 @@ impl<'a> FunctionGen<'a> {
                 local_var_id: Some(local_var_id),
                 ..
             } => {
+                // If the name exists but the id does not match, report
+                let candidates = self
+                    .local_var_table
+                    .offsets
+                    .iter()
+                    .filter(|(i, _, _)| i == &ident.to_owned())
+                    .collect::<Vec<_>>();
+
                 let offset = self
                     .local_var_table
                     .offsets
-                    .get(&(ident.to_owned(), local_var_id.to_owned()))
+                    .iter()
+                    .find(|(i, l, _)| i == &ident.to_owned() && l == &local_var_id.to_owned())
                     .unwrap_or_else(|| {
                         panic!(
-                            "変数 {ident} は関数 {} 内で宣言されていません",
+                            "関数 {} 内で、変数 {ident} は id {local_var_id} で参照されているが、id の候補は {candidates:?} です",
                             self.function_name
                         )
-                    });
+                    })
+                    .2;
                 buf.append(rbpをプッシュ());
                 buf.append(rdiへとポップ());
-                buf.append(rdiから即値を引く(*offset));
+                buf.append(rdiから即値を引く(offset));
             }
             Expr::Identifier {
                 ident,
@@ -1244,7 +1254,7 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
 
     let mut function_gen = FunctionGen {
         local_var_table: LocalVarTable {
-            offsets: HashMap::new(),
+            offsets: Vec::new(),
             max_offset: 0,
         },
         stack_size: 0,

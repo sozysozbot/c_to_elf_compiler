@@ -121,16 +121,14 @@ fn after_param_list(
 
             let mut statements_or_declarations: Vec<StatementOrDeclaration> = vec![];
 
-            let mut local_var_and_param_declarations: HashMap<String, TypeAndSize> = HashMap::new();
-            local_var_and_param_declarations.extend(params.iter().map(|(typ, ident)| {
-                (
-                    ident.clone(),
-                    TypeAndSize {
-                        typ: (*typ).clone(),
-                        size: typ.sizeof(&previous_global_declarations.struct_names),
-                    },
-                )
-            }));
+            let mut param_declarations: Vec<(String, TypeAndSize)> = Vec::new();
+            for (typ, ident) in &params {
+                let typ_and_size = TypeAndSize {
+                    typ: typ.clone(),
+                    size: typ.sizeof(&previous_global_declarations.struct_names),
+                };
+                param_declarations.push((ident.clone(), typ_and_size));
+            }
 
             let mut global_declarations = (*previous_global_declarations).clone();
 
@@ -145,7 +143,7 @@ fn after_param_list(
                 SymbolDeclaration::Func(signature.clone()),
             );
 
-            let mut context = Context::new(local_var_and_param_declarations, global_declarations);
+            let mut context = Context::new(param_declarations, global_declarations);
 
             loop {
                 match tokens.peek() {
@@ -171,7 +169,6 @@ fn after_param_list(
                     }
                 }
             }
-
 
             if return_type == Type::Void {
                 statements_or_declarations

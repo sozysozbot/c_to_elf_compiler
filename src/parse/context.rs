@@ -19,14 +19,14 @@ impl Context {
         self.all_local_var_declarations.clone()
     }
     pub fn new(
-        param_declarations: HashMap<String, TypeAndSize>,
+        param_declarations: Vec<(String, TypeAndSize)>,
         global_declarations: GlobalDeclarations,
     ) -> Self {
         let mut next_local_var_id = 0;
         let mut param_declarations_with_ids = HashMap::new();
         for (ident, typ_and_size) in param_declarations.iter() {
             param_declarations_with_ids
-            .insert(ident.clone(), (next_local_var_id, typ_and_size.clone()));
+                .insert(ident.clone(), (next_local_var_id, typ_and_size.clone()));
             next_local_var_id += 1;
         }
 
@@ -68,12 +68,9 @@ impl Context {
 
         let id = self.next_local_var_id;
         self.next_local_var_id += 1;
-        
-        self.all_local_var_declarations.push((
-            ident.clone(),
-            id,
-            typ_and_size.clone(),
-        ));
+
+        self.all_local_var_declarations
+            .push((ident.clone(), id, typ_and_size.clone()));
 
         current_scope.insert(ident, (id, typ_and_size));
         id

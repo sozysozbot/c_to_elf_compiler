@@ -23,7 +23,7 @@ fn parse_test() {
     assert_eq!(
         parse_statement(
             &mut Context::new(
-                HashMap::new(),
+                Vec::new(),
                 GlobalDeclarations {
                     symbols: HashMap::new(),
                     struct_names: HashMap::new()
@@ -376,6 +376,7 @@ fn parse_statement(
             pos,
         } => {
             tokens.next();
+            context.push_new_scope();
             let mut statements = vec![];
             loop {
                 match tokens.peek() {
@@ -392,6 +393,7 @@ fn parse_statement(
                         ..
                     }) => {
                         tokens.next();
+                        context.pop_scope();
 
                         break;
                     }

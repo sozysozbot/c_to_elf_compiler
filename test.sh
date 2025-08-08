@@ -327,6 +327,16 @@ check 1 "int main() { int *p; p = 0; if (p) { return 0; } else { return 1; } }"
 # clearing the lower 32 bits does not make it a null pointer
 check 1 "int main() { int a; int *p; p = &a; int **pp; pp = &p; void *q; q = pp; int *r; r = q; *r = 0; if (p) { return 1; } else { return 0; } }"
 
+check 42 "int addition(int x, int y) { return x + y; } int main() { return 42; }"
+check 42 "int id(int x) { return x; } int main() { return 42; }"
+
+# scope chain
+check 3 "int main() { int a; a = 3; { int a; a = 4; } return a; }"
+check 3 "int main() { int a; a = 3; { int a; a = 4; } { int a; a = 5; } return a; }"
+check 4 "int main() { int a = 3; int b; { int a = 4; b = a; } return b; }"
+check 43 "int main() { int a = 3; int b; { int a = 4; b = a; } return b * 10 + a; }"
+
+
 wait_jobs
 if [ $fail_count -gt 0 ]; then
   echo "$fail_count tests failed"

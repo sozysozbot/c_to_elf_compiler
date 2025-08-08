@@ -122,10 +122,7 @@ pub fn tokenize(input: &str, filename: &str) -> Result<Vec<Token>, AppError> {
             }
             '.' => {
                 iter.next();
-                ans.push(Token {
-                    tok: Tok::Dot,
-                    pos,
-                });
+                ans.push(Token { tok: Tok::Dot, pos });
             }
             '+' => {
                 iter.next();

@@ -1,9 +1,10 @@
 use std::{collections::HashMap, iter::Peekable, slice::Iter};
 
 use crate::{
-    apperror::AppError, parse::toplevel::StructDefinition, token::{Tok, Token}
+    apperror::AppError,
+    parse::toplevel::StructDefinition,
+    token::{Tok, Token},
 };
-
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Type {
