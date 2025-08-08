@@ -3678,8 +3678,8 @@ check 101 &quot;int main(int argc, char **argv) { return argc + argv[1][2]; }&qu
 <h3 class="date">2025年8月9日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_0b28e05058800f26e7b56a3fadc81e4d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_0b28e05058800f26e7b56a3fadc81e4d').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_0b28e05058800f26e7b56a3fadc81e4d" href="#permalink_0b28e05058800f26e7b56a3fadc81e4d" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_e3400f02215ee3ec0b77c37210b81fc1').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_e3400f02215ee3ec0b77c37210b81fc1').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_e3400f02215ee3ec0b77c37210b81fc1" href="#permalink_e3400f02215ee3ec0b77c37210b81fc1" class="permalink">¶</a>
 		<div class="content">ところで printf ってのもあるよな。現状使ってるのは %c %d %s %*s %.*s の 5 種類だけか。じゃあ自前で一応組めるっちゃ組める。</div>
 		<div class="content">とりあえずはプロトタイプ宣言。int foo(); と int foo(int a, int b); の両方が必要。</div>
 		<div class="content">両方実装した。</div>
@@ -3741,6 +3741,53 @@ check 101 &quot;int main(int argc, char **argv) { return argc + argv[1][2]; }&qu
 </code></pre>
 		<div class="content">あ～たしかにそこの decay_if_arr を忘れていた。</div>
 		<div class="content">statement.rs の各所に decay_if_arr をばらまいて、解決。</div>
+		<div class="content">さ～～て、ラスボスを倒すか</div>
+		<div class="content">ラスボスは、グローバル変数の読み書きです</div>
+		<div class="content">リンカが無いんでね</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><img alt="KOBA789" class="icon" src="icons/KOBA789.webp" height="48px"></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_20d7edd3bd8e1e6747e530a521c27ee4').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_20d7edd3bd8e1e6747e530a521c27ee4').style.visibility = 'hidden'">
+		<span class="name">KOBA789</span><a id="permalink_20d7edd3bd8e1e6747e530a521c27ee4" href="#permalink_20d7edd3bd8e1e6747e530a521c27ee4" class="permalink">¶</a>
+		<div class="content">リンカが無いもんな</div>
+	</div>
+</div>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_7fb5b169a8378999ef27bccd7ded487b').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_7fb5b169a8378999ef27bccd7ded487b').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_7fb5b169a8378999ef27bccd7ded487b" href="#permalink_7fb5b169a8378999ef27bccd7ded487b" class="permalink">¶</a>
+		<div class="content">いや待てよ？　先に 2kmcc step1 を倒してもよいな。倒すか。</div>
+		<div class="content">2kmcc step1 は、以下のコード</div>
+		<pre><code class="language-c">int printf();
+int atoi(); 
+
+int main(int argc, char **argv) {
+    if (argc != 2) {
+        return 3;
+    }
+    printf(&quot;.intel_syntax noprefix\n&quot;);
+    printf(&quot;.globl main\n&quot;);
+    printf(&quot;main:\n&quot;);
+    printf(&quot;  mov rax, %d\n&quot;, atoi(argv[1]));
+    printf(&quot;  ret\n&quot;);
+    return 0;
+}
+</code></pre>
+		<div class="content">とりあえず atoi を自前で実装してみるか、今回使う分なら</div>
+		<pre><code class="language-c">int atoi(const char *s) {
+    int n = 0;
+    while (*s &gt;= &#x27;0&#x27; &amp;&amp; *s &lt;= &#x27;9&#x27;) {
+        n = n * 10 + (*s - &#x27;0&#x27;);
+        s++;
+    }
+    return n;
+}
+</code></pre>
+		<div class="content">ぐらいの素朴な実装で十分。標準ライブラリをリンクする仕組みなど無いので、入力のソースを改竄して先頭に貼り付けることで解決。</div>
+		<pre><code class="language-">[PASS] int main() { return atoi(&quot;123&quot;); } =&gt; 123
+</code></pre>
+		<div class="content">よ～し。</div>
 	</div>
 </div>
 
