@@ -3678,8 +3678,8 @@ check 101 &quot;int main(int argc, char **argv) { return argc + argv[1][2]; }&qu
 <h3 class="date">2025年8月9日</h3>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_2531aa26df6fb832e6e14c815148e745').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_2531aa26df6fb832e6e14c815148e745').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_2531aa26df6fb832e6e14c815148e745" href="#permalink_2531aa26df6fb832e6e14c815148e745" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_0b28e05058800f26e7b56a3fadc81e4d').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_0b28e05058800f26e7b56a3fadc81e4d').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_0b28e05058800f26e7b56a3fadc81e4d" href="#permalink_0b28e05058800f26e7b56a3fadc81e4d" class="permalink">¶</a>
 		<div class="content">ところで printf ってのもあるよな。現状使ってるのは %c %d %s %*s %.*s の 5 種類だけか。じゃあ自前で一応組めるっちゃ組める。</div>
 		<div class="content">とりあえずはプロトタイプ宣言。int foo(); と int foo(int a, int b); の両方が必要。</div>
 		<div class="content">両方実装した。</div>
@@ -3735,6 +3735,12 @@ check 101 &quot;int main(int argc, char **argv) { return argc + argv[1][2]; }&qu
 [PASS] int main() { const char *s = &quot;\\&quot;; return s[0]; } =&gt; 92
 </code></pre>
 		<div class="content">よ～しよしよし</div>
+		<div class="content">試しに hsjoihs-c-compiler のテストケースを入れると、</div>
+		<pre><code class="language-">run_test 238 &#x27;int main(){int a[5]; if(a){return 174;} return 0;}&#x27; 174
+条件式の型のサイズがよろしくない: Identifier { ident: &quot;a&quot;, pos: 24, typ: Arr(Int, 5), local_var_id: Some(0) }
+</code></pre>
+		<div class="content">あ～たしかにそこの decay_if_arr を忘れていた。</div>
+		<div class="content">statement.rs の各所に decay_if_arr をばらまいて、解決。</div>
 	</div>
 </div>
 
