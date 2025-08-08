@@ -328,7 +328,7 @@ impl<'a> FunctionGen<'a> {
                     8 => cond_buf.append(rdiが0かを確認()),
                     4 => cond_buf.append(ediが0かを確認()),
                     1 => cond_buf.append(dilが0かを確認()),
-                    _ => panic!("条件式の型のサイズがよろしくない"),
+                    _ => panic!("条件式の型のサイズがよろしくない: {cond:?}"),
                 }
 
                 cond_buf.append(je(i32::try_from(then_buf.len()).unwrap()));
@@ -368,7 +368,7 @@ impl<'a> FunctionGen<'a> {
                     8 => cond_buf.append(rdiが0かを確認()),
                     4 => cond_buf.append(ediが0かを確認()),
                     1 => cond_buf.append(dilが0かを確認()),
-                    _ => panic!("条件式の型のサイズがよろしくない"),
+                    _ => panic!("条件式の型のサイズがよろしくない: {cond:?}"),
                 }
                 cond_buf.append(je(i32::try_from(body_buf.len() + LONGER_JMP).unwrap()));
 
@@ -458,7 +458,7 @@ impl<'a> FunctionGen<'a> {
                     8 => else_buf.append(rdiが0かを確認()),
                     4 => else_buf.append(ediが0かを確認()),
                     1 => else_buf.append(dilが0かを確認()),
-                    _ => panic!("条件式の型のサイズがよろしくない"),
+                    _ => panic!("条件式の型のサイズがよろしくない: {右辺:?}"),
                 }
                 else_buf.append(フラグを読んで異なっているかどうかをalにセット());
                 else_buf.append(alをゼロ拡張してediにセット());
@@ -474,7 +474,7 @@ impl<'a> FunctionGen<'a> {
                     8 => cond_buf.append(rdiが0かを確認()),
                     4 => cond_buf.append(ediが0かを確認()),
                     1 => cond_buf.append(dilが0かを確認()),
-                    _ => panic!("条件式の型のサイズがよろしくない"),
+                    _ => panic!("条件式の型のサイズがよろしくない: {左辺:?}"),
                 }
                 cond_buf.append(je(i32::try_from(then_buf.len()).expect(
                     "|| の右辺をコンパイルした長さが長すぎてジャンプを構築できません",
@@ -500,7 +500,7 @@ impl<'a> FunctionGen<'a> {
                     8 => then_buf.append(rdiが0かを確認()),
                     4 => then_buf.append(ediが0かを確認()),
                     1 => then_buf.append(dilが0かを確認()),
-                    _ => panic!("条件式の型のサイズがよろしくない"),
+                    _ => panic!("条件式の型のサイズがよろしくない: {右辺:?}"),
                 }
                 then_buf.append(フラグを読んで異なっているかどうかをalにセット());
                 then_buf.append(alをゼロ拡張してediにセット());
@@ -512,7 +512,7 @@ impl<'a> FunctionGen<'a> {
                     8 => cond_buf.append(rdiが0かを確認()),
                     4 => cond_buf.append(ediが0かを確認()),
                     1 => cond_buf.append(dilが0かを確認()),
-                    _ => panic!("条件式の型のサイズがよろしくない"),
+                    _ => panic!("条件式の型のサイズがよろしくない: {左辺:?}"),
                 }
                 cond_buf.append(je(i32::try_from(then_buf.len())
                     .expect("&& の右辺をコンパイルした長さが i32 に収まりません")));

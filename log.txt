@@ -2532,3 +2532,13 @@ $source
 ```
 
 hsjoihs「よ～しよしよし」
+hsjoihs「試しに hsjoihs-c-compiler のテストケースを入れると、」
+
+$source
+```
+run_test 238 'int main(){int a[5]; if(a){return 174;} return 0;}' 174
+条件式の型のサイズがよろしくない: Identifier { ident: "a", pos: 24, typ: Arr(Int, 5), local_var_id: Some(0) }
+```
+
+hsjoihs「あ～たしかにそこの decay_if_arr を忘れていた。」
+hsjoihs「statement.rs の各所に decay_if_arr をばらまいて、解決。」

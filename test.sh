@@ -552,6 +552,13 @@ run_test 315 'int main(void){int q; int *p = &q; return (1+!p)*174;}' 174
 run_test 225 'int main(){return _Alignof(int);}' 4
 run_test 226 'int main(){return _Alignof(int*);}' 8
 run_test 344 'int main(){char a[456]; return a + 3 - a; }' 3
+run_test 212 'struct A{int a; int b;}; int main(){ struct A *p; void *q1; void *q2; q1 = p; q2 = p+1; char *r1; char *r2; r1 = q1; r2 = q2; return r2-r1;}' 8
+run_test 227 'struct A{int a; int b;}; int main(){ return _Alignof(struct A);}' 4
+run_test 228 'struct A{int a; char c; char d; int b;}; int main(){ return _Alignof(struct A);}' 4
+run_test 230 'void f(int *p){*p = 174;} int main(void){ int a; f(&a); return a;}' 174
+run_test 238 'int main(){int a[5]; if(a){return 174;} return 0;}' 174
+run_test 213 'void f(int *p){*p = 174; return;} int main(void){ int a; f(&a); return a;}' 174
+
 
 # argc and argv
 

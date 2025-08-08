@@ -4,8 +4,8 @@ use crate::parse::combinator::recover;
 use crate::parse::context::Context;
 use crate::parse::toplevel::TypeAndSize;
 use crate::parse::typ::Type;
-use crate::token::*;
 use crate::strlit_collector::StrLitCollector;
+use crate::token::*;
 use std::{iter::Peekable, slice::Iter};
 
 use super::combinator::satisfy;
@@ -285,7 +285,7 @@ fn parse_statement(
                     })
                 }
             }
-            let cond = Box::new(parse_expr(
+            let cond = decay_if_arr(parse_expr(
                 strlit_collector,
                 context,
                 tokens,
@@ -350,7 +350,7 @@ fn parse_statement(
                 |tok| tok == &Tok::開き丸括弧,
                 "期待された開き括弧が来ませんでした",
             )?;
-            let cond = Box::new(parse_expr(
+            let cond = decay_if_arr(parse_expr(
                 strlit_collector,
                 context,
                 tokens,
@@ -425,8 +425,13 @@ fn parse_statement(
                                 tok: Tok::Assign, ..
                             } => {
                                 tokens.next();
-                                let expr =
-                                    parse_expr(strlit_collector, context, tokens, filename, input)?;
+                                let expr = decay_if_arr(parse_expr(
+                                    strlit_collector,
+                                    context,
+                                    tokens,
+                                    filename,
+                                    input,
+                                )?);
                                 satisfy(
                                     tokens,
                                     filename,
@@ -438,7 +443,7 @@ fn parse_statement(
                                     name: local_var_name,
                                     id,
                                     typ_and_size,
-                                    initializer: Box::new(expr),
+                                    initializer: expr,
                                 })
                             }
                             Token {
@@ -472,7 +477,7 @@ fn parse_statement(
                         )?;
 
                         Box::new(StatementOrDeclaration::Statement(Statement::Expr {
-                            expr: Box::new(expr),
+                            expr: decay_if_arr(expr),
                             semicolon_pos: tokens.peek().unwrap().pos,
                         }))
                     }
@@ -485,7 +490,7 @@ fn parse_statement(
                     tok: Tok::Semicolon,
                     ..
                 } => None,
-                _ => Some(Box::new(parse_expr(
+                _ => Some(decay_if_arr(parse_expr(
                     strlit_collector,
                     context,
                     tokens,
@@ -506,7 +511,7 @@ fn parse_statement(
                     tok: Tok::閉じ丸括弧,
                     ..
                 } => None,
-                _ => Some(Box::new(parse_expr(
+                _ => Some(decay_if_arr(parse_expr(
                     strlit_collector,
                     context,
                     tokens,
@@ -579,7 +584,7 @@ fn parse_statement(
             })
         }
         _ => {
-            let expr = Box::new(parse_expr(
+            let expr = decay_if_arr(parse_expr(
                 strlit_collector,
                 context,
                 tokens,
