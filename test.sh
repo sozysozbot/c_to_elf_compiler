@@ -339,6 +339,11 @@ check 43 "int main() { int a = 3; int b; { int a = 4; b = a; } return b * 10 + a
 # for loop with an initialization statement
 check 45 "int main() { int b; for (int a = 0; a < 10; a++) { b = b + a; } return b; }"
 
+# parameter with type char
+check 3 "int foo(char a) { return a; } int main() { return foo(3); }"
+check 29 "int foo(char a) { return a; } int main() { return foo(7*7*7) / 3; }"
+
+
 # tests taken from hsjoihs-c-compiler
 
 

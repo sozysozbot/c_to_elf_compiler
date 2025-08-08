@@ -264,6 +264,30 @@ fn leave_ret() -> [u8; 2] {
     [0xc9, 0xc3]
 }
 
+fn rbpにoffsetを足した位置にdilを代入(offset: i8) -> [u8; 4] {
+    [0x40, 0x88, 0x7d, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にsilを代入(offset: i8) -> [u8; 4] {
+    [0x40, 0x88, 0x75, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にdlを代入(offset: i8) -> [u8; 3] {
+    [0x88, 0x55, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にclを代入(offset: i8) -> [u8; 3] {
+    [0x88, 0x4d, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にr8bを代入(offset: i8) -> [u8; 4] {
+    [0x44, 0x88, 0x45, offset.to_le_bytes()[0]]
+}
+
+fn rbpにoffsetを足した位置にr9bを代入(offset: i8) -> [u8; 4] {
+    [0x44, 0x88, 0x4d, offset.to_le_bytes()[0]]
+}
+
 fn rbpにoffsetを足した位置にediを代入(offset: i8) -> [u8; 3] {
     [0x89, 0x7d, offset.to_le_bytes()[0]]
 }
@@ -1304,6 +1328,24 @@ pub fn 関数をコード生成しメインバッファとグローバル関数�
                 negative_offset,
             )),
             (5, 4) => parameter_buf.append(rbpにoffsetを足した位置にr9dを代入(
+                negative_offset,
+            )),
+            (0, 1) => parameter_buf.append(rbpにoffsetを足した位置にdilを代入(
+                negative_offset,
+            )),
+            (1, 1) => parameter_buf.append(rbpにoffsetを足した位置にsilを代入(
+                negative_offset,
+            )),
+            (2, 1) => parameter_buf.append(rbpにoffsetを足した位置にdlを代入(
+                negative_offset,
+            )),
+            (3, 1) => parameter_buf.append(rbpにoffsetを足した位置にclを代入(
+                negative_offset,
+            )),
+            (4, 1) => parameter_buf.append(rbpにoffsetを足した位置にr8bを代入(
+                negative_offset,
+            )),
+            (5, 1) => parameter_buf.append(rbpにoffsetを足した位置にr9bを代入(
                 negative_offset,
             )),
             (0..=5, _) => {
