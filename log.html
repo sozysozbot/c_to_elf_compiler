@@ -3652,8 +3652,8 @@ main:
 </div>
 <div class="one_person">
 	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
-	<div class="name_and_content" onmouseover="document.getElementById('permalink_dea773c8af11b43e20f1cf9c3c3cbcec').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_dea773c8af11b43e20f1cf9c3c3cbcec').style.visibility = 'hidden'">
-		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_dea773c8af11b43e20f1cf9c3c3cbcec" href="#permalink_dea773c8af11b43e20f1cf9c3c3cbcec" class="permalink">¶</a>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_c25ba908a03da001dfcb348891fabcb0').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_c25ba908a03da001dfcb348891fabcb0').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_c25ba908a03da001dfcb348891fabcb0" href="#permalink_c25ba908a03da001dfcb348891fabcb0" class="permalink">¶</a>
 		<div class="content">CRT って何の略だろう…ああ『C ランタイム』、まあそれはそう</div>
 		<div class="content"> <a href="https://stackoverflow.com/questions/50260855/how-to-get-arguments-value-in-start-and-call-main-using-inline-assembly-in-c" target="_blank" rel="noopener noreferrer">https://stackoverflow.com/questions/50260855/how-to-get-arguments-value-in-start-and-call-main-using-inline-assembly-in-c</a> を読む。ああこれこんなに簡単なのか。 _start に到達したタイミングでは 0(%rsp) に argc があり、8(%rsp) に argv があるらしい。それぞれ mov と lea で rdi と rsi に取ってくれば解決か。</div>
 		<div class="content">とりあえず、先頭に __builtin_populate_argc_argv; という文がある関数は、プロローグがすり替わって</div>
@@ -3673,8 +3673,16 @@ check 101 &quot;int main(int argc, char **argv) { return argc + argv[1][2]; }&qu
 		<div class="content">現状は関数の position が発生するたびにそれをグローバル関数テーブルに突っ込んでいく実装だけど、</div>
 		<div class="content">単純に Buf にひと細工すればいいか</div>
 		<div class="content">とりあえず NamedHole というのを作った</div>
+	</div>
+</div>
+<h3 class="date">2025年8月9日</h3>
+<div class="one_person">
+	<div><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer"><img alt="hsjoihs" class="icon" src="icons/hsjoihs.webp" height="48px"></a></div>
+	<div class="name_and_content" onmouseover="document.getElementById('permalink_4f92836bd0d9238e040ffd317bea5c88').style.visibility = 'visible'" onmouseout="document.getElementById('permalink_4f92836bd0d9238e040ffd317bea5c88').style.visibility = 'hidden'">
+		<span class="name"><a href="https://twitter.com/hsjoihs" target="_blank" rel="noopener noreferrer">hsjoihs</a></span><a id="permalink_4f92836bd0d9238e040ffd317bea5c88" href="#permalink_4f92836bd0d9238e040ffd317bea5c88" class="permalink">¶</a>
 		<div class="content">ところで printf ってのもあるよな。現状使ってるのは %c %d %s %*s %.*s の 5 種類だけか。じゃあ自前で一応組めるっちゃ組める。</div>
 		<div class="content">とりあえずはプロトタイプ宣言。int foo(); と int foo(int a, int b); の両方が必要。</div>
+		<div class="content">両方実装した。</div>
 	</div>
 </div>
 
