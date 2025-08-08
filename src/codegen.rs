@@ -264,17 +264,15 @@ impl<'a> FunctionGen<'a> {
                 else_buf
                     .as_ref()
                     .map(|else_buf| {
-                        Buf::from(
-                            jmp(
-                                i8::try_from(else_buf.len())
+                        jmp(
+                                i32::try_from(else_buf.len())
                                 .unwrap_or_else(
                                     |_| panic!(
-                                        "else でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です",
+                                        "else でジャンプするためのバッファの長さが i32 に収まりません。バッファの長さは {}、中身は 0x[{}] です",
                                         else_buf.len(), else_buf.to_vec().iter().map(|a| format!("{a:02x}")).collect::<Vec<_>>().join(" ")
                                     )
                                 )
                             )
-                        )
                     })
                     .unwrap_or_else(Buf::new),
             );
@@ -289,13 +287,35 @@ impl<'a> FunctionGen<'a> {
                     _ => panic!("条件式の型のサイズがよろしくない"),
                 }
 
-                cond_buf.append(je(i8::try_from(then_buf.len()).unwrap()));
+                cond_buf.append(je(i32::try_from(then_buf.len()).unwrap()));
 
                 cond_buf
                     .join(then_buf)
                     .join(else_buf.unwrap_or_else(Buf::new))
             }
             Statement::While { cond, body, .. } => {
+                // ここで構築したいのは
+                //
+                // CONTINUING:
+                // cond_buf
+                // je BREAKING
+                // body_buf
+                // jmp CONTINUING
+                // BREAKING:
+                //
+                // という構造。
+                // je BREAKING は、オフセットとして「body_buf + <jmp CONTINUING>」の長さを必要とする。
+                // jmp CONTINUING は、負のオフセットとして「cond_buf + <je BREAKING> + body_buf  + <jmp CONTINUING>」を必要とする。
+                // ここで、je は「i8 のオフセットをエンコードすると 2 byte、i32 のオフセットをエンコードすると 6 byte」となり、
+                // jmp は「i8 のオフセットをエンコードすると 2 byte、i32 のオフセットをエンコードすると 5 byte」となる。
+                // 解決が循環するのを防ぐため、jmp は常に長い方 (5 byte) でエンコードすることとし、
+                // まず je BREAKING を「body_buf + 5」バイトのオフセットとしてエンコードし、
+                // それをもとに jmp CONTINUING を「cond_buf + <je BREAKING> + body_buf + 5」バイトのオフセットとしてエンコードする。
+                // const SHORTER_JE: usize = 2;
+                // const LONGER_JE: usize = 6;
+                // const SHORTER_JMP: usize = 2;
+                const LONGER_JMP: usize = 5;
+
                 let body_buf = self.statement_or_declarationを評価(body.as_ref());
 
                 let mut cond_buf = Buf::new();
@@ -306,13 +326,13 @@ impl<'a> FunctionGen<'a> {
                     1 => cond_buf.append(dilが0かを確認()),
                     _ => panic!("条件式の型のサイズがよろしくない"),
                 }
-                cond_buf.append(je(i8::try_from(body_buf.len() + 2).unwrap()));
+                cond_buf.append(je(i32::try_from(body_buf.len() + LONGER_JMP).unwrap()));
 
-                let buf = cond_buf.join(body_buf);
-                let buf_len = i8::try_from(-(buf.len() as i64) - 2).unwrap_or_else(
-                |_| panic!("while 文の中でジャンプするためのバッファの長さが i8 に収まりません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{a:02x}")).collect::<Vec<_>>().join(" "))
+                let buf = cond_buf.join(body_buf); // je の長さが含まれている
+                let buf_len = i32::try_from(-((buf.len() + LONGER_JMP) as i64)).unwrap_or_else(
+                |_| panic!("while 文の中でジャンプするためのバッファの長さが i32 に収まりません。バッファの長さは {}、中身は 0x[{}] です", buf.len(), buf.to_vec().iter().map(|a| format!("{a:02x}")).collect::<Vec<_>>().join(" "))
             );
-                buf.join(Buf::from(jmp(buf_len)))
+                buf.join(jmp(buf_len))
             }
             Statement::For {
                 init,
@@ -399,8 +419,8 @@ impl<'a> FunctionGen<'a> {
 
                 let mut then_buf = Buf::new();
                 then_buf.append(ediに代入(1));
-                then_buf.append(jmp(i8::try_from(else_buf.len())
-                    .expect("|| の右辺をコンパイルした長さが i8 に収まりません")));
+                then_buf.append(jmp(i32::try_from(else_buf.len())
+                    .expect("|| の右辺をコンパイルした長さが i32 に収まりません")));
 
                 let mut cond_buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut cond_buf, 左辺);
@@ -410,7 +430,7 @@ impl<'a> FunctionGen<'a> {
                     1 => cond_buf.append(dilが0かを確認()),
                     _ => panic!("条件式の型のサイズがよろしくない"),
                 }
-                cond_buf.append(je(i8::try_from(then_buf.len()).expect(
+                cond_buf.append(je(i32::try_from(then_buf.len()).expect(
                     "|| の右辺をコンパイルした長さが長すぎてジャンプを構築できません",
                 )));
 
@@ -438,7 +458,7 @@ impl<'a> FunctionGen<'a> {
                 }
                 then_buf.append(フラグを読んで異なっているかどうかをalにセット());
                 then_buf.append(alをゼロ拡張してediにセット());
-                then_buf.append(jmp(i8::try_from(else_buf.len()).unwrap()));
+                then_buf.append(jmp(i32::try_from(else_buf.len()).unwrap()));
 
                 let mut cond_buf = Buf::new();
                 self.exprを評価してediレジスタへ(&mut cond_buf, 左辺);
@@ -448,8 +468,8 @@ impl<'a> FunctionGen<'a> {
                     1 => cond_buf.append(dilが0かを確認()),
                     _ => panic!("条件式の型のサイズがよろしくない"),
                 }
-                cond_buf.append(je(i8::try_from(then_buf.len())
-                    .expect("&& の右辺をコンパイルした長さが i8 に収まりません")));
+                cond_buf.append(je(i32::try_from(then_buf.len())
+                    .expect("&& の右辺をコンパイルした長さが i32 に収まりません")));
 
                 buf.append(cond_buf.join(then_buf).join(else_buf))
             }

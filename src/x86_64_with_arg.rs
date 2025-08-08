@@ -70,12 +70,38 @@ pub fn プロローグ(x: i32) -> Buf {
         .join(rspから即値を引く(x))
 }
 
-pub fn jmp(n: i8) -> [u8; 2] {
-    [0xeb, n.to_le_bytes()[0]]
+pub fn jmp(n: i32) -> Buf {
+    fn _jmp_i8(n: i8) -> Buf {
+        Buf::from([0xeb, n.to_le_bytes()[0]])
+    }
+
+    fn jmp_i32(n: i32) -> Buf {
+        let buf = n.to_le_bytes();
+        Buf::from([0xe9, buf[0], buf[1], buf[2], buf[3]])
+    }
+
+    /*if n >= i8::MIN as i32 && n <= i8::MAX as i32 {
+        _jmp_i8(n as i8)
+    } else*/ {
+        jmp_i32(n)
+    }
 }
 
-pub fn je(n: i8) -> [u8; 2] {
-    [0x74, n.to_le_bytes()[0]]
+pub fn je(n: i32) -> Buf {
+    fn je_i8(n: i8) -> Buf {
+        Buf::from([0x74, n.to_le_bytes()[0]])
+    }
+
+    fn je_i32(n: i32) -> Buf {
+        let buf = n.to_le_bytes();
+        Buf::from([0x0f, 0x84, buf[0], buf[1], buf[2], buf[3]])
+    }
+
+    if n >= i8::MIN as i32 && n <= i8::MAX as i32 {
+        je_i8(n as i8)
+    } else {
+        je_i32(n)
+    }
 }
 
 pub fn ediに代入(n: u32) -> [u8; 5] {
@@ -426,4 +452,3 @@ pub fn rbpにoffsetを足したアドレスをrsiに代入(offset: i32) -> Buf {
         rbpにoffsetを足したアドレスをrsiに代入_i32(offset)
     }
 }
-
