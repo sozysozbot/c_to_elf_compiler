@@ -42,6 +42,7 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Vec<u8>, AppError> {
     let mut tokens = tokens.iter().peekable();
     let function_declarations: HashMap<String, FunctionSignature> = [
@@ -67,6 +68,14 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
                 params: Some(vec![Type::Int, Type::Int, Type::Int, Type::Int]),
                 pos: 0,
                 return_type: Type::Ptr(Box::new(Type::Int)),
+            },
+        ),
+        (
+            "__builtin_abc".to_string(),
+            FunctionSignature {
+                params: Some(vec![]),
+                pos: 0,
+                return_type: Type::Arr(Box::new(Type::Char), 4),
             },
         ),
     ]
@@ -103,6 +112,10 @@ fn parse_and_codegen(tokens: &[Token], input: &str, filename: &str) -> Result<Ve
     let builtin_alloc4_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
     buf.append(codegen::builtin_alloc4関数を生成());
     global_function_table.insert("__builtin_alloc4".to_string(), builtin_alloc4_pos);
+
+    let builtin_abc_pos = u32::try_from(buf.len()).expect("バッファの長さが u32 に収まりません");
+    buf.append(codegen::builtin_abc関数を生成());
+    global_function_table.insert("__builtin_abc".to_string(), builtin_abc_pos);
 
     for definition in function_definitions {
         codegen::関数をコード生成しメインバッファとグローバル関数テーブルに挿入(

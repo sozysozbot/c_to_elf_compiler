@@ -2463,3 +2463,21 @@ $DATE「2025年8月9日」
 hsjoihs「ところで printf ってのもあるよな。現状使ってるのは %c %d %s %*s %.*s の 5 種類だけか。じゃあ自前で一応組めるっちゃ組める。」
 hsjoihs「とりあえずはプロトタイプ宣言。int foo(); と int foo(int a, int b); の両方が必要。」
 hsjoihs「両方実装した。」
+
+hsjoihs「文字列リテラルを作る必要がありますねぇ」
+hsjoihs「まあ実は alloc4 を作る過程で既に仕事の大半は終わっている」
+hsjoihs「とりあえず、文字列リテラル "abc" として振る舞う値を返す __builtin_abc を実装してみるか。」
+hsjoihs「え？ C 言語では配列を返せない？ いやいやそれは C 言語で『配列を返す関数』を書く構文が無いというだけであって、」
+hsjoihs「あらかじめ『そういう型の関数』を組み込み実装しておけば別に問題は無い。やるぞ。」
+hsjoihs「…ん？『左辺値として扱えない』というエラーが出る。ああなるほど、『配列型の値を評価するときには左辺値として』のルールが効いてしまうのか。それの適応を除外。」
+
+$source
+```
+[PASS] int main() { return sizeof(__builtin_abc()); } => 4
+[PASS] int main() { const char *s = __builtin_abc(); return s[0]; } => 97
+[PASS] int main() { const char *s = __builtin_abc(); return s[3]; } => 0
+[PASS] int main() { const char *s = __builtin_abc(); return s[1]; } => 98
+[PASS] int main() { const char *s = __builtin_abc(); return s[2]; } => 99
+```
+
+hsjoihs「よし、『呼び出すと文字列リテラルとして振る舞うビルトイン関数』が実装できた。」

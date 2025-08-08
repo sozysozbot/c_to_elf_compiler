@@ -107,6 +107,42 @@ pub fn builtin_alloc4関数を生成() -> Buf {
         .join(エピローグ())
 }
 
+
+pub fn builtin_abc関数を生成() -> Buf {
+    const STR_SIZE: u32 = 4;
+    プロローグ(WORD_SIZE_AS_I32 * 4)
+        .join(eaxに即値をセット(12)) // sys_brk
+        .join(ediに代入(0)) // NULL
+        .join(syscall()) // rax: br
+        .join(raxをプッシュ())
+        .join(rdiへとポップ()) // rdi: br,
+        .join(eaxに即値をセット(STR_SIZE)) // rax: 4, rdi: br
+        .join(rdiにraxを足し合わせる()) // rdi: br + 4
+        .join(eaxに即値をセット(12)) // rax: 12(sys_brk), rdi: br + 4
+        .join(syscall()) // rax: br + 4
+        //
+        // br[3] = 0
+        .join(raxから即値を引く(1)) // rax: br + 3
+        .join(ediに代入(0)) // edi: 0
+        .join(raxが指す位置にdilを代入()) // *(br + 3) = 0;
+        //
+        // br[2] = 'c'
+        .join(raxから即値を引く(1)) // rax: br + 2
+        .join(ediに代入('c' as u32))
+        .join(raxが指す位置にdilを代入()) // *(br + 2) = 'c';
+        //
+        // br[1] = 'b'
+        .join(raxから即値を引く(1)) // rax: br + 1
+        .join(ediに代入('b' as u32)) 
+        .join(raxが指す位置にdilを代入()) // *(br + 1) = 'b';
+        //
+        // br[0] = 'a'
+        .join(raxから即値を引く(1)) // rax: br + 12
+        .join(ediに代入('a' as u32)) 
+        .join(raxが指す位置にdilを代入()) // *br = 'a';
+        .join(エピローグ())
+}
+
 pub struct LocalVarTable {
     pub offsets: Vec<(String, u64, i32)>,
     pub max_offset: i32,
@@ -184,7 +220,7 @@ impl<'a> FunctionGen<'a> {
             } => {
                 self.exprを評価してediレジスタへ(buf, expr);
             }
-            _ => panic!("代入式の左辺に左辺値以外が来ています"),
+            e => panic!("代入式の左辺に左辺値以外が来ています: {e:?}"),
         }
     }
 
@@ -401,7 +437,7 @@ impl<'a> FunctionGen<'a> {
 
     #[allow(clippy::too_many_lines)]
     pub fn exprを評価してediレジスタへ(&mut self, buf: &mut Buf, expr: &Expr) {
-        if matches!(expr.typ(), Type::Arr(_, _)) {
+        if matches!(expr.typ(), Type::Arr(_, _)) && !matches!(expr, Expr::Call { .. }) /* not a builtin string literal */ {
             self.exprを左辺値として評価してアドレスをrdiレジスタへ(buf, expr);
             return;
         }
